@@ -1,0 +1,1428 @@
+/* =========================================
+   1. Variables Globales (Basadas en el diseño)
+   ========================================= */
+:root {
+  --primary-blue: #005684; /* Azul oscuro del botón principal */
+  --primary-hover: #00456a;
+  --dark-navy: #0f2a3f; /* Azul muy oscuro para títulos y top badge */
+  --bg-app: #f4f7fb; /* Fondo sutilmente azulado de la app */
+  --bg-element: #f0f4f8; /* Fondo gris/azul clarito para inputs y botones */
+  --text-main: #2d3748;
+  --text-muted: #718096;
+  --border-color: #e2e8f0;
+  --white: #ffffff;
+  --success-bg: #c6f6d5;
+  --success-text: #22543d;
+  --font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+/* empieza estilos login.tsx */
+/* =========================================
+   2. Reseteo Básico
+   ========================================= */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: var(--font-family);
+  background-color: var(--bg-app);
+  color: var(--text-main);
+  line-height: 1.5;
+  /* Un gradiente radial suave para simular el fondo de la imagen */
+  background: radial-gradient(circle at 50% 0%, #e6f0ff 0%, #f4f7fb 100%);
+  min-height: 100vh;
+}
+
+a {
+  text-decoration: none;
+  color: var(--primary-blue);
+  font-weight: 500;
+  transition: color 0.2s;
+}
+
+a:hover {
+  color: var(--primary-hover);
+}
+
+/* =========================================
+   3. Layout Principal
+   ========================================= */
+.login-layout {
+  display: flex;
+  min-height: 100vh;
+  width: 100%;
+  justify-content: center;
+  align-items: center;
+  padding: 1rem;
+}
+
+.login-form-container {
+  width: 100%;
+  max-width: 680px; /* Ancho de la tarjeta */
+}
+
+.form-wrapper {
+  background-color: var(--white);
+  padding: 2.5rem 2rem;
+  border-radius: 16px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.03), 0 4px 10px rgba(0, 0, 0, 0.02);
+  display: flex;
+  flex-direction: column;
+}
+
+/* =========================================
+   4. Encabezado y Top Badge
+   ========================================= */
+.top-badge {
+  background-color: var(--dark-navy);
+  color: var(--white);
+  align-self: center;
+  padding: 0.35rem 1rem;
+  border-radius: 9999px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.status-dot {
+  color: #48bb78; /* Punto verde */
+}
+
+.form-wrapper h1 {
+  color: var(--dark-navy);
+  font-size: 1.75rem;
+  text-align: center;
+  margin-bottom: 0.5rem;
+  font-weight: 700;
+}
+
+.subtitle {
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  margin-bottom: 2rem;
+  padding: 0 1rem;
+}
+
+/* =========================================
+   5. Selector de Tipo de Usuario (Toggle)
+   ========================================= */
+.user-type-toggle {
+  display: flex;
+  background-color: var(--bg-element);
+  padding: 0.25rem;
+  border-radius: 8px;
+  margin-bottom: 2rem;
+}
+
+.toggle-btn {
+  flex: 1;
+  background: transparent;
+  border: none;
+  padding: 0.75rem;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+}
+
+.toggle-btn.active {
+  background-color: var(--white);
+  color: var(--primary-blue);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+/* =========================================
+   6. Campos del Formulario
+   ========================================= */
+.input-group {
+  margin-bottom: 1.25rem;
+}
+
+.label-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+
+.label-row label {
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: var(--text-main);
+}
+
+.helper-text {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input-icon {
+  position: absolute;
+  font-size: 1.1rem;
+  color: var(--text-muted);
+  opacity: 0.6;
+}
+
+.input-icon.left {
+  left: 12px;
+}
+
+.input-icon.right {
+  right: 12px;
+  cursor: pointer;
+}
+
+.input-wrapper input {
+  width: 100%;
+  padding: 0.875rem 2.5rem;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  font-size: 0.95rem;
+  transition: border-color 0.2s;
+  color: var(--text-main);
+  background-color: var(--bg-element);
+}
+
+.input-wrapper input::placeholder {
+  color: #a0aec0;
+}
+
+.input-wrapper input:focus {
+  outline: none;
+  border-color: var(--primary-blue);
+}
+
+/* =========================================
+   7. Opciones y Botón Principal
+   ========================================= */
+.form-options {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  font-size: 0.85rem;
+}
+
+.remember-me {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  color: var(--text-main);
+}
+
+.btn-primary {
+  width: 100%;
+  padding: 0.875rem;
+  background-color: var(--primary-blue);
+  color: var(--white);
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.btn-primary:hover {
+  background-color: var(--primary-hover);
+}
+
+/* =========================================
+   8. Divisor y Botones Secundarios
+   ========================================= */
+.divider {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  margin: 1.5rem 0;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+}
+
+.divider::before,
+.divider::after {
+  content: '';
+  flex: 1;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.divider::before { margin-right: 1rem; }
+.divider::after { margin-left: 1rem; }
+
+.alt-login-buttons {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.btn-outline {
+  flex: 1;
+  padding: 0.75rem;
+  background-color: var(--bg-element);
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  color: var(--dark-navy);
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
+  transition: background-color 0.2s;
+}
+
+.btn-outline:hover {
+  background-color: #e2e8f0;
+}
+
+/* =========================================
+   9. Banner de Seguridad y Footer
+   ========================================= */
+.security-banner {
+  background-color: var(--bg-element);
+  border-radius: 8px;
+  padding: 1rem;
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+  margin-bottom: 1.5rem;
+}
+
+.shield-icon {
+  font-size: 1.5rem;
+  background: var(--white);
+  border-radius: 50%;
+  padding: 0.2rem;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.security-info h4 {
+  font-size: 0.85rem;
+  color: var(--dark-navy);
+  margin-bottom: 0.25rem;
+  display: flex;
+  align-items: center;
+}
+
+.badge-tls {
+  background-color: var(--success-bg);
+  color: var(--success-text);
+  font-size: 0.65rem;
+  padding: 0.15rem 0.4rem;
+  border-radius: 4px;
+  margin-left: 0.5rem;
+  font-weight: 700;
+}
+
+.security-info p {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+.login-footer {
+  text-align: center;
+  font-size: 0.9rem;
+  margin-top: 1rem;
+}
+/* =========================================
+   5. Selector de Tipo de Usuario (Toggle Animado)
+   ========================================= */
+.user-type-toggle {
+  position: relative;
+  display: flex;
+  background-color: var(--bg-element);
+  padding: 0.25rem;
+  border-radius: 8px;
+  margin-bottom: 2rem;
+}
+
+/* El fondo blanco que se desliza */
+.sliding-background {
+  position: absolute;
+  top: 0.25rem;
+  left: 0.25rem;
+  height: calc(100% - 0.5rem);
+  width: calc(50% - 0.25rem); /* Mitad del espacio interno */
+  background-color: var(--white);
+  border-radius: 6px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  /* Curva de aceleración para un efecto más natural y fluido */
+  transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  z-index: 1;
+}
+
+.toggle-btn {
+  position: relative;
+  z-index: 2; /* Para que el texto e icono queden sobre el fondo blanco */
+  flex: 1;
+  background: transparent;
+  border: none;
+  padding: 0.75rem;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  transition: color 0.3s ease;
+}
+
+.toggle-btn.active {
+  color: var(--primary-blue);
+  /* El fondo y sombra se eliminaron de aquí porque ahora los maneja .sliding-background */
+}
+
+/* fin estilos globales y estilos de login.tsx*/
+
+/* se anade estilos de home.tsx */
+/* =========================================
+   12. Estilos Landing Page (Home)
+   ========================================= */
+.home-layout {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background-color: #ffffff;
+}
+
+/* Header */
+.home-header {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  padding: 1rem 2rem;
+  border-bottom: 1px solid var(--border-color);
+  background: var(--white);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.header-left, .header-right {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.header-right-inicre{
+    display: inline-flex;
+    align-items: center;
+    gap: 1rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.header-right {
+  justify-content: flex-end;
+}
+
+.header-search {
+  display: flex;
+  align-items: center;
+  background: var(--bg-element);
+  padding: 0.5rem 1rem;
+  border-radius: 999px;
+  width: 250px;
+}
+
+.header-search input {
+  border: none;
+  background: transparent;
+  outline: none;
+  margin-left: 0.5rem;
+  width: 100%;
+  font-size: 0.85rem;
+}
+
+.brand-logo-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1.2;
+}
+
+.time-text {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--primary-blue);
+  letter-spacing: -0.5px;
+}
+
+.brand-slogan {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  font-weight: bold;
+}
+
+.avatar-circle.small {
+  background-color: #006194;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  aspect-ratio: 1 / 1; 
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+
+.avatar-circle.small .icon-person {
+  width: 12px;  
+  height: 12px;
+  object-fit: contain;
+}
+/* Botón de Filtros */
+.btn-filtros {
+  display: inline-flex;
+  align-items: center;    /* Centra verticalmente el icono, el texto y la burbuja */
+  white-space: nowrap;    /* ¡Clave! Evita que el texto se rompa en dos líneas */
+  gap: 0.6rem;            /* Espacio uniforme entre icono, texto y número */
+  
+  /* Estilo del botón basado en el segundo diseño */
+  background-color: #f0f6ff; /* Azul muy suave de fondo */
+  border: none;
+  border-radius: 10px;    /* Bordes completamente redondeados */
+  padding: 0.5rem 1rem;
+  
+  color: #0c2340;         /* Color oscuro para el texto */
+  font-weight: 500;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+/* El icono SVG */
+.btn-filtros .icon-svg {
+  width: 16px;
+  height: 16px;
+  object-fit: contain;
+}
+
+/* La burbuja con el número (Badge) */
+.btn-filtros .badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  
+  width: 20px;
+  height: 20px;
+  background-color: #dbeafe; /* Fondo azul un poco más oscuro para resaltar */
+  color: #006194;            /* Color del número */
+  font-size: 0.8rem;
+  font-weight: 700;
+  border-radius: 1rem;        /* Círculo perfecto para el número */
+}
+
+
+/* Hero Section */
+/* Hero Section */
+.hero-section {
+  text-align: center;
+  padding: 6rem 2rem 4rem 2rem; /* Más espacio arriba para que respire el degradado */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  box-sizing: border-box;
+  
+  /* Gradientes expansivos basados en el ancho de la pantalla (vw) */
+  background: 
+    radial-gradient(50vw 50vw at 0% 100%, rgba(204, 214, 255, 0.7) 0%, rgba(255, 255, 255, 0) 100%),
+    radial-gradient(50vw 50vw at 100% 0%, rgba(204, 225, 255, 0.7) 0%, rgba(255, 255, 255, 0) 100%),
+    #ffffff;
+}
+
+.live-badge {
+  display: inline-flex;
+  align-items: center;
+  background-color: #EFF4FF; /* Fondo azul muy claro */
+  padding: 8px 16px;
+  border-radius: 999px; /* Forma de píldora */
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 13px;
+  gap: 8px; /* Espaciado entre elementos */
+  width: fit-content;
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  background-color: #007953; /* Verde oscuro */
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.live-badge-highlight {
+  color: #005b9f; /* Azul institucional */
+  font-weight: 700;
+  letter-spacing: 0.3px;
+}
+
+.live-badge-divider {
+  width: 1px;
+  height: 14px;
+  background-color: #caced3; /* Línea gris sutil */
+  margin: 0 4px;
+}
+
+.live-badge-text {
+  color: #555555; /* Texto gris */
+  font-weight: 400;
+}
+
+.hero-title {
+  font-size: 3.5rem;
+  font-weight: 800;
+  color: var(--dark-navy);
+  max-width: 800px;
+  line-height: 1.1;
+  margin-bottom: 1rem;
+}
+
+.highlight {
+  color: var(--primary-blue);
+  position: relative;
+}
+
+.highlight::after {
+  content: '';
+  position: absolute;
+  bottom: 5px;
+  left: 0;
+  width: 100%;
+  height: 4px;
+  background-color: var(--primary-blue);
+  border-radius: 2px;
+}
+
+.hero-subtitle {
+  font-size: 1.1rem;
+  color: var(--text-muted);
+  max-width: 700px;
+  margin-bottom: 3rem;
+}
+
+/* Search Widget */
+.search-widget {
+  background: var(--white);
+  border-radius: 16px;
+  padding: 1.5rem;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+  width: 100%;
+  max-width: 900px;
+}
+
+.search-tabs {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.search-tabs .tab {
+  background: none;
+  border: none;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 0.5rem 1rem;
+  border-radius: 999px;
+}
+
+.search-tabs .tab.active {
+  background: var(--primary-blue);
+  color: var(--white);
+}
+
+/* =========================================
+   Corrección de la Caja de Búsqueda Flotante
+   ========================================= */
+.search-widget {
+  background: var(--white);
+  border-radius: 16px;
+  padding: 1.5rem;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
+  width: 100%;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.search-tabs {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.search-tabs .tab {
+  background: none;
+  border: none;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 0.5rem 1rem;
+  border-radius: 999px;
+  transition: all 0.2s ease;
+}
+
+.search-tabs .tab.active {
+  background: #e6f0ff;
+  color: var(--primary-blue);
+  font-weight: 600;
+}
+
+/* Contenedor principal de la barra */
+.search-bar-wrapper {
+  display: flex;
+  gap: 0.75rem;
+  padding: 0.5rem;
+  border-radius: 12px;
+  align-items: center;
+  margin-bottom: 1.25rem;
+  
+}
+
+/* Input con su icono a la izquierda */
+.input-with-icon {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  background: var(--white);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 0 0.75rem;
+  background-color: #e6f0ff;
+}
+
+.icon-prefix {
+  font-size: 0.9rem;
+  margin-right: 0.5rem;
+  opacity: 0.6;
+}
+
+.search-bar-wrapper input {
+  width: 100%;
+  border: none;
+  background: transparent;
+  outline: none;
+  padding: 0.65rem 0;
+  font-size: 0.9rem;
+  color: var(--text-main);
+}
+
+.search-bar-wrapper input::placeholder {
+  color: #a0aec0;
+}
+
+.search-bar-wrapper .btn-filters {
+  background-color: #e6f0ff;
+  color: var(--text-main);
+  border: 1px solid var(--border-color);
+  padding: 0.75rem 1.25rem;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  
+  display: flex;
+  align-items: center;     /* Centrado vertical */
+  justify-content: center;  /* ¡Agregado! Centrado horizontal exacto */
+  gap: 0.4rem;
+  
+  white-space: nowrap;
+  transition: background 0.2s;
+}
+
+/* Asegura que el icono mantenga la misma línea */
+.search-bar-wrapper .btn-filters .icon {
+  display: flex;
+  align-items: center;
+}
+
+.search-bar-wrapper .btn-filters:hover {
+  background: #f8fafc;
+}
+
+/* Botón Explorar principal de la barra */
+.search-bar-wrapper .btn-explore {
+  background: var(--primary-blue);
+  color: var(--white);
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.2s;
+  width: 25%;
+}
+
+.search-bar-wrapper .btn-explore:hover {
+  background: var(--primary-hover);
+}
+
+/* Etiquetas rápidas inferiores */
+.search-tags {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.8rem;
+  flex-wrap: wrap;
+}
+
+.tag-label {
+  font-weight: 700;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+}
+
+.tag {
+  background: var(--bg-element);
+  padding: 0.3rem 0.8rem;
+  border-radius: 999px;
+  color: var(--text-main);
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.tag:hover {
+  background: #e2e8f0;
+}
+
+.tag.urgent {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.search-tags {
+  display: flex;
+  justify-content: center;
+  gap: 0.75rem;
+  font-size: 0.8rem;
+  flex-wrap: wrap;
+}
+
+.tag-label {
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.tag {
+  background: var(--bg-element);
+  padding: 0.2rem 0.75rem;
+  border-radius: 999px;
+  color: var(--text-main);
+}
+
+.tag.urgent {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+/* Stats Section */
+.stats-section {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  padding: 2rem 2rem 4rem;
+  flex-wrap: wrap;
+}
+
+.stat-card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background: var(--white);
+  padding: 1.5rem 2rem;
+  border-radius: 12px;
+  min-width: 250px;
+}
+
+.stat-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+}
+.stat-icon.blue { background: #e0f2fe; }
+.stat-icon.green { background: #dcfce7; }
+.stat-icon.purple { background: #f3e8ff; }
+
+.stat-info h3 {
+  font-size: 1.5rem;
+  color: var(--dark-navy);
+}
+.stat-info p {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+/* CTA Banner */
+.cta-banner {
+  margin: 0 auto;
+  width: 100%;             /* Se expande a lo ancho */
+  max-width: 100vw;        /* Rompe los límites laterales para lucir de fondo completo */
+  box-sizing: border-box;
+  
+  /* Fondo degradado lineal ultra sutil (como la segunda imagen) y sin bordes */
+  background: linear-gradient(90deg, rgba(204, 214, 255, 0.5) 100%, rgba(255, 255, 255, 0) 100%);
+  border: none;            /* Eliminamos el borde marcado anterior */
+  border-radius: 0;        /* Sin bordes redondeados en la sección completa */
+  
+  /* Ajuste de espaciados internos y distribución */
+  padding: 1.5rem 6rem;    /* Genera márgenes generosos a los extremos del contenido */
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.cta-content {
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;             /* Un poco más de espacio entre el círculo del icono y el texto */
+}
+
+.cta-content .cta-icon-wrapper {
+  width: 42px;
+  height: 42px;
+  padding: 9px; /* Crea el espacio interno para que el icono no toque los bordes */
+  box-sizing: border-box;
+  
+  background-color: #CCE5FF; /* Azul suave traslúcido exacto */
+  border-radius: 50%; /* Círculo perfecto */
+  
+  object-fit: contain; /* Evita que la campana se deforme */
+  flex-shrink: 0; /* Evita que el círculo se aplaste en pantallas chicas */
+}
+.cta-content .cta-icon{
+    
+  width: 18px;
+  height: 18px;
+}
+
+.cta-content h3 { 
+  color: var(--primary-blue); 
+  margin: 0 0 0.25rem 0;     /* Aseguramos limpiar márgenes extraños */
+  font-weight: 700;
+  font-size: 1.15rem;
+}
+
+.cta-content p { 
+  color: var(--text-main); 
+  font-size: 0.95rem; 
+  margin: 0;
+}
+
+.cta-actions { 
+  display: flex; 
+  align-items: center;
+  gap: 1.2rem; 
+}
+
+/* Botón Principal Azul (Registrarme ahora) */
+.cta-banner .btn-primary {
+  background-color: #006194; /* Color corporativo */
+  color: #ffffff;
+  border: none;
+  padding: 0.75rem 2rem;
+  border-radius: 50px;       /* Forma de píldora idéntica al diseño */
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+/* Botón Secundario Blanco (Filtrar directorio) */
+.cta-banner .btn-outline {
+  background-color: #ffffff;
+  color: #4a5568;
+  border: 1px solid #e2e8f0;
+  padding: 0.75rem 1.5rem;
+  border-radius: 50px;       /* Forma de píldora idéntica al diseño */
+  font-weight: 500;
+  font-size: 0.9rem;
+  cursor: pointer;
+  box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.05); /* Pequeño relieve suave abajo */
+  white-space: nowrap;
+}
+
+
+/* --- 5. Sección: Necesidades de Fundaciones --- */
+.content-section {
+  max-width: 100%;
+  margin: 0 auto;
+  padding: 3rem;
+  box-sizing: border-box;
+  font-family: system-ui, -apple-system, sans-serif;
+  background: linear-gradient(90deg, rgba(204, 214, 255, 0.2) 100%, rgba(255, 255, 255, 0) 100%);
+}
+/* --- Ajustes en el Contenedor y Encabezado --- */
+.content-section.gray-bg {
+  background-color: #f8fafc; /* Gris ultra suave de fondo para toda la sección */
+  padding: 4rem 2rem;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+
+/* Encabezado Principal */
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end; /* Alinea los filtros abajo con el texto */
+  margin-bottom: 2rem;
+}
+
+.section-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  margin-bottom: 0.5rem;
+  display: block;
+}
+.section-label.red {
+  color: #d32f2f;
+  font-weight: 700;
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+.section-label.green {
+  color: #047857; /* Verde esmeralda para el subtítulo */
+  font-weight: 700;
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+}
+.subsection-title-cards {
+    text-align: left;
+}
+.section-header h2 {
+  color: #0c2340;
+  font-size: 1.8rem;
+  margin: 0.4rem 0;
+  font-weight: 700;
+}
+.section-header p {
+  color: #616e7d;
+  font-size: 0.95rem;
+  margin: 0;
+}
+
+/* Contenedor de Filtros (Derecha) */
+.section-filters {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+/* Botón Panel de Filtros */
+.section-filters .btn-outline.small {
+  background-color: #ffffff;
+  color: #4a5568;
+  border: 1px solid #e2e8f0;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-weight: 500;
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  cursor: pointer;
+}
+
+/* Pastillas de Filtro (Pills) */
+.filter-pills {
+  display: flex;
+  gap: 0.5rem;
+  background-color: #f7faff;
+  padding: 0.25rem;
+  border-radius: 20px;
+}
+.filter-pills .pill {
+  padding: 0.4rem 1rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #616e7d;
+  cursor: pointer;
+  border-radius: 20px;
+  transition: all 0.2s ease;
+}
+.filter-pills .pill.active {
+  background-color: #cce5ff;
+  color: #006194;
+  font-weight: 600;
+}
+
+/* --- Cuadrícula Corregida (Evita el estiramiento horizontal) --- */
+.cards-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr); /* ¡Clave! Fuerza 4 columnas idénticas como la imagen */
+  gap: 1.25rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+/* Estilo Base de la Tarjeta */
+.need-card {
+  background: #ffffff;
+  border: 1px solid #eef2f6;
+  border-radius: 12px;
+  padding: 1.25rem;
+  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.02);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+}
+
+.need-card .btn-primary {
+  background-color: #006194;
+  color: #ffffff;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.need-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+}
+/* Variaciones por prioridad */
+.need-card:has(.urgent)::before { background-color: #e53e3e; }
+.need-card:has(.medium)::before { background-color: #3182ce; }
+
+/* --- Tarjetas de Voluntarios --- */
+.volunteer-card {
+  background: var(--white);
+  border: 1px solid #eef2f6; /* Borde más sutil que el anterior */
+  border-radius: 14px;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+/* Botón Ver Perfil */
+.volunteer-card .btn-outline {
+  background-color: #ffffff;
+  color: #2d3748;
+  border: 1px solid #e2e8f0;
+  padding: 0.45rem 1rem;
+  border-radius: 20px; /* Redondeado tipo píldora */
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  width: auto; /* Evita que ocupe todo el ancho si flex-caja está activo */
+  transition: all 0.2s ease;
+}
+.volunteer-card .btn-outline:hover {
+  background-color: #f7fafc;
+  border-color: #cbd5e0;
+}
+/* Cards (Needs & Volunteers) */
+.need-card, .volunteer-card {
+  background: var(--white);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.volunteer-card .avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  object-fit: cover; /* Recorta los avatares sin deformar sus rostros */
+  border: 1px solid #e2e8f0;
+}
+/* Fila Superior del Avatar */
+.volunteer-card .card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+}
+.volunteer-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 24px rgba(0,0,0,0.06);
+}
+.need-card:hover, .volunteer-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 24px rgba(0,0,0,0.06);
+}
+
+.card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  margin-top: 0.25rem;
+}
+.badge {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.2rem 0.6rem;
+  border-radius: 4px;
+}
+.badge.urgent { background-color: #fff5f5; color: #e53e3e; }
+.badge.medium { background-color: #ebf8ff; color: #3182ce; }
+.time-ago {
+  font-size: 0.75rem;
+  color: #a0aec0;
+}
+
+/* Información de la Fundación */
+.foundation-info {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+.org-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background-color: #e6f0ff;
+  color: #006194;
+  font-weight: 700;
+  font-size: 0.8rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.org-icon.purple { background-color: #faf5ff; color: #6b46c1; }
+.foundation-info h4 {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #2d3748;
+  font-weight: 600;
+}
+.foundation-info .location {
+  margin: 0;
+  font-size: 0.75rem;
+  color: #718096;
+}
+.org-icon.blue-vibrant { background-color: #ebf8ff; color: #2b6cb0; }
+.org-icon.blue-dark { background-color: #e6fffa; color: #234e52; }
+.location { 
+  font-size: 0.78rem; 
+  color: var(--text-muted); 
+  margin: 0 0 1.25rem 0;
+}
+
+/* Tipografía Interna */
+.volunteer-name { 
+  font-size: 1.1rem; 
+  color: var(--dark-navy); 
+  margin: 0 0 0.15rem 0; 
+  font-weight: 700;
+  line-height: 1.3; 
+}
+.need-title, .volunteer-name { font-size: 1.1rem; color: var(--dark-navy); margin-bottom: 0.5rem; line-height: 1.3; }
+/* Título y Descripción de la necesidad */
+.need-title {
+  font-size: 1.05rem;
+  color: #0c2340;
+  margin: 0 0 0.5rem 0;
+  font-weight: 700;
+  line-height: 1.4;
+  min-height: 44px; /* Mantiene la alineación aunque el título tenga menos texto */
+}
+.need-desc {
+  font-size: 0.85rem;
+  color: #718096;
+  margin: 0 0 1.25rem 0;
+  line-height: 1.5;
+}
+.volunteer-profession { 
+  font-size: 0.85rem; 
+  color: #006194; /* Tu azul principal */
+  font-weight: 600; 
+  margin-bottom: 0.3rem; 
+}
+
+/* --- Sección de Progreso (Idéntica a la imagen) --- */
+.progress-container {
+  background-color: #f7fafc;
+  padding: 0.75rem;
+  border-radius: 8px;
+  margin-bottom: 1.25rem;
+}
+.progress-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  color: #4a5568;
+  margin-bottom: 0.5rem;
+}
+/* Barra de progreso sutil */
+.progress-bar {
+  width: 100%;
+  height: 6px;
+  background-color: #edf2f7;
+  border-radius: 3px;
+  overflow: hidden;
+  margin-bottom: 0.4rem;
+}
+.progress-bar .fill {
+  height: 100%;
+  background-color: #006194; /* Color por defecto */
+  border-radius: 3px;
+}
+.progress-bar .fill.purple { background-color: #6b46c1; }
+.progress-stats {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  color: #a0aec0;
+}
+
+/* Acciones Inferiores (Alineadas abajo) */
+.card-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: auto; /* Empuja esta fila al fondo */
+  gap: 0.5rem;
+}
+.verified-tag {
+  font-size: 0.8rem;
+  color: #319795;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.2rem;
+}
+.verified-tag.light {
+  font-size: 0.78rem;
+  color: #a0aec0;
+  font-weight: 500;
+  white-space: nowrap;
+}
+.verified-tag.blue { color: var(--primary-blue); background: #e6f0ff; padding: 0.2rem 0.5rem; border-radius: 4px; }
+.full-width { flex: 1; }
+
+.avatar { width: 50px; height: 50px; border-radius: 50%; object-fit: cover; }
+/* Badges de Disponibilidad */
+.availability-badge {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.25rem 0.7rem;
+  border-radius: 20px;
+  background-color: #e6fdf5; /* Verde claro por defecto (Viaja Nal) */
+  color: #047857;
+}
+.availability-badge.local {
+  background-color: #eff6ff; /* Azul claro para el badge Local */
+  color: #1e40af;
+}
+
+/* Caja de Servicio (Idéntica a la maqueta gris) */
+.service-box { 
+  background: #f4f7fc; /* Gris azulado limpio */
+  padding: 0.75rem 1rem; 
+  border-radius: 10px; 
+  margin: 0 0 1rem 0; 
+  text-align: left;
+}
+.service-box .box-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #4a5568;
+  display: block;
+  margin-bottom: 0.25rem;
+  letter-spacing: 0.03em;
+}
+.box-label { font-size: 0.65rem; font-weight: 700; color: var(--text-muted); letter-spacing: 0.5px; display: block; margin-bottom: 0.25rem; }
+.service-box p { 
+  font-size: 0.82rem; 
+  color: var(--text-main); 
+  line-height: 1.4; 
+  margin: 0;
+}
+/* Información de Horarios */
+.schedule-info { 
+  font-size: 0.8rem; 
+  color: #4a5568; 
+  margin-bottom: 1.5rem; 
+  display: flex; 
+  align-items: center; 
+  gap: 0.4rem; 
+}
+
+/* Buttons Utilities */
+.btn-success {
+  background-color: #047857;
+  color: #ffffff;
+  border: none;
+  padding: 0.6rem 1.4rem;
+  border-radius: 20px; /* Bordes completamente redondeados */
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  align-items: center;
+  display: inline-flex;
+  gap: 0.2rem;
+}
+.btn-success:hover {
+  background-color: #065f46;
+}
+.btn-primary.small, .btn-outline.small { padding: 0.5rem 1rem; font-size: 0.85rem; }
+
+/* Footer */
+.home-footer {background: linear-gradient(90deg, rgba(204, 214, 255, 0.2) 100%, rgba(255, 255, 255, 0) 100%); padding: 4rem 2rem 2rem; border-top: 1px solid var(--border-color); }
+.footer-content { max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: 1.5fr 2fr; gap: 4rem; margin-bottom: 3rem; }
+.footer-brand p { color: var(--text-muted); font-size: 0.9rem; margin: 1rem 0; max-width: 300px; }
+.footer-links { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2rem; }
+.link-group h4 { color: var(--dark-navy); margin-bottom: 1.25rem; font-size: 0.95rem; }
+.link-group a { display: block; color: var(--text-muted); margin-bottom: 0.75rem; font-size: 0.85rem; font-weight: 400; }
+.link-group a:hover { color: var(--primary-blue); }
+.footer-bottom { max-width: 1200px; margin: 0 auto; padding-top: 2rem; border-top: 1px solid var(--border-color); display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--text-muted); }
+/* fin de home.tsx */
