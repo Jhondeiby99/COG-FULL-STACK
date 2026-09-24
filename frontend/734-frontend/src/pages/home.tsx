@@ -1,18 +1,35 @@
+import iconFiltrosUrl from '../assets/icons/icon-filtros.svg';
+import SearchIcon from '../assets/icons/SearchIcon.svg';
+import arrowDownIcon from '../assets/icons/arrowDownIcon.svg';
+import PersonIcon from '../assets/icons/PersonIcon.svg';
+import CampanaIcon from '../assets/icons/CampanaIcon.svg';
+import FiltroDirectorio from '../assets/icons/FiltroDirectorio.svg';
+import EdificioIcon from '../assets/icons/EdificioIcon.svg';
+import ManoIcon from '../assets/icons/ManoIcon.svg';
+import PaqueteIcon from '../assets/icons/PaqueteIcon.svg';
+import IconVoluntario from '../assets/icons/IconVoluntario.svg';
+import IconVerify from '../assets/icons/IconVerify.svg';
+
 export function Home() {
   return (
     <div className="home-layout">
-      {/* 1. Barra de Navegación (Header) */}
       <header className="home-header">
         <div className="header-left">
-          <button className="btn-icon">
-            <span className="icon">⚙️</span> Filtros avanzados
+           {/* Botón de Filtros */}
+          <button className="btn-filtros">
+            <img src={iconFiltrosUrl} className="icon-svg" alt="Filtros" />
+            Filtros avanzados
+            <span className="badge">3</span>
           </button>
+
+          {/* Buscador */}
           <div className="header-search">
-            <span className="icon">🔍</span>
+            <img src={SearchIcon} className="icon-search" alt="Buscar" />
             <input type="text" placeholder="Causas, fundaciones..." />
           </div>
         </div>
         
+        {/* Centro - Logo / Hora */}
         <div className="header-center">
           <div className="brand-logo-center">
             <span className="time-text">7:34 AM</span>
@@ -20,14 +37,18 @@ export function Home() {
           </div>
         </div>
 
+        {/* Derecha - Acciones de Usuario */}
         <div className="header-right">
-            <div className="header-right-inicre">
-                <a href="#" className="nav-link">Iniciar sesión</a>
-               <button className="btn-primary small">
-                Crear usuario <span>▼</span>
-                </button>
-                <div className="avatar-circle small">👤</div>
+          <div className="header-right-inicre">
+            <a href="#" className="nav-link">Iniciar sesión</a>
+            <button className="btn-primary small">
+              Crear usuario 
+              <img src={arrowDownIcon} className="icon-arrow" alt="Desplegar" />
+            </button>
+            <div className="avatar-circle small">
+              <img src={PersonIcon} className="icon-person" alt="Usuario" />
             </div>
+          </div>
         </div>
       </header>
 
@@ -36,7 +57,9 @@ export function Home() {
         <section className="hero-section">
           <div className="live-badge">
             <span className="status-dot"></span>
-            07:34 AM • RED NACIONAL ACTIVA | Conectando en tiempo real
+            <span className="live-badge-highlight">07:34 AM • RED NACIONAL ACTIVA</span>
+            <span className="live-badge-divider"></span>
+            <span className="live-badge-text">Conectando en tiempo real</span>
           </div>
           
           <h1 className="hero-title">
@@ -56,7 +79,7 @@ export function Home() {
             
             <div className="search-bar-wrapper">
               <div className="input-with-icon">
-                <span className="icon-prefix">🔍</span>
+                <span className="icon-prefix"><img src={SearchIcon} alt="Buscar" /></span>
                 <input 
                   type="text" 
                   placeholder="Buscar por necesidad, comuna, profesión, insumo o fundación..." 
@@ -64,7 +87,7 @@ export function Home() {
               </div>
 
               <button type="button" className="btn-filters">
-                <span className="icon">⚙️</span> Filtros
+                <span className="icon"><img src={iconFiltrosUrl} alt="Filtros" /></span> Filtros
               </button>
 
               <button type="button" className="btn-primary btn-explore">
@@ -80,37 +103,40 @@ export function Home() {
               <span className="tag urgent">🔴 Alta Prioridad</span>
             </div>
           </div>
+          {/* 3. Estadísticas */}
+          <section className="stats-section">
+            <div className="stat-card">
+              <div className="stat-icon blue"><img src={EdificioIcon} alt="Edificio" /></div>
+              <div className="stat-info">
+                <h3>+120</h3>
+                <p>Fundaciones auditadas y activas</p>
+              </div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-icon green"><img src={ManoIcon} alt="Mano" /></div>
+              <div className="stat-info">
+                <h3>+1,450</h3>
+                <p>Voluntarios con perfil verificado</p>
+              </div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-icon purple"><img src={PaqueteIcon} alt="Paquete" /></div>
+              <div className="stat-info">
+                <h3>+3,800</h3>
+                <p>Donaciones e insumos canalizados</p>
+              </div>
+            </div>
+          </section>
         </section>
 
-        {/* 3. Estadísticas */}
-        <section className="stats-section">
-          <div className="stat-card">
-            <div className="stat-icon blue">🏢</div>
-            <div className="stat-info">
-              <h3>+120</h3>
-              <p>Fundaciones auditadas y activas</p>
-            </div>
-          </div>
-          <div className="stat-card">
-            <div className="stat-icon green">🤝</div>
-            <div className="stat-info">
-              <h3>+1,450</h3>
-              <p>Voluntarios con perfil verificado</p>
-            </div>
-          </div>
-          <div className="stat-card">
-            <div className="stat-icon purple">📦</div>
-            <div className="stat-info">
-              <h3>+3,800</h3>
-              <p>Donaciones e insumos canalizados</p>
-            </div>
-          </div>
-        </section>
+        
 
         {/* 4. Banner CTA */}
         <section className="cta-banner">
           <div className="cta-content">
-            <span className="icon">💡</span>
+            <div className="cta-icon-wrapper">
+            <img src={CampanaIcon} className="cta-icon" alt="Campana" />
+            </div>
             <div>
               <h3>¿Quieres ser parte de las soluciones de hoy?</h3>
               <p>Registra tu causa social o comparte tus horas de profesión.</p>
@@ -118,20 +144,20 @@ export function Home() {
           </div>
           <div className="cta-actions">
             <button className="btn-primary">Registrarme ahora</button>
-            <button className="btn-outline">≡ Filtrar directorio</button>
+            <button className="btn-outline"><img src={FiltroDirectorio} alt="Filtrar directorio" />Filtrar directorio</button>
           </div>
         </section>
 
         {/* 5. Sección: Necesidades de Fundaciones */}
         <section className="content-section">
           <div className="section-header">
-            <div>
+            <div className="subsection-title-cards">
               <span className="section-label red">🔴 LLAMADOS URGENTES</span>
               <h2>Necesidades de Fundaciones</h2>
               <p>Requerimientos puntuales, verificados por nuestro comité de transparencia comunitaria.</p>
             </div>
             <div className="section-filters">
-              <button className="btn-outline small">⚙️ Panel de Filtros</button>
+              <button className="btn-outline small"><img src={iconFiltrosUrl} alt="Filtro" /> Panel de Filtros</button>
               <div className="filter-pills">
                 <span className="pill active">Todas (4)</span>
                 <span className="pill">Alimentos</span>
@@ -213,12 +239,12 @@ export function Home() {
         {/* 6. Sección: Voluntarios Disponibles */}
         <section className="content-section gray-bg">
           <div className="section-header">
-            <div>
+            <div className="subsection-title-cards">
               <span className="section-label green">🟢 TALENTO & SOLIDARIDAD</span>
               <h2>Voluntarios Disponibles</h2>
               <p>Profesionales y ciudadanos dispuestos a donar horas, conocimientos y experiencia.</p>
             </div>
-            <button className="btn-success">⊕ Ofrecer voluntariado</button>
+            <button className="btn-success"><img src={IconVoluntario} className='icon-svg' alt="Icono de Voluntariado" /> Ofrecer voluntariado</button>
           </div>
 
           <div className="cards-grid">
@@ -281,7 +307,7 @@ export function Home() {
           <div className="footer-brand">
             <h2 className="time-text">7:34 AM</h2>
             <p>Plataforma cívica de solidaridad transparente que canaliza voluntades hacia causas de impacto social comprobable.</p>
-            <span className="verified-tag blue">✓ Impacto Verificado</span>
+            <span className="verified-tag blue"><img src={IconVerify} className="icon-svg" alt="Icono de Verificación" /> Impacto Verificado</span>
           </div>
           
           <div className="footer-links">
