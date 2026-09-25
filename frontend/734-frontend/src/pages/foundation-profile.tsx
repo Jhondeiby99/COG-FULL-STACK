@@ -1,13 +1,9 @@
 import { useMemo, useState, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
-import IconVerify from '../assets/icons/IconVerify.svg';
 import { Header } from '../components/Header.tsx';
 import { Footer } from '../components/Footer.tsx';
-import  ManoIcon from '../assets/icons/ManoIcon2.svg'
-import  MensajeIcon from '../assets/icons/MensajeIcon.svg'
-import  CompartirIcon from '../assets/icons/CompartirIcon.svg'
-import  EnviarIcon from '../assets/icons/EnviarIcon.svg'
-import  EnviarIconWhite from '../assets/icons/EnviarIconWhite.svg'
+import * as Icons from "../assets/icons/index.ts";
+
 
 const CAUSE_TAGS = ['Primera infancia', 'Nutrición comunitaria', 'Educación', 'Salud preventiva'];
 const CHANNELS = ['Nutrición', 'Salud', 'Educación', 'Infraestructura'];
@@ -167,7 +163,7 @@ export function FoundationProfile() {
                         Fundación Huellas de Esperanza
                       </h1>
                       <span className="inline-flex items-center gap-1.5 rounded-full bg-[#edf6ff] px-2.5 py-0.5 text-xs font-bold text-[#005684]">
-                        <img src={IconVerify} alt="Verificado" className="size-3.5" />
+                        <img src={Icons.IconVerify} alt="Verificado" className="size-3.5" />
                         Verificada Oficial
                       </span>
                     </div>
@@ -175,13 +171,17 @@ export function FoundationProfile() {
                     {/* Línea de Metadatos (NIT, Ubicación, RUT) */}
                     <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs font-medium text-[#64748b] md:text-sm">
                       <span className="flex items-center gap-1">
-                        <span className="opacity-60">🪪</span> NIT: 901.432.889-4
+                        <span className="opacity-60">
+                          <img src={Icons.NitIcon}></img>
+                        </span> NIT: 901.432.889-4
                       </span>
                       <span className="flex items-center gap-1">
-                        <span className="text-blue-500">📍</span> Bogotá D.C., Localidad Chapinero
+                        <span className="text-blue-500">
+                          <img src={Icons.UbicacionIcon}></img>
+                        </span> Bogotá D.C., Localidad Chapinero
                       </span>
                       <span className="flex items-center gap-1 text-[#047857] font-bold">
-                        <span>✓</span> RUT y Personería Vigente
+                        <span><img src={Icons.CheckVerifyIcon}></img></span> RUT y Personería Vigente
                       </span>
                     </div>
 
@@ -208,7 +208,7 @@ export function FoundationProfile() {
                     className="flex items-center justify-center gap-2 rounded-xl bg-[#e8f2ff] px-5 py-2.5 text-sm font-bold text-[#005684] transition hover:bg-[#d4e7fe] flex-1 sm:flex-none"
                   >
                     <span>
-                      <img src={MensajeIcon} alt='Contacto'></img>
+                      <img src={Icons.MensajeIcon} alt='Contacto'></img>
                     </span> Contactar
                   </button>
 
@@ -218,7 +218,7 @@ export function FoundationProfile() {
                     className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-[#e8f2ff] text-[#005684] transition hover:bg-[#d4e7fe]"
                     aria-label="Compartir"
                   >
-                    <span className="text-sm"><img src={CompartirIcon} alt='Compartir'></img></span>
+                    <span className="text-sm"><img src={Icons.CompartirIcon} alt='Compartir'></img></span>
                   </button>
 
                   {/* Botón Donar ahora (Fondo azul marino continuo) */}
@@ -227,7 +227,7 @@ export function FoundationProfile() {
                     className="flex items-center justify-center gap-2 rounded-xl bg-[#005684] px-6 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-[#00456a] flex-1 sm:flex-none"
                   >
                     <span>
-                      <img src={ManoIcon} alt='Donar'></img>
+                      <img src={Icons.ManoIcon} alt='Donar'></img>
                       </span> Donar ahora
                   </button>
                 </div>
@@ -241,7 +241,7 @@ export function FoundationProfile() {
                 value="8" 
                 unit="años continuos" 
                 hint="Desde marzo de 2017" 
-                icon="📈" // Reemplaza por tu icono o SVG de trayectoria
+                icon={Icons.TrayectoriaIcon} // Reemplaza por tu icono o SVG de trayectoria
               />
               <Stat 
                 label="Población Activa" 
@@ -249,14 +249,14 @@ export function FoundationProfile() {
                 unit="beneficiarios directos" 
                 hint="Adultos mayores en Chapinero" 
                 hintColor="text-[#10b981]" // Color verde para el mockup
-                icon="👥" // Reemplaza por tu icono o SVG de usuarios
+                icon={Icons.PersonsIcon} // Reemplaza por tu icono o SVG de usuarios
               />
               <Stat 
                 label="Reputación Social" 
                 value="4.9" 
                 unit="⭐⭐⭐⭐⭐" // Aquí puedes mapear tus estrellas fijas
                 hint="124 opiniones auditadas" 
-                icon="⭐" // Reemplaza por tu icono o SVG de estrella
+                icon={Icons.StarIcon} // Reemplaza por tu icono o SVG de estrella
               />
               <Stat 
                 label="Efectividad" 
@@ -264,7 +264,7 @@ export function FoundationProfile() {
                 unit="necesidades resueltas" 
                 hint="100% rendición verificada" 
                 hintColor="text-[#005684] font-bold" // Color azul destacado
-                icon="🛡️" // Reemplaza por tu icono o SVG de verificación
+                icon={Icons.CheckVerifyIcon} // Reemplaza por tu icono o SVG de verificación
               />
             </div>
 
@@ -291,9 +291,9 @@ export function FoundationProfile() {
                   </p>
 
                   <div className="mt-6 grid gap-4 sm:grid-cols-3">
-                    <InfoChip icon="📄" title="Tipo de entidad" value="Fundación sin ánimo de lucro" />
+                    <InfoChip icon={Icons.EntidadIcon} title="Tipo de entidad" value="Fundación sin ánimo de lucro" />
                     <InfoChip icon="⚖️" title="Cobertura legal" value="Registro Cámara de Comercio" />
-                    <InfoChip icon="🛡️" title="Confianza" value="Comité de transparencia 7:34 AM" />
+                    <InfoChip icon={Icons.IconVerify} title="Confianza" value="Comité de transparencia 7:34 AM" />
                   </div>
 
                   <div className="mt-8 flex items-center gap-5 rounded-xl border border-[#e2e8f0] bg-[#f8fafc] p-5">
@@ -403,7 +403,7 @@ export function FoundationProfile() {
                 <div className="flex items-start gap-3">
                   <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-[#e6f0ff] text-[#005684]">
                     {/* Icono de avión de papel / enviar */}
-                    <span className="text-lg"><img src={EnviarIcon}></img></span> 
+                    <span className="text-lg"><img src={Icons.EnviarIcon}></img></span> 
                   </div>
                   <div>
                     <h3 className="m-0 text-[15px] font-bold text-[#071d37]">Contacto Directo</h3>
@@ -465,7 +465,7 @@ export function FoundationProfile() {
                     type="submit" 
                     className="w-full flex items-center justify-center gap-2 text-xs font-bold text-white bg-[#005684] py-3 rounded-xl hover:bg-[#00456a] transition-all shadow-sm mt-1"
                   >
-                    <span><img src={EnviarIconWhite}></img></span> Enviar mensaje a coordinación
+                    <span><img src={Icons.EnviarIconWhite}></img></span> Enviar mensaje a coordinación
                   </button>
 
                 </form>
@@ -479,7 +479,9 @@ export function FoundationProfile() {
                   {/* Teléfono */}
                   <div className="flex items-start gap-3">
                     <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-[#e6f0ff] text-[#005684]">
-                      <span className="text-xs">📞</span>
+                      <span className="text-xs">
+                        <img src={Icons.PhoneIcon}></img>
+                      </span>
                     </div>
                     <div className="flex flex-col">
                       <span className="text-[11px] font-bold text-[#a0aec0] tracking-wide uppercase">Línea Verificada</span>
@@ -490,7 +492,9 @@ export function FoundationProfile() {
                   {/* Correo Electrónico */}
                   <div className="flex items-start gap-3">
                     <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-[#e6f0ff] text-[#005684]">
-                      <span className="text-xs">✉️</span>
+                      <span className="text-xs">
+                        <img src={Icons.CorreoIcon}></img>
+                      </span>
                     </div>
                     <div className="flex flex-col min-w-0">
                       <span className="text-[11px] font-bold text-[#a0aec0] tracking-wide uppercase">Correo Institucional</span>
@@ -501,7 +505,9 @@ export function FoundationProfile() {
                   {/* Dirección */}
                   <div className="flex items-start gap-3">
                     <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-[#e6f0ff] text-[#005684]">
-                      <span className="text-xs">📍</span>
+                      <span className="text-xs">
+                        <img src={Icons.UbicacionIcon}></img>
+                      </span>
                     </div>
                     <div className="flex flex-col">
                       <span className="text-[11px] font-bold text-[#a0aec0] tracking-wide uppercase">Sede de Acopio y Atención</span>
@@ -518,9 +524,15 @@ export function FoundationProfile() {
                 <div className="flex items-center justify-between w-full pt-1">
                   <span className="text-xs font-bold text-[#475569]">Canales digitales:</span>
                   <div className="flex items-center gap-2">
-                    <button className="flex size-8 items-center justify-center rounded-lg bg-[#f4f7fc] text-[#005684] hover:bg-[#e6f0ff] text-xs transition-colors">📸</button>
-                    <button className="flex size-8 items-center justify-center rounded-lg bg-[#f4f7fc] text-[#005684] hover:bg-[#e6f0ff] text-xs transition-colors">🌐</button>
-                    <button className="flex size-8 items-center justify-center rounded-lg bg-[#f4f7fc] text-[#005684] hover:bg-[#e6f0ff] text-xs transition-colors">📢</button>
+                    <button className="flex size-8 items-center justify-center rounded-lg bg-[#f4f7fc] text-[#005684] hover:bg-[#e6f0ff] text-xs transition-colors">
+                      <img src={Icons.CameraIcon}></img>
+                    </button>
+                    <button className="flex size-8 items-center justify-center rounded-lg bg-[#f4f7fc] text-[#005684] hover:bg-[#e6f0ff] text-xs transition-colors">
+                      <img src={Icons.MundoIcon}></img>
+                    </button>
+                    <button className="flex size-8 items-center justify-center rounded-lg bg-[#f4f7fc] text-[#005684] hover:bg-[#e6f0ff] text-xs transition-colors">
+                      <img src={Icons.RedIcon}></img>
+                    </button>
                   </div>
                 </div>
 
@@ -536,7 +548,9 @@ export function FoundationProfile() {
                     />
                   </div>
                   <div className="mt-3 flex items-start gap-2">
-                    <span className="text-[#005684]">📍</span>
+                    <span className="text-[#005684]">
+                      <img src={Icons.UbicacionIcon}></img>
+                    </span>
                     <p className="m-0 text-sm font-medium text-[#475569]">Chapinero, Bogotá D.C.<br/><span className="text-xs text-[#94a3b8]">Colombia</span></p>
                   </div>
                 </SidebarCard>
@@ -546,7 +560,7 @@ export function FoundationProfile() {
                   {/* Icono de Escudo Verificado */}
                   <div className="text-[#005684] shrink-0 mt-0.5 bg-transparent size-8 rounded-xl flex items-center justify-center">
                     {/* Escudo con check azul */}
-                    <span className="text-base font-bold"><img className="w-[16px] h-[20px]" src={IconVerify}></img></span> 
+                    <span className="text-base font-bold"><img className="w-[16px] h-[20px]" src={Icons.IconVerify}></img></span> 
                   </div>
 
                   {/* Contenido de Texto */}
@@ -612,7 +626,7 @@ interface StatProps {
   unit: string;
   hint: string;
   hintColor?: string;
-  icon: React.ReactNode;
+  icon: string;
 }
 
 function Stat({ value, label, unit, hint, hintColor = "text-[#64748b]", icon }: StatProps) {
@@ -625,7 +639,7 @@ function Stat({ value, label, unit, hint, hintColor = "text-[#64748b]", icon }: 
           {label}
         </span>
         <div className="text-sm opacity-80 shrink-0">
-          {icon}
+          <img src={icon}></img>
         </div>
       </div>
       
@@ -653,7 +667,9 @@ function InfoChip({ icon, title, value }: { icon: string; title: string; value: 
   return (
     <div className="flex flex-col rounded-xl bg-[#f8fafc] border border-[#e2e8f0] p-4">
       <div className="flex items-center gap-2 mb-2">
-        <span className="text-lg">{icon}</span>
+        <span className="text-lg">
+          <img src={icon}></img>
+        </span>
         <p className="m-0 text-[11px] font-extrabold tracking-wider text-[#005684] uppercase">{title}</p>
       </div>
       <p className="m-0 text-sm font-bold text-[#0f2a3f]">{value}</p>
@@ -732,7 +748,7 @@ function NeedCard({ need }: { need: (typeof NEEDS)[number] }) {
       
       <div className="mt-4 flex items-center justify-between pt-2">
         <span className="flex items-center gap-1.5 text-xs font-extrabold text-[#047857]">
-          <img src={IconVerify} alt="Verificado" className="size-3.5" /> Verificada
+          <img src={Icons.IconVerify} alt="Verificado" className="size-3.5" /> Verificada
         </span>
         <button
           type="button"
