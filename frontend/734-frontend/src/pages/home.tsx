@@ -1,7 +1,5 @@
 import iconFiltrosUrl from '../assets/icons/icon-filtros.svg';
 import SearchIcon from '../assets/icons/SearchIcon.svg';
-import arrowDownIcon from '../assets/icons/arrowDownIcon.svg';
-import PersonIcon from '../assets/icons/PersonIcon.svg';
 import CampanaIcon from '../assets/icons/CampanaIcon.svg';
 import FiltroDirectorio from '../assets/icons/FiltroDirectorio.svg';
 import EdificioIcon from '../assets/icons/EdificioIcon.svg';
@@ -9,48 +7,13 @@ import ManoIcon from '../assets/icons/ManoIcon.svg';
 import PaqueteIcon from '../assets/icons/PaqueteIcon.svg';
 import IconVoluntario from '../assets/icons/IconVoluntario.svg';
 import IconVerify from '../assets/icons/IconVerify.svg';
+import { Header } from '../components/Header.tsx';
+import { Footer } from '../components/Footer.tsx';
 
 export function Home() {
   return (
     <div className="home-layout">
-      <header className="home-header">
-        <div className="header-left">
-           {/* Botón de Filtros */}
-          <button className="btn-filtros">
-            <img src={iconFiltrosUrl} className="icon-svg" alt="Filtros" />
-            Filtros avanzados
-            <span className="badge">3</span>
-          </button>
-
-          {/* Buscador */}
-          <div className="header-search">
-            <img src={SearchIcon} className="icon-search" alt="Buscar" />
-            <input type="text" placeholder="Causas, fundaciones..." />
-          </div>
-        </div>
-        
-        {/* Centro - Logo / Hora */}
-        <div className="header-center">
-          <div className="brand-logo-center">
-            <span className="time-text">7:34 AM</span>
-            <span className="brand-slogan">Conectando voluntades y causas</span>
-          </div>
-        </div>
-
-        {/* Derecha - Acciones de Usuario */}
-        <div className="header-right">
-          <div className="header-right-inicre">
-            <a href="#" className="nav-link">Iniciar sesión</a>
-            <button className="btn-primary small">
-              Crear usuario 
-              <img src={arrowDownIcon} className="icon-arrow" alt="Desplegar" />
-            </button>
-            <div className="avatar-circle small">
-              <img src={PersonIcon} className="icon-person" alt="Usuario" />
-            </div>
-          </div>
-        </div>
-      </header>
+      <Header />
 
       <main className="home-main">
         {/* 2. Sección Hero y Búsqueda Principal */}
@@ -177,7 +140,11 @@ export function Home() {
               <div className="foundation-info">
                 <div className="org-icon">HE</div>
                 <div>
-                  <h4>Fundación Huellas de Esperanza</h4>
+                  <h4>
+                    <a href="/fundacion" style={{ color: 'inherit' }}>
+                      Fundación Huellas de Esperanza
+                    </a>
+                  </h4>
                   <p className="location">📍 Bogotá, Chapinero</p>
                 </div>
               </div>
@@ -302,43 +269,7 @@ export function Home() {
       </main>
 
       {/* 7. Footer */}
-      <footer className="home-footer">
-        <div className="footer-content">
-          <div className="footer-brand">
-            <h2 className="time-text">7:34 AM</h2>
-            <p>Plataforma cívica de solidaridad transparente que canaliza voluntades hacia causas de impacto social comprobable.</p>
-            <span className="verified-tag blue"><img src={IconVerify} className="icon-svg" alt="Icono de Verificación" /> Impacto Verificado</span>
-          </div>
-          
-          <div className="footer-links">
-            <div className="link-group">
-              <h4>Explorar</h4>
-              <a href="#">Necesidades activas</a>
-              <a href="#">Directorio de Fundaciones</a>
-              <a href="#">Bolsa de Voluntariado</a>
-              <a href="#">Cómo funciona</a>
-            </div>
-            <div className="link-group">
-              <h4>Comunidad</h4>
-              <a href="#">Registrar Organización</a>
-              <a href="#">Sumarse como Voluntario</a>
-              <a href="#">Preguntas frecuentes</a>
-              <a href="#">Reportes de Rendición</a>
-            </div>
-            <div className="link-group">
-              <h4>Legal & Contacto</h4>
-              <a href="#">Política de Privacidad</a>
-              <a href="#">Términos de Servicio</a>
-              <a href="#">Canal de Coordinación</a>
-              <a href="#" className="email-link">contacto@734am.org</a>
-            </div>
-          </div>
-        </div>
-        <div className="footer-bottom">
-          <p>© 2025 7:34 AM. Plataforma de solidaridad y voluntariado comunitario.</p>
-          <p>Despertando el compromiso social a cada hora.</p>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }
