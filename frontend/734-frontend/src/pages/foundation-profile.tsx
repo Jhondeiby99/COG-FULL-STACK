@@ -578,7 +578,7 @@ export function FoundationProfile() {
           </div>
           <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
             <Link
-              to="/login"
+              to="/SignUp"
               className="rounded-lg bg-[#FFFFFF] px-6 py-3 text-center text-[15px] font-bold !text-black no-underline shadow-md transition whitespace-nowrap"
             >
               Registrarme ahora
