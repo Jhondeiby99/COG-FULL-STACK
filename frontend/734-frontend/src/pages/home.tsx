@@ -9,6 +9,7 @@ import IconVoluntario from '../assets/icons/IconVoluntario.svg';
 import IconVerify from '../assets/icons/IconVerify.svg';
 import { Header } from '../components/Header.tsx';
 import { Footer } from '../components/Footer.tsx';
+import { Link } from 'react-router-dom';
 
 export function Home() {
   return (
@@ -106,7 +107,10 @@ export function Home() {
             </div>
           </div>
           <div className="cta-actions">
+            <Link
+            to="/signup">
             <button className="btn-primary">Registrarme ahora</button>
+            </Link>
             <button className="btn-outline"><img src={FiltroDirectorio} alt="Filtrar directorio" />Filtrar directorio</button>
           </div>
         </section>

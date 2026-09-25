@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 export function Login() {
     // 1. Creamos el estado para saber cuál está activo por defecto
   const [activeUserType, setActiveUserType] = useState<'voluntario' | 'fundacion'>('voluntario');
@@ -97,9 +98,12 @@ export function Login() {
             </div>
 
             {/* Botón Principal */}
-            <button type="submit" className="btn-primary">
-              Iniciar Sesión en 7:34 AM <span>→</span>
-            </button>
+            <Link
+            to="/">
+              <button type="submit" className="btn-primary">
+                Iniciar Sesión en 7:34 AM <span>→</span>
+              </button>
+            </Link>
           </form>
           
           {/* Divisor */}
@@ -128,7 +132,10 @@ export function Login() {
 
           {/* Footer */}
           <div className="login-footer">
-            <p>¿Aún no tienes cuenta? <a href="#">Regístrate gratis ↗</a></p>
+            <Link
+            to="/signup">
+            <p>¿Aún no tienes cuenta?Regístrate gratis ↗</p>
+            </Link>
           </div>
 
         </div>

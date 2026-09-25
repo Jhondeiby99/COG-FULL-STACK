@@ -3,6 +3,7 @@ import iconFiltrosUrl from '../assets/icons/icon-filtros.svg';
 import SearchIcon from '../assets/icons/SearchIcon.svg';
 import arrowDownIcon from '../assets/icons/arrowDownIcon.svg';
 import PersonIcon from '../assets/icons/PersonIcon.svg';
+import { Link } from 'react-router-dom';
 
 interface HeaderProps {
   onSearchChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
@@ -48,10 +49,13 @@ export function Header({
       <div className="header-right">
         <div className="header-right-inicre">
           <a href="/login" className="nav-link">Iniciar sesión</a>
+          <Link
+          to="/signup">
           <button className="btn-primary small" type="button">
             Crear usuario 
             <img src={arrowDownIcon} className="icon-arrow" alt="Desplegar" />
           </button>
+          </Link>
           <div className="avatar-circle small">
             <img src={PersonIcon} className="icon-person" alt="Usuario" />
           </div>
