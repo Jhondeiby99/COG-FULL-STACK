@@ -1,3 +1,7 @@
+import { useEffect, useState } from 'react';
+import { supabase } from '../lib/supabase';
+import { Link } from 'react-router-dom';
+
 import iconFiltrosUrl from '../assets/icons/icon-filtros.svg';
 import SearchIcon from '../assets/icons/SearchIcon.svg';
 import CampanaIcon from '../assets/icons/CampanaIcon.svg';
@@ -6,18 +10,111 @@ import EdificioIcon from '../assets/icons/EdificioIcon.svg';
 import ManoIcon from '../assets/icons/ManoIcon.svg';
 import PaqueteIcon from '../assets/icons/PaqueteIcon.svg';
 import IconVoluntario from '../assets/icons/IconVoluntario.svg';
-import IconVerify from '../assets/icons/IconVerify.svg';
 import { Header } from '../components/Header.tsx';
 import { Footer } from '../components/Footer.tsx';
-import { Link } from 'react-router-dom';
+
+// Tipos básicos
+type Fundacion = { id: string; nombre_legal: string; ubicacion: string };
+type Necesidad = {
+  id: string;
+  titulo: string;
+  descripcion: string;
+  categoria: string;
+  prioridad: 'alta' | 'media' | 'baja';
+  meta_texto: string;
+  porcentaje_recaudado: number;
+  fundacion: Fundacion;
+};
+type Voluntario = {
+  id: string;
+  nombre_completo: string;
+  profesion: string;
+  ubicacion: string;
+  sobre_mi: string;
+  avatar_url: string | null;
+  tiempo_disponible: string;
+  disponibilidad_viaje: string;
+};
 
 export function Home() {
+  const [necesidades, setNecesidades] = useState<Necesidad[]>([]);
+  const [voluntarios, setVoluntarios] = useState<Voluntario[]>([]);
+  const [stats, setStats] = useState({
+    fundaciones: 0,
+    voluntarios: 0,
+    donaciones: 0
+  });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchData() {
+      // 1. Traer Necesidades con la información de su Fundación
+      const { data: reqData } = await supabase
+        .from('necesidades')
+        .select(`*, fundacion:fundaciones(id,nombre_legal, ubicacion)`)
+        .order('created_at', { ascending: false })
+        .limit(4);
+
+      if (reqData) setNecesidades(reqData as Necesidad[]);
+
+      // 2. Traer Voluntarios
+      const { data: volData } = await supabase
+        .from('voluntarios')
+        .select('*')
+        .limit(4);
+
+      if (volData) setVoluntarios(volData as Voluntario[]);
+
+      // 3. Traer Estadísticas Reales (Conteos + Métricas Globales)
+      const { count: countFundaciones } = await supabase
+        .from('fundaciones')
+        .select('*', { count: 'exact', head: true })
+        .eq('estado', 'aprobada');
+
+      const { count: countVoluntarios } = await supabase
+        .from('voluntarios')
+        .select('*', { count: 'exact', head: true })
+        .eq('is_verified', true);
+
+      const { data: metricas } = await supabase
+        .from('metricas_globales')
+        .select('donaciones_canalizadas')
+        .single();
+
+      setStats({
+        fundaciones: countFundaciones || 0,
+        voluntarios: countVoluntarios || 0,
+        donaciones: metricas?.donaciones_canalizadas || 0
+      });
+      
+      setLoading(false);
+    }
+
+    fetchData();
+  }, []);
+
+  const getInitials = (name?: string) => {
+    if (!name) return 'FN';
+    const words = name.replace('Fundación', '').replace('Corporación', '').trim().split(' ');
+    return (words[0]?.[0] + (words[1]?.[0] || '')).toUpperCase();
+  };
+
+  const getPriorityStyle = (prioridad: string) => {
+    if (prioridad === 'alta') return { badge: 'urgent', text: '🔴 Alta Prioridad', colorClass: '' };
+    if (prioridad === 'media') return { badge: 'medium', text: '🔵 Media Prioridad', colorClass: 'purple' };
+    return { badge: 'low', text: '🟢 Baja Prioridad', colorClass: 'green' };
+  };
+
+  // Validación estricta para evitar el error src=""
+  const getAvatarUrl = (url?: string | null) => {
+    return url && url.trim() !== '' ? url : 'https://i.pravatar.cc/150';
+  };
+
   return (
     <div className="home-layout">
       <Header />
 
       <main className="home-main">
-        {/* 2. Sección Hero y Búsqueda Principal */}
         <section className="hero-section">
           <div className="live-badge">
             <span className="status-dot"></span>
@@ -33,7 +130,6 @@ export function Home() {
             7:34 AM es la plataforma cívica y transparente que vincula de forma directa las urgencias de fundaciones con la generosidad de donantes y el talento de voluntarios en toda Colombia.
           </p>
 
-          {/* Caja de Búsqueda Flotante */}
           <div className="search-widget">
             <div className="search-tabs">
               <button className="tab active">Ver todo</button>
@@ -44,19 +140,12 @@ export function Home() {
             <div className="search-bar-wrapper">
               <div className="input-with-icon">
                 <span className="icon-prefix"><img src={SearchIcon} alt="Buscar" /></span>
-                <input 
-                  type="text" 
-                  placeholder="Buscar por necesidad, comuna, profesión, insumo o fundación..." 
-                />
+                <input type="text" placeholder="Buscar por necesidad, comuna, profesión, insumo o fundación..." />
               </div>
-
               <button type="button" className="btn-filters">
                 <span className="icon"><img src={iconFiltrosUrl} alt="Filtros" /></span> Filtros
               </button>
-
-              <button type="button" className="btn-primary btn-explore">
-                Explorar →
-              </button>
+              <button type="button" className="btn-primary btn-explore">Explorar →</button>
             </div>
 
             <div className="search-tags">
@@ -67,35 +156,32 @@ export function Home() {
               <span className="tag urgent">🔴 Alta Prioridad</span>
             </div>
           </div>
-          {/* 3. Estadísticas */}
+
           <section className="stats-section">
             <div className="stat-card">
               <div className="stat-icon blue"><img src={EdificioIcon} alt="Edificio" /></div>
               <div className="stat-info">
-                <h3>+120</h3>
+                <h3>+{stats.fundaciones}</h3>
                 <p>Fundaciones auditadas y activas</p>
               </div>
             </div>
             <div className="stat-card">
               <div className="stat-icon green"><img src={ManoIcon} alt="Mano" /></div>
               <div className="stat-info">
-                <h3>+1,450</h3>
+                <h3>+{stats.voluntarios}</h3>
                 <p>Voluntarios con perfil verificado</p>
               </div>
             </div>
             <div className="stat-card">
               <div className="stat-icon purple"><img src={PaqueteIcon} alt="Paquete" /></div>
               <div className="stat-info">
-                <h3>+3,800</h3>
+                <h3>+{stats.donaciones.toLocaleString()}</h3>
                 <p>Donaciones e insumos canalizados</p>
               </div>
             </div>
           </section>
         </section>
 
-        
-
-        {/* 4. Banner CTA */}
         <section className="cta-banner">
           <div className="cta-content">
             <div className="cta-icon-wrapper">
@@ -107,15 +193,11 @@ export function Home() {
             </div>
           </div>
           <div className="cta-actions">
-            <Link
-            to="/signup">
-            <button className="btn-primary">Registrarme ahora</button>
-            </Link>
+            <Link to="/signup"><button className="btn-primary">Registrarme ahora</button></Link>
             <button className="btn-outline"><img src={FiltroDirectorio} alt="Filtrar directorio" />Filtrar directorio</button>
           </div>
         </section>
 
-        {/* 5. Sección: Necesidades de Fundaciones */}
         <section className="content-section">
           <div className="section-header">
             <div className="subsection-title-cards">
@@ -126,7 +208,7 @@ export function Home() {
             <div className="section-filters">
               <button className="btn-outline small"><img src={iconFiltrosUrl} alt="Filtro" /> Panel de Filtros</button>
               <div className="filter-pills">
-                <span className="pill active">Todas (4)</span>
+                <span className="pill active">Todas ({necesidades.length})</span>
                 <span className="pill">Alimentos</span>
                 <span className="pill">Medicamentos</span>
                 <span className="pill">Útiles</span>
@@ -135,79 +217,63 @@ export function Home() {
           </div>
 
           <div className="cards-grid">
-            {/* Tarjeta de Necesidad 1 */}
-            <div className="need-card">
-              <div className="card-top">
-                <span className="badge urgent">🔴 Alta Prioridad</span>
-                <span className="time-ago">Hace 2 horas</span>
-              </div>
-              <div className="foundation-info">
-                <div className="org-icon">HE</div>
-                <div>
-                  <h4>
-                    <a href="/fundacion" style={{ color: 'inherit' }}>
-                      Fundación Huellas de Esperanza
-                    </a>
-                  </h4>
-                  <p className="location">📍 Bogotá, Chapinero</p>
-                </div>
-              </div>
-              <h3 className="need-title">Alimentos no perecederos para 45 adultos mayores</h3>
-              <p className="need-desc">Requerimos granos secos (arroz, lentejas, avena), aceite vegetal y complementos...</p>
-              
-              <div className="progress-container">
-                <div className="progress-labels">
-                  <span>Categoría: <strong>Alimentos</strong></span>
-                </div>
-                <div className="progress-bar"><div className="fill" style={{width: '30%'}}></div></div>
-                <div className="progress-stats">
-                  <span>Recaudado: 30%</span>
-                  <span>Meta: 200 kg</span>
-                </div>
-              </div>
+            {loading ? (
+              <p className="text-gray-500 font-bold p-4">Cargando necesidades en tiempo real...</p>
+            ) : necesidades.length === 0 ? (
+              <p className="text-gray-500 p-4">No hay llamados urgentes publicados en este momento.</p>
+            ) : (
+              necesidades.map((need) => {
+                const style = getPriorityStyle(need.prioridad);
+                const fundacion = Array.isArray(need.fundacion) ? need.fundacion[0] : need.fundacion;
 
-              <div className="card-actions">
-                <span className="verified-tag">✓ Verificada</span>
-                <button className="btn-primary full-width">Ver necesidad →</button>
-              </div>
-            </div>
+                return (
+                  <div key={need.id} className="need-card">
+                    <div className="card-top">
+                      <span className={`badge ${style.badge}`}>{style.text}</span>
+                      <span className="time-ago">Reciente</span>
+                    </div>
+                    <div className="foundation-info">
+                      <div className={`org-icon ${style.colorClass}`}>{getInitials(fundacion?.nombre_legal)}</div>
+                      <div>
+                        <h4>
+                          <Link to="/fundacion" style={{ color: 'inherit' }}>
+                            {fundacion?.nombre_legal || 'Fundación Desconocida'}
+                          </Link>
+                        </h4>
+                        <p className="location">📍 {fundacion?.ubicacion || 'Ubicación no registrada'}</p>
+                      </div>
+                    </div>
+                    <h3 className="need-title">{need.titulo}</h3>
+                    <p className="need-desc">
+                      {need.descripcion?.length > 100 ? `${need.descripcion.substring(0, 100)}...` : need.descripcion}
+                    </p>
+                    
+                    <div className="progress-container">
+                      <div className="progress-labels">
+                        <span>Categoría: <strong>{need.categoria}</strong></span>
+                      </div>
+                      <div className="progress-bar">
+                        <div className={`fill ${style.colorClass}`} style={{width: `${need.porcentaje_recaudado}%`}}></div>
+                      </div>
+                      <div className="progress-stats">
+                        <span>Recaudado: {need.porcentaje_recaudado}%</span>
+                        <span>{need.meta_texto}</span>
+                      </div>
+                    </div>
 
-            {/* Tarjeta de Necesidad 2 */}
-            <div className="need-card">
-              <div className="card-top">
-                <span className="badge medium">🔵 Media Prioridad</span>
-                <span className="time-ago">Hace 1 día</span>
-              </div>
-              <div className="foundation-info">
-                <div className="org-icon purple">CP</div>
-                <div>
-                  <h4>Corporación Semillas de Paz</h4>
-                  <p className="location">📍 Medellín, Comuna 13</p>
-                </div>
-              </div>
-              <h3 className="need-title">Kits de útiles escolares y cuadernos para inicio de clases</h3>
-              <p className="need-desc">Campaña escolar para beneficiar a 110 niños y niñas del sector El Salado...</p>
-              
-              <div className="progress-container">
-                <div className="progress-labels">
-                  <span>Categoría: <strong>Útiles escolares</strong></span>
-                </div>
-                <div className="progress-bar"><div className="fill purple" style={{width: '60%'}}></div></div>
-                <div className="progress-stats">
-                  <span>Recaudado: 60%</span>
-                  <span>Meta: 110 kits</span>
-                </div>
-              </div>
-
-              <div className="card-actions">
-                <span className="verified-tag">✓ Verificada</span>
-                <button className="btn-primary full-width">Ver necesidad →</button>
-              </div>
-            </div>
+                    <div className="card-actions">
+                      <span className="verified-tag">✓ Verificada</span>
+                      <Link to={`/fundacion/${fundacion?.id}`}>
+                          <button className="btn-primary full-width">Ver necesidad →</button>
+                      </Link>
+                    </div>
+                  </div>
+                );
+              })
+            )}
           </div>
         </section>
 
-        {/* 6. Sección: Voluntarios Disponibles */}
         <section className="content-section gray-bg">
           <div className="section-header">
             <div className="subsection-title-cards">
@@ -219,60 +285,45 @@ export function Home() {
           </div>
 
           <div className="cards-grid">
-            {/* Tarjeta de Voluntario 1 */}
-            <div className="volunteer-card">
-              <div className="card-top">
-                <img src="https://i.pravatar.cc/150?img=47" alt="Perfil" className="avatar" />
-                <span className="availability-badge">✈️ Viaja Nal.</span>
-              </div>
-              <h3 className="volunteer-name">Dra. Camila Restrepo</h3>
-              <p className="volunteer-profession">Médica Pediatra</p>
-              <p className="location">📍 Medellín (Comuna 10, La Candelaria)</p>
-              
-              <div className="service-box">
-                <span className="box-label">SERVICIO QUE OFRECE:</span>
-                <p>Brigadas de salud y atención primaria infantil comunitaria.</p>
-              </div>
-              
-              <div className="schedule-info">
-                <span className="icon">📅</span> Fines de semana (10 hrs/sem)
-              </div>
+            {loading ? (
+              <p className="text-gray-500 font-bold p-4">Cargando talento solidario...</p>
+            ) : voluntarios.length === 0 ? (
+              <p className="text-gray-500 p-4">Aún no hay voluntarios registrados.</p>
+            ) : (
+              voluntarios.map((voluntario) => (
+                <div key={voluntario.id} className="volunteer-card">
+                  <div className="card-top">
+                    <img src={getAvatarUrl(voluntario.avatar_url)} alt="Perfil" className="avatar" />
+                    <span className={`availability-badge ${voluntario.disponibilidad_viaje === 'Local' ? 'local' : ''}`}>
+                      {voluntario.disponibilidad_viaje === 'Local' ? '📍 Local' : '✈️ Viaja Nal.'}
+                    </span>
+                  </div>
+                  <h3 className="volunteer-name">{voluntario.nombre_completo}</h3>
+                  <p className="volunteer-profession">{voluntario.profesion || 'Voluntario Activo'}</p>
+                  <p className="location">📍 {voluntario.ubicacion || 'Ubicación no especificada'}</p>
+                  
+                  <div className="service-box">
+                    <span className="box-label">SERVICIO QUE OFRECE:</span>
+                    <p>{voluntario.sobre_mi ? `${voluntario.sobre_mi.substring(0, 75)}...` : 'Ayuda comunitaria general.'}</p>
+                  </div>
+                  
+                  <div className="schedule-info">
+                    <span className="icon">📅</span> {voluntario.tiempo_disponible || 'Disponibilidad a convenir'}
+                  </div>
 
-              <div className="card-actions">
-                <span className="verified-tag light">Identidad validada</span>
-                <button className="btn-outline full-width">Ver perfil</button>
-              </div>
-            </div>
-
-            {/* Tarjeta de Voluntario 2 */}
-            <div className="volunteer-card">
-              <div className="card-top">
-                <img src="https://i.pravatar.cc/150?img=11" alt="Perfil" className="avatar" />
-                <span className="availability-badge local">📍 Local</span>
-              </div>
-              <h3 className="volunteer-name">Ing. Alejandro Morales</h3>
-              <p className="volunteer-profession">Software & Telemática</p>
-              <p className="location">📍 Bogotá (Teusaquillo)</p>
-              
-              <div className="service-box">
-                <span className="box-label">SERVICIO QUE OFRECE:</span>
-                <p>Alfabetización digital y soporte técnico para fundaciones.</p>
-              </div>
-              
-              <div className="schedule-info">
-                <span className="icon">📅</span> Mar / Jue tardes (6 hrs/sem)
-              </div>
-
-              <div className="card-actions">
-                <span className="verified-tag light">Identidad validada</span>
-                <button className="btn-outline full-width">Ver perfil</button>
-              </div>
-            </div>
+                  <div className="card-actions">
+                    <span className="verified-tag light">Identidad validada</span>
+                    <Link to={`/voluntario/${voluntario.id}`} className="w-full" style={{ display: 'block', width: '100%' }}>
+                      <button className="btn-outline full-width">Ver perfil</button>
+                    </Link>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </section>
       </main>
 
-      {/* 7. Footer */}
       <Footer />
     </div>
   );

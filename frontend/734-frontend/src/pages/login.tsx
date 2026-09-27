@@ -1,21 +1,42 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { supabase } from '../lib/supabase';
+
 export function Login() {
-    // 1. Creamos el estado para saber cuál está activo por defecto
+  const navigate = useNavigate();
   const [activeUserType, setActiveUserType] = useState<'voluntario' | 'fundacion'>('voluntario');
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  
+  // Estados para el formulario
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    // Lógica futura de autenticación
-    console.log("Formulario enviado");
+    setLoading(true);
+    setError(null);
+
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (error) {
+      setError('Correo o contraseña incorrectos.');
+      setLoading(false);
+      return;
+    }
+
+    // Si es exitoso, redirigimos al home
+    navigate('/');
   };
 
   return (
     <main className="login-layout">
-      {/* Contenedor principal del formulario */}
       <section className="login-form-container">
         <div className="form-wrapper">
           
-          {/* Logo / Badge superior */}
           <div className="top-badge">
             <span className="time-icon">🕒</span> 7:34 AM <span className="status-dot">•</span>
           </div>
@@ -25,14 +46,10 @@ export function Login() {
             Plataforma cívica que articula solidaridad activa, fundaciones acreditadas y voluntariado.
           </p>
 
-          {/* Selector de tipo de usuario con animación de deslizamiento */}
           <div className="user-type-toggle">
-            {/* Fondo animado que se mueve según el estado */}
             <div 
               className="sliding-background"
-              style={{
-                transform: activeUserType === 'voluntario' ? 'translateX(0)' : 'translateX(100%)'
-              }}
+              style={{ transform: activeUserType === 'voluntario' ? 'translateX(0)' : 'translateX(100%)' }}
             ></div>
 
             <button 
@@ -52,30 +69,30 @@ export function Login() {
             </button>
           </div>
 
+          {/* Formulario conectado a Supabase */}
           <form onSubmit={handleSubmit}>
-            
-            {/* Campo de Correo / Documento */}
             <div className="input-group">
               <div className="label-row">
-                <label htmlFor="email">Correo electrónico o Documento</label>
+                <label htmlFor="email">Correo electrónico</label>
                 <span className="helper-text">Requerido</span>
               </div>
               <div className="input-wrapper">
                 <span className="input-icon left">✉️</span>
                 <input 
-                  type="text" 
+                  type="email" 
                   id="email" 
-                  placeholder="ejemplo@correo.org o 900.123.456-7" 
+                  placeholder="ejemplo@correo.org" 
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   required 
                 />
               </div>
             </div>
 
-            {/* Campo de Contraseña */}
             <div className="input-group">
               <div className="label-row">
                 <label htmlFor="password">Contraseña de acceso</label>
-                <span className="helper-text">Mín. 8 caracteres</span>
+                <span className="helper-text">Mín. 6 caracteres</span>
               </div>
               <div className="input-wrapper">
                 <span className="input-icon left">🔒</span>
@@ -83,13 +100,16 @@ export function Login() {
                   type="password" 
                   id="password" 
                   placeholder="••••••••" 
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
                   required 
                 />
                 <span className="input-icon right">👁️</span>
               </div>
             </div>
 
-            {/* Opciones: Recordar sesión y Olvidaste contraseña */}
+            {error && <p className="text-red-500 text-xs font-bold mt-2">{error}</p>}
+
             <div className="form-options">
               <label className="remember-me">
                 <input type="checkbox" /> Recordar sesión
@@ -97,31 +117,18 @@ export function Login() {
               <a href="#" className="forgot-password">¿Olvidaste tu contraseña?</a>
             </div>
 
-            {/* Botón Principal */}
-            <Link
-            to="/">
-              <button type="submit" className="btn-primary">
-                Iniciar Sesión en 7:34 AM <span>→</span>
-              </button>
-            </Link>
+            <button type="submit" className="btn-primary" disabled={loading}>
+              {loading ? 'Ingresando...' : 'Iniciar Sesión en 7:34 AM'} <span>→</span>
+            </button>
           </form>
           
-          {/* Divisor */}
-          <div className="divider">
-            <span>O CONTINÚA CON</span>
-          </div>
+          <div className="divider"><span>O CONTINÚA CON</span></div>
 
-          {/* Botones de acceso alternativo */}
           <div className="alt-login-buttons">
-            <button className="btn-outline">
-              <span className="icon">G</span> Google
-            </button>
-            <button className="btn-outline">
-              <span className="icon">📄</span> Firma / RUT
-            </button>
+            <button className="btn-outline"><span className="icon">G</span> Google</button>
+            <button className="btn-outline"><span className="icon">📄</span> Firma / RUT</button>
           </div>
 
-          {/* Banner de Seguridad */}
           <div className="security-banner">
             <div className="shield-icon">🛡️</div>
             <div className="security-info">
@@ -130,12 +137,8 @@ export function Login() {
             </div>
           </div>
 
-          {/* Footer */}
           <div className="login-footer">
-            <Link
-            to="/signup">
-            <p>¿Aún no tienes cuenta?Regístrate gratis ↗</p>
-            </Link>
+            <Link to="/signup"><p>¿Aún no tienes cuenta? Regístrate gratis ↗</p></Link>
           </div>
 
         </div>
