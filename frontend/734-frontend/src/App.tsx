@@ -8,6 +8,9 @@ import { SignUp } from './pages/sign-up';
 import { VolunteerProfile } from './pages/volunteer-profile';
 import './styles/global.css';
 import './index.css';
+import { AccountSettings } from './pages/account-settings';
+import { DashboardLayout } from './components/DashboardLayout';
+import { EditVolunteerProfile } from './pages/edit-volunteer-profile';
 
 // Componente opcional para proteger paneles exclusivos (Ej: Admin o Edición)
 function ProtectedRoute({ children, requiredRole }: { children: React.ReactNode; requiredRole?: string }) {
@@ -91,6 +94,17 @@ function App() {
           } 
         /> 
         */}
+        <Route 
+         path='/ajustes'
+         element={
+            <AccountSettings />
+         }
+        />
+        <Route path="/dashboard" element={<ProtectedRoute><DashboardLayout /></ProtectedRoute>}>
+          <Route path="ajustes" element={<AccountSettings />} />
+          <Route path="voluntario/editar" element={<EditVolunteerProfile />} />
+        {/* Otras rutas del dashboard */}
+        </Route>
 
         {/* Redirección por defecto ante cualquier ruta extraña */}
         <Route path="*" element={<Navigate to="/" replace />} />

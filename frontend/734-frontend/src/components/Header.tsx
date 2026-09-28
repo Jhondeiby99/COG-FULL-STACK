@@ -122,7 +122,7 @@ export function Header({
             /* VISTA: Usuario Logueado */
             <div className="flex items-center gap-3">
               <span className="text-xs font-bold text-[#071d37] hidden md:inline">
-                Hola, {profileData?.name || 'Usuario'}
+                Hola, {profileData?.name_completo || profileData?.nombre_legal || 'Usuario'}
               </span>
               
               <button 
@@ -135,7 +135,7 @@ export function Header({
               </button>
 
               <div className="avatar-circle small overflow-hidden border border-gray-200">
-                <img src={getAvatar()} className="icon-person w-full h-full object-cover" alt="Avatar" />
+                <img src={getAvatar()} className="icon-person" alt="Avatar" />
               </div>
             </div>
           ) : (
