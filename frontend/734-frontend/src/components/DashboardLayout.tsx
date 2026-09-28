@@ -1,10 +1,46 @@
 import { useNavigate, Outlet, Link, useLocation } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import * as Icons from "../assets/icons/index.ts";
+import { useState, useEffect } from 'react';
 
 export function DashboardLayout() {
   const navigate = useNavigate();
   const location = useLocation();
+  const [rol, setRol] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+
+
+
+  useEffect(() => {
+    async function getSessionAndRol() {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (session?.user) {
+          const { data: perfil, error } = await supabase
+            .from('perfiles')
+            .select('rol')
+            .eq('id', session.user.id)
+            .maybeSingle();
+
+          if (error) {
+            console.error("Error obteniendo el rol del layout:", error.message);
+          } else if (perfil) {
+            setRol(perfil.rol);
+          }
+        } else {
+          // Si no hay sesión activa, redirigir al login
+          navigate('/login');
+        }
+      } catch (err) {
+        console.error("Error inesperado en sesión:", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    getSessionAndRol();
+  }, [navigate]);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -13,6 +49,13 @@ export function DashboardLayout() {
 
   const isActive = (path: string) => location.pathname.includes(path);
 
+  if (loading) {
+    return (
+      <div className="flex min-h-svh w-full items-center justify-center bg-[#EFF4FF]">
+        <p className="text-xs font-bold text-[#005684] animate-pulse">Cargando módulos de seguridad...</p>
+      </div>
+    );
+  }
   return (
     <div className="flex min-h-svh w-full bg-[#EFF4FF] text-[#2d3748] font-sans">
       
@@ -38,7 +81,7 @@ export function DashboardLayout() {
           <div className="flex flex-col gap-2">
             <span className="text-[11px] font-extrabold text-[#94a3b8] uppercase tracking-wider">Panel Admin</span>
             <nav className="flex flex-col gap-1">
-              <Link to="/dashboard" className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[#64748b] hover:bg-gray-50 text-xs font-semibold transition">
+              <Link to="/dashboard/admin-dashboard" className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-[#64748b] text-xs font-semibold transition ${isActive('/admin-dashboard') ? 'bg-[#005684] text-white shadow-sm' : 'text-[#64748b] hover:bg-gray-50 font-semibold'}`}>
                 <span>🗂️</span> Resumen
               </Link>
               {/* ... resto de enlaces ... */}
@@ -52,7 +95,16 @@ export function DashboardLayout() {
                 to="/dashboard/voluntario/editar" 
                 className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition ${isActive('/voluntario/editar') ? 'bg-[#005684] text-white shadow-sm' : 'text-[#64748b] hover:bg-gray-50 font-semibold'}`}
               >
-                <span>👤</span> Editar Perfil
+                <span>👤</span> Editar Perfil Voluntario
+              </Link>
+              {/* ... resto de enlaces ... */}
+            </nav>
+            <nav className="flex flex-col gap-1">
+              <Link 
+                to="/dashboard/fundacion/editar" 
+                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition ${isActive('/fundacion/editar') ? 'bg-[#005684] text-white shadow-sm' : 'text-[#64748b] hover:bg-gray-50 font-semibold'}`}
+              >
+                <span>👤</span> Editar Perfil Fundacion
               </Link>
               {/* ... resto de enlaces ... */}
             </nav>
@@ -77,7 +129,9 @@ export function DashboardLayout() {
             onClick={handleLogout}
             className="flex items-center gap-2 text-red-600 hover:text-red-700 text-xs font-bold transition w-full px-3 py-2 rounded-xl hover:bg-red-50 cursor-pointer"
           >
-            <span>🚪</span> Cerrar Sesión
+            <span>
+              <img src={Icons.LogoutIcon}></img>
+            </span> Cerrar Sesión
           </button>
         </div>
       </aside>
