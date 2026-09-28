@@ -11,6 +11,8 @@ import './index.css';
 import { AccountSettings } from './pages/account-settings';
 import { DashboardLayout } from './components/DashboardLayout';
 import { EditVolunteerProfile } from './pages/edit-volunteer-profile';
+import { EditFoundationProfile } from './pages/edit-foundation-profile';
+import { AdminDashboard } from './pages/admin-dashboard';
 
 // Componente opcional para proteger paneles exclusivos (Ej: Admin o Edición)
 function ProtectedRoute({ children, requiredRole }: { children: React.ReactNode; requiredRole?: string }) {
@@ -103,6 +105,8 @@ function App() {
         <Route path="/dashboard" element={<ProtectedRoute><DashboardLayout /></ProtectedRoute>}>
           <Route path="ajustes" element={<AccountSettings />} />
           <Route path="voluntario/editar" element={<EditVolunteerProfile />} />
+          <Route path="fundacion/editar" element={<EditFoundationProfile />} />
+          <Route path="admin-dashboard" element={<AdminDashboard />} />
         {/* Otras rutas del dashboard */}
         </Route>
 

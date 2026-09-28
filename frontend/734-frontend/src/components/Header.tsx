@@ -28,27 +28,50 @@ export function Header({
         setUser(session.user);
 
         // 2. Consultar la tabla perfiles para saber el rol y buscar su nombre real
-        const { data: perfil } = await supabase
+        const { data: perfil,error: perfilError } = await supabase
           .from('perfiles')
           .select('*')
           .eq('id', session.user.id)
-          .single();
-
+          .maybeSingle();
+          if (perfilError) {
+            console.error("Error cargando perfil:", perfilError.message);
+          }
         if (perfil) {
           if (perfil.rol === 'fundacion') {
-            const { data: fund } = await supabase
+            const { data: fund,error: fundacionError } = await supabase
               .from('fundaciones')
               .select('nombre_legal, logo_url')
               .eq('id', session.user.id)
-              .single();
-            setProfileData({ name: fund?.nombre_legal || 'Fundación', avatar: fund?.logo_url });
-          } else {
-            const { data: vol } = await supabase
+              .maybeSingle();
+            setProfileData({ 
+              name: fund?.nombre_legal || 'Fundación', 
+              avatar: fund?.logo_url,
+              rol: perfil.rol 
+            });
+            if (fundacionError) {
+            console.error("Error cargando perfil:", fundacionError.message);
+          }
+          } else if (perfil.rol === 'voluntario') {
+            const { data: vol ,error: voluntarioError } = await supabase
               .from('voluntarios')
               .select('nombre_completo, avatar_url')
               .eq('id', session.user.id)
-              .single();
-            setProfileData({ name: vol?.nombre_completo || 'Voluntario', avatar: vol?.avatar_url });
+              .maybeSingle();
+              if (voluntarioError) {
+            console.error("Error cargando perfil:", voluntarioError.message);
+            }
+            setProfileData({ 
+              name: vol?.nombre_completo || 'Voluntario', 
+              avatar: vol?.avatar_url,
+              rol: perfil.rol 
+            });
+            
+          } else if (perfil.rol === 'admin') {
+            setProfileData({ 
+              name: 'Administrador', 
+              avatar: null,
+              rol: perfil.rol 
+            });
           }
         }
       }
@@ -80,6 +103,19 @@ export function Header({
       return profileData.avatar;
     }
     return Icons.PersonIcon;
+  };
+
+  // Función para determinar la ruta del dashboard según el rol
+  const getDashboardPath = () => {
+    switch (profileData?.rol) {
+      case 'admin':
+        return '/dashboard/admin-dashboard';
+      case 'fundacion':
+        return '/dashboard/fundacion/editar';
+      case 'voluntario':
+      default:
+        return '/dashboard/voluntario/editar';
+    }
   };
 
   return (
@@ -122,8 +158,16 @@ export function Header({
             /* VISTA: Usuario Logueado */
             <div className="flex items-center gap-3">
               <span className="text-xs font-bold text-[#071d37] hidden md:inline">
-                Hola, {profileData?.name_completo || profileData?.nombre_legal || 'Usuario'}
+                Hola, {profileData?.name || 'Usuario'}
               </span>
+              
+              {/* Botón dinámico hacia el dashboard según rol */}
+              <Link 
+                to={getDashboardPath()}
+                className="rounded-lg bg-[#005684] px-3 py-1.5 text-xs font-bold text-white transition hover:bg-[#00456a]"
+              >
+                Mi Panel
+              </Link>
               
               <button 
                 onClick={handleLogout} 

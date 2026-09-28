@@ -56,24 +56,24 @@ export function EditVolunteerProfile() {
           
           {/* HEADER DE LA FICHA */}
           <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
-            <div>
-              <div className="flex items-center gap-3 mb-2">
-                <span className="bg-[#dcfce7] text-[#166534] text-[10px] font-extrabold px-2.5 py-1 rounded-full uppercase border border-[#bbf7d0] flex items-center gap-1">
-                  ✓ FICHA VERIFICADA NIVEL 3
+            <div className="text-left">
+              <div className="flex items-center gap-1 mb-0">
+                <span className="bg-[#dcfce7] text-[#166534] text-[10px] font-extrabold px-2.5 py-1 rounded-full uppercase border border-[#EFF4FF] flex items-center gap-1">
+                  <img src={Icons.CheckVerifyIcon}></img> FICHA VERIFICADA NIVEL 3
                 </span>
                 <span className="text-[11px] font-bold text-[#94a3b8]">ID: VOL-734-COL-082</span>
               </div>
-              <h1 className="text-2xl md:text-3xl font-extrabold text-[#071d37]">Mi Ficha de Voluntariado</h1>
-              <h2 className="text-lg font-bold text-[#005684] mt-0.5">— Dra. Camila Restrepo (Médica Pediatra)</h2>
+              <h1 className="text-2xl md:text-3xl font-bold text-[#071d37] mt-0 mb-2">Mi Ficha de Voluntariado</h1>
+              <h2 className="text-lg font-bold text-[#005684] mt-0">— Dra. Camila Restrepo (Médica Pediatra)</h2>
               <p className="text-[13px] text-[#64748b] mt-2 max-w-2xl">Esta información se sincroniza en tiempo real con las brigadas de emergencia activa y el Directorio Nacional de Talento Cívico 7:34 AM.</p>
             </div>
             
-            <div className="flex flex-col items-end gap-3 shrink-0">
-              <label className="flex items-center gap-2 cursor-pointer">
+            <div className="flex flex-col items-start gap-3 shrink-0 m-auto">
+              <label className="flex items-center gap-2 cursor-pointer  bg-[#EFF4FF] p-2 rounded-xl">
                 <div className={`w-10 h-6 flex items-center rounded-full p-1 transition-colors ${disponibilidadActiva ? 'bg-[#047857]' : 'bg-gray-300'}`} onClick={() => {setDisponibilidadActiva(!disponibilidadActiva); markUnsaved();}}>
                   <div className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform ${disponibilidadActiva ? 'translate-x-4' : ''}`}></div>
                 </div>
-                <div className="flex flex-col text-right">
+                <div className="flex flex-col text-left">
                   <span className="text-xs font-bold text-[#071d37]">Disponibilidad Activa</span>
                   <span className="text-[10px] text-[#64748b]">Visible en búsquedas</span>
                 </div>
@@ -179,13 +179,12 @@ export function EditVolunteerProfile() {
                 <p className="text-[11px] text-[#64748b] mb-4">Haz clic sobre los bloques para encender/apagar tus turnos disponibles habituales. Las fundaciones solo te convocarán en tus franjas marcadas.</p>
 
                 {/* Grid de Horarios */}
-                <div className="bg-[#f8fafc] rounded-2xl border border-[#e2e8f0] p-4 overflow-x-auto">
                   <table className="w-full text-left border-collapse">
-                    <thead>
+                    <thead className='bg-[#EFF4FF]'>
                       <tr>
-                        <th className="text-[10px] font-bold text-[#94a3b8] uppercase pb-3 w-1/4">Franja Horaria</th>
+                        <th className="text-[10px] font-bold text-[#94a3b8] uppercase w-1/4 p-2">Franja Horaria</th>
                         {['Lun','Mar','Mie','Jue','Vie','Sab','Dom'].map(d => (
-                          <th key={d} className="text-[10px] font-bold text-[#94a3b8] uppercase pb-3 text-center w-[10%]">{d}</th>
+                          <th key={d} className="text-[10px] font-bold text-[#94a3b8] uppercase p-2 text-center w-[10%]">{d}</th>
                         ))}
                       </tr>
                     </thead>
@@ -195,7 +194,7 @@ export function EditVolunteerProfile() {
                         { id: 'tarde', label: '🌤️ Tarde (13:00 - 18:00)' },
                         { id: 'noche', label: '🌙 Noche (18:30 - 22:00)' }
                       ].map((franja) => (
-                        <tr key={franja.id} className="border-t border-[#f1f5f9]">
+                        <tr key={franja.id} className="border-t border-[#f1f5f9] bg-white">
                           <td className="py-2.5 text-xs font-semibold text-[#475569]">{franja.label}</td>
                           {['lun','mar','mie','jue','vie','sab','dom'].map((dia) => {
                             const isActive = horarios[franja.id as keyof typeof horarios][dia as keyof typeof horarios['manana']];
@@ -203,7 +202,7 @@ export function EditVolunteerProfile() {
                               <td key={dia} className="py-2.5 text-center">
                                 <button 
                                   onClick={() => toggleHorario(franja.id as any, dia)}
-                                  className={`w-11 py-1.5 rounded-lg text-[10px] font-bold transition-all ${isActive ? 'bg-[#047857] text-white shadow-sm' : 'bg-[#e2e8f0] text-[#94a3b8] hover:bg-[#cbd5e1]'}`}
+                                  className={`w-11 py-1.5 rounded-lg text-[10px] font-bold transition-all ${isActive ? 'bg-[#047857] text-white shadow-sm' : 'bg-[#EFF4FF] text-[#94a3b8] hover:bg-[#cbd5e1]'}`}
                                 >
                                   {isActive ? 'Activo' : 'Off'}
                                 </button>
@@ -214,7 +213,7 @@ export function EditVolunteerProfile() {
                       ))}
                     </tbody>
                   </table>
-                </div>
+                
 
                 {/* Slider Objetivo Mensual */}
                 <div className="mt-5 pt-5 border-t border-[#f1f5f9]">
@@ -233,7 +232,7 @@ export function EditVolunteerProfile() {
 
               {/* 04. HISTORIAL DE MISIONES */}
               <section className="bg-white rounded-3xl p-6 border border-[#e2e8f0] shadow-sm mb-6">
-                <div className="flex items-center justify-between mb-4">
+                <div className="items-center justify-between mb-4">
                   <h3 className="text-[11px] font-bold text-[#005684] uppercase tracking-wider flex items-center gap-2">
                     <span className="text-base">🤝</span> 04 / HISTORIAL DE MISIONES Y TESTIMONIOS RECIBIDOS
                   </h3>
@@ -244,28 +243,28 @@ export function EditVolunteerProfile() {
 
                 <div className="flex flex-col gap-3">
                   {/* Item 1 */}
-                  <div className="flex gap-4 p-4 rounded-xl bg-[#f8fafc] border border-[#e2e8f0]">
+                  <div className="flex gap-4 p-4 rounded-xl bg-[#EFF4FF] border border-[#e2e8f0]">
                     <div className="w-8 h-8 rounded-lg bg-[#eef6ff] text-[#0284c7] flex items-center justify-center shrink-0">🏥</div>
                     <div className="flex-1">
                        <div className="flex justify-between items-start">
-                         <div>
+                         <div className='text-left'>
                            <h4 className="text-[13px] font-extrabold text-[#071d37]">Jornada Pediátrica Comuna 13</h4>
-                           <span className="bg-[#e0e7ff] text-[#3730a3] text-[9px] font-bold px-2 py-0.5 rounded mt-0.5 inline-block">Completada (32 Atenciones)</span>
+                           <span className="bg-[#0069471A] text-[#006947] text-[9px] font-bold px-2 py-0.5 rounded mt-0.5 inline-block">Completada (32 Atenciones)</span>
                            <p className="text-[10px] font-semibold text-[#64748b] mt-1">Fundación Huellas del Mañana • Sep 2024</p>
                          </div>
                          <div className="text-[11px] font-bold text-[#f59e0b] bg-amber-50 px-2 py-1 rounded border border-amber-100 flex items-center gap-1">
                            <span>★</span> 5.0 Cívico
                          </div>
                        </div>
-                       <p className="text-[11px] text-[#475569] mt-2 italic leading-relaxed border-l-2 border-[#cbd5e1] pl-2">"La dedicación de la Dra. Camila fue clave para identificar a tiempo 8 casos de desnutrición infantil y canalizarlos con el sistema de salud."</p>
+                       <p className="text-[11px] text-[#475569] mt-2 italic leading-relaxed text-left">"La dedicación de la Dra. Camila fue clave para identificar a tiempo 8 casos de desnutrición infantil y canalizarlos con el sistema de salud."</p>
                     </div>
                   </div>
                   {/* Item 2 */}
-                  <div className="flex gap-4 p-4 rounded-xl bg-[#f8fafc] border border-[#e2e8f0]">
+                  <div className="flex gap-4 p-4 rounded-xl bg-[#EFF4FF] border border-[#e2e8f0]">
                     <div className="w-8 h-8 rounded-lg bg-[#eef6ff] text-[#0284c7] flex items-center justify-center shrink-0">💧</div>
                     <div className="flex-1">
                        <div className="flex justify-between items-start">
-                         <div>
+                         <div className='text-left'>
                            <h4 className="text-[13px] font-extrabold text-[#071d37]">Brigada Médica Emergencia Invernal Chocó</h4>
                            <span className="bg-[#dbeafe] text-[#1e40af] text-[9px] font-bold px-2 py-0.5 rounded mt-0.5 inline-block">Misión Desplegada</span>
                            <p className="text-[10px] font-semibold text-[#64748b] mt-1">Cruz Cívica Regional • Jul 2024</p>
@@ -274,7 +273,7 @@ export function EditVolunteerProfile() {
                            <span>★</span> 5.0 Cívico
                          </div>
                        </div>
-                       <p className="text-[11px] text-[#475569] mt-2 italic leading-relaxed border-l-2 border-[#cbd5e1] pl-2">"Lideró el protocolo de tamizaje y desparasitación con admirable temple en condiciones de lluvia extrema."</p>
+                       <p className="text-[11px] text-[#475569] mt-2 italic leading-relaxed text-left">"Lideró el protocolo de tamizaje y desparasitación con admirable temple en condiciones de lluvia extrema."</p>
                     </div>
                   </div>
                 </div>
@@ -336,7 +335,7 @@ export function EditVolunteerProfile() {
                  </div>
 
                  <div className="flex flex-col gap-2 mb-4">
-                   <div className="bg-[#f0fdf4] border border-[#bbf7d0] p-3 rounded-xl flex items-center justify-between">
+                   <div className="bg-[#EFF4FF] border border-[#EFF4FF] p-3 rounded-xl flex items-center justify-between">
                      <div className="flex items-center gap-2.5">
                        <span className="text-[#047857]">⚕️</span>
                        <div>
@@ -346,7 +345,7 @@ export function EditVolunteerProfile() {
                      </div>
                      <span className="bg-[#047857] text-white text-[9px] font-bold px-2 py-0.5 rounded-full">Verificado</span>
                    </div>
-                   <div className="bg-[#f0fdf4] border border-[#bbf7d0] p-3 rounded-xl flex items-center justify-between">
+                   <div className="bg-[#EFF4FF] border border-[#EFF4FF] p-3 rounded-xl flex items-center justify-between">
                      <div className="flex items-center gap-2.5">
                        <span className="text-[#047857]">🎓</span>
                        <div>
@@ -356,7 +355,7 @@ export function EditVolunteerProfile() {
                      </div>
                      <span className="bg-[#047857] text-white text-[9px] font-bold px-2 py-0.5 rounded-full">Verificado</span>
                    </div>
-                   <div className="bg-[#f0fdf4] border border-[#bbf7d0] p-3 rounded-xl flex items-center justify-between">
+                   <div className="bg-[#EFF4FF] border border-[#EFF4FF] p-3 rounded-xl flex items-center justify-between">
                      <div className="flex items-center gap-2.5">
                        <span className="text-[#047857]">💉</span>
                        <div>
@@ -368,7 +367,7 @@ export function EditVolunteerProfile() {
                    </div>
                  </div>
 
-                 <button className="w-full bg-[#f8fafc] border border-dashed border-[#cbd5e1] rounded-xl py-4 text-center text-[#005684] hover:bg-[#f0f6ff] transition cursor-pointer flex flex-col items-center justify-center gap-1">
+                 <button className="w-full bg-[#DCE9FF66] border border-dashed border-[#cbd5e1] rounded-xl py-4 text-center text-[#005684] hover:bg-[#f0f6ff] transition cursor-pointer flex flex-col items-center justify-center gap-1">
                    <span className="text-lg">📄</span>
                    <span className="text-xs font-bold">Adjuntar nueva certificación</span>
                    <span className="text-[9px] text-[#94a3b8]">PDF hasta 10MB (Especializaciones, Cruz Roja, etc.)</span>
@@ -382,13 +381,13 @@ export function EditVolunteerProfile() {
 
               {/* MÉTRICAS DE CONFIABILIDAD */}
               <section className="bg-white rounded-3xl p-6 border border-[#e2e8f0] shadow-sm">
-                 <h3 className="text-[10px] font-extrabold text-[#94a3b8] uppercase tracking-wider text-center mb-4">Métricas de Confiabilidad Cívica</h3>
+                 <h3 className="text-[10px] font-extrabold text-[#94a3b8] uppercase tracking-wider text-left mb-4">Métricas de Confiabilidad Cívica</h3>
                  <div className="grid grid-cols-2 gap-4 text-center divide-x divide-[#e2e8f0]">
-                   <div>
+                   <div className="bg-[#DCE9FF66] p-2 rounded-md">
                      <p className="text-2xl font-black text-[#005684]">142</p>
                      <p className="text-[10px] font-bold text-[#64748b]">Horas donadas</p>
                    </div>
-                   <div>
+                   <div className="bg-[#DCE9FF66] p-2 rounded-md">
                      <p className="text-2xl font-black text-[#047857]">100%</p>
                      <p className="text-[10px] font-bold text-[#64748b]">Asistencia efectiva</p>
                    </div>
