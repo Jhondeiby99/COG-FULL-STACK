@@ -80,9 +80,9 @@ export function AccountSettings() {
 
 
           {/* DISTRIBUCIÓN EN 2 COLUMNAS (Sidebar Izquierdo de Secciones + Bloques de Configuración Derecha) */}
-          <div className="grid grid-cols-1 lg:grid-cols-[250px_1fr] gap-8 items-start">
+          <div className="gap-8 items-start">
             
-            {/* Columna Izquierda: Ejes de Gestión & Zona de Peligro */}
+            {/* Columna Izquierda: Ejes de Gestión & Zona de Peligro 
             <div className="bg-white rounded-3xl p-5  flex flex-col gap-4">
               <p className="text-[11px] font-extrabold text-[#94a3b8] uppercase tracking-wider px-2">Ejes de Gestión</p>
               <nav className="flex flex-col gap-1">
@@ -118,6 +118,7 @@ export function AccountSettings() {
                 </p>
               </div>
             </div>
+            */}
 
             {/* Columna Derecha: Tarjetas de Configuración */}
             <div className="flex flex-col gap-6">

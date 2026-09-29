@@ -13,6 +13,10 @@ import { DashboardLayout } from './components/DashboardLayout';
 import { EditVolunteerProfile } from './pages/edit-volunteer-profile';
 import { EditFoundationProfile } from './pages/edit-foundation-profile';
 import { AdminDashboard } from './pages/admin-dashboard';
+import { AdminApproval } from './pages/admin-approval';
+import { AdminFoundations } from './pages/admin-foundations';
+import { AdminVolunteers } from './pages/admin-volunteers';
+import { AdminNotifications } from './pages/admin-notifications';
 
 // Componente opcional para proteger paneles exclusivos (Ej: Admin o Edición)
 function ProtectedRoute({ children, requiredRole }: { children: React.ReactNode; requiredRole?: string }) {
@@ -107,6 +111,10 @@ function App() {
           <Route path="voluntario/editar" element={<EditVolunteerProfile />} />
           <Route path="fundacion/editar" element={<EditFoundationProfile />} />
           <Route path="admin-dashboard" element={<AdminDashboard />} />
+          <Route path="admin-aprobaciones" element={<AdminApproval />} />
+           <Route path="admin-fundaciones" element={<AdminFoundations />} />
+           <Route path="admin-voluntarios" element={<AdminVolunteers />} />
+           <Route path="admin-notificaciones" element={<AdminNotifications />} />
         {/* Otras rutas del dashboard */}
         </Route>
 

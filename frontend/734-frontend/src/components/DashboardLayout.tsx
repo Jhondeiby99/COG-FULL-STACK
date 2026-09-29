@@ -9,8 +9,6 @@ export function DashboardLayout() {
   const [rol, setRol] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
-
-
   useEffect(() => {
     async function getSessionAndRol() {
       try {
@@ -56,6 +54,7 @@ export function DashboardLayout() {
       </div>
     );
   }
+
   return (
     <div className="flex min-h-svh w-full bg-[#EFF4FF] text-[#2d3748] font-sans">
       
@@ -78,48 +77,75 @@ export function DashboardLayout() {
             OPERATIVO ACTIVO
           </div>
 
-          <div className="flex flex-col gap-2">
-            <span className="text-[11px] font-extrabold text-[#94a3b8] uppercase tracking-wider">Panel Admin</span>
-            <nav className="flex flex-col gap-1">
-              <Link to="/dashboard/admin-dashboard" className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-[#64748b] text-xs font-semibold transition ${isActive('/admin-dashboard') ? 'bg-[#005684] text-white shadow-sm' : 'text-[#64748b] hover:bg-gray-50 font-semibold'}`}>
-                <span>🗂️</span> Resumen
-              </Link>
-              {/* ... resto de enlaces ... */}
-            </nav>
-          </div>
+          {/* VALIDACIÓN: Mostrar solo si es Administrador */}
+          {rol === 'administrador' && (
+            <div className="flex flex-col gap-2">
+              <span className="text-[11px] font-extrabold text-[#94a3b8] uppercase tracking-wider">Panel Admin</span>
+              <nav className="flex flex-col gap-1">
+                <Link to="/dashboard/admin-dashboard" className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition ${isActive('/admin-dashboard') ? 'bg-[#005684] text-white shadow-sm' : 'text-[#64748b] hover:bg-gray-50'}`}>
+                  <span>🗂️</span> Resumen
+                </Link>
+                <Link to="/dashboard/admin-aprobaciones" className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition ${isActive('/admin-aprobaciones') ? 'bg-[#005684] text-white shadow-sm' : 'text-[#64748b] hover:bg-gray-50'}`}>
+                  <span>🗂️</span> Aprobaciones
+                </Link>
+                <Link to="/dashboard/admin-fundaciones" className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition ${isActive('/admin-fundaciones') ? 'bg-[#005684] text-white shadow-sm' : 'text-[#64748b] hover:bg-gray-50'}`}>
+                  <span>🗂️</span> Fundaciones
+                </Link>
+                <Link to="/dashboard/admin-voluntarios" className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition ${isActive('/admin-voluntarios') ? 'bg-[#005684] text-white shadow-sm' : 'text-[#64748b] hover:bg-gray-50'}`}>
+                  <span>👥</span> Voluntarios
+                </Link>
+                {/* Agrega aquí más opciones exclusivas del admin */}
+              </nav>
+            </div>
+          )}
 
-          <div className="flex flex-col gap-2">
-            <span className="text-[11px] font-extrabold text-[#94a3b8] uppercase tracking-wider">Usuario</span>
-            <nav className="flex flex-col gap-1">
-              <Link 
-                to="/dashboard/voluntario/editar" 
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition ${isActive('/voluntario/editar') ? 'bg-[#005684] text-white shadow-sm' : 'text-[#64748b] hover:bg-gray-50 font-semibold'}`}
-              >
-                <span>👤</span> Editar Perfil Voluntario
-              </Link>
-              {/* ... resto de enlaces ... */}
-            </nav>
-            <nav className="flex flex-col gap-1">
-              <Link 
-                to="/dashboard/fundacion/editar" 
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition ${isActive('/fundacion/editar') ? 'bg-[#005684] text-white shadow-sm' : 'text-[#64748b] hover:bg-gray-50 font-semibold'}`}
-              >
-                <span>👤</span> Editar Perfil Fundacion
-              </Link>
-              {/* ... resto de enlaces ... */}
-            </nav>
-          </div>
+          {/* VALIDACIÓN: Mostrar sección Usuario solo para Voluntarios o Fundaciones */}
+          {(rol === 'voluntario' || rol === 'fundacion') && (
+            <div className="flex flex-col gap-2">
+              <span className="text-[11px] font-extrabold text-[#94a3b8] uppercase tracking-wider">Usuario</span>
+              
+              {/* Opción exclusiva para Voluntarios */}
+              {rol === 'voluntario' && (
+                <nav className="flex flex-col gap-1">
+                  <Link 
+                    to="/dashboard/voluntario/editar" 
+                    className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition ${isActive('/voluntario/editar') ? 'bg-[#005684] text-white shadow-sm' : 'text-[#64748b] hover:bg-gray-50 font-semibold'}`}
+                  >
+                    <span>👤</span> Editar Perfil Voluntario
+                  </Link>
+                </nav>
+              )}
 
+              {/* Opción exclusiva para Fundaciones */}
+              {rol === 'fundacion' && (
+                <nav className="flex flex-col gap-1">
+                  <Link 
+                    to="/dashboard/fundacion/editar" 
+                    className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition ${isActive('/fundacion/editar') ? 'bg-[#005684] text-white shadow-sm' : 'text-[#64748b] hover:bg-gray-50 font-semibold'}`}
+                  >
+                    <span>🏢</span> Editar Perfil Fundación
+                  </Link>
+                </nav>
+              )}
+            </div>
+          )}
+
+          {/* Opciones Generales del Sistema (Todos los roles pueden acceder a sus ajustes) */}
           <div className="flex flex-col gap-2">
             <span className="text-[11px] font-extrabold text-[#94a3b8] uppercase tracking-wider">Sistema</span>
             <nav className="flex flex-col gap-1">
-              {/* ... otros enlaces ... */}
               <Link 
                 to="/dashboard/ajustes" 
                 className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition ${isActive('/ajustes') ? 'bg-[#005684] text-white shadow-sm' : 'text-[#64748b] hover:bg-gray-50 font-semibold'}`}
               >
-                <span>⚙️</span> Preferencias
+                <span>⚙️</span> Seguridad
               </Link>
+              <Link 
+                  to="/dashboard/admin-notificaciones" 
+                  className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition ${isActive('/admin-notificaciones') ? 'bg-[#005684] text-white shadow-sm' : 'text-[#64748b] hover:bg-gray-50 font-semibold'}`}
+                >
+                  <span>🔔</span> Notificaciones
+                </Link>
             </nav>
           </div>
         </div>
@@ -129,9 +155,7 @@ export function DashboardLayout() {
             onClick={handleLogout}
             className="flex items-center gap-2 text-red-600 hover:text-red-700 text-xs font-bold transition w-full px-3 py-2 rounded-xl hover:bg-red-50 cursor-pointer"
           >
-            <span>
-              <img src={Icons.LogoutIcon}></img>
-            </span> Cerrar Sesión
+            <span><img src={Icons.LogoutIcon} alt="Cerrar sesión" /></span> Cerrar Sesión
           </button>
         </div>
       </aside>
@@ -139,38 +163,39 @@ export function DashboardLayout() {
       {/* CONTENEDOR DERECHO */}
       <div className="flex-1 flex flex-col min-h-screen relative">
         
-      <header className="bg-[#EFF4FF] border-b border-[#e2e8f0] px-8 py-4 flex items-center justify-between sticky top-0 z-30">
+        <header className="bg-[#EFF4FF] border-b border-[#e2e8f0] px-8 py-4 flex items-center justify-between sticky top-0 z-30">
           <div className="flex items-center gap-2 text-xs font-semibold text-[#64748b]">
             <span>Dashboard</span>
             <span>&gt;</span>
-            <span className="text-[#071d37] font-bold">Administración</span>
+            <span className="text-[#071d37] font-bold capitalize">{rol || 'Administración'}</span>
           </div>
           
           <div className="flex items-center bg-[#f8fafc] border border-[#e2e8f0] rounded-xl px-3 py-2 w-60 gap-2">
             <span className="text-gray-400 text-xs">
-                <img src={Icons.SearchIcon}></img>
+                <img src={Icons.SearchIcon} alt="Buscar" />
             </span>
             <input type="text" placeholder="Buscar voluntarios, solicitudes..." className="bg-transparent text-xs w-full focus:outline-none" />
           </div>
 
           <div className="flex items-center gap-4">
+            {/* Badges de rol dinámicos */}
             <div className="flex items-center gap-1 bg-gray-100 p-1 rounded-xl text-[11px] font-bold text-gray-600">
-              <span className="bg-[#006194] px-2.5 py-1 rounded-lg shadow-xs text-white">Admin</span>
-              <span className="px-2.5 py-1 text-[#3F4850] bg-[#DAE2FD] rounded-xl">Gestor</span>
-              <span className="px-2.5 py-1 text-[#3F4850] bg-[#DAE2FD] rounded-xl">Voluntario</span>
+              <span className={`px-2.5 py-1 rounded-lg transition ${rol === 'administrador' ? 'bg-[#006194] text-white shadow-xs' : 'bg-[#DAE2FD] text-[#3F4850]'}`}>Admin</span>
+              <span className={`px-2.5 py-1 rounded-lg transition ${rol === 'fundacion' ? 'bg-[#006194] text-white shadow-xs' : 'bg-[#DAE2FD] text-[#3F4850]'}`}>Fundación</span>
+              <span className={`px-2.5 py-1 rounded-lg transition ${rol === 'voluntario' ? 'bg-[#006194] text-white shadow-xs' : 'bg-[#DAE2FD] text-[#3F4850]'}`}>Voluntario</span>
             </div>
-            <img src={Icons.CampanaIcon2}></img>
+            <img src={Icons.CampanaIcon2} alt="Notificaciones" />
             <span className="relative flex h-2 w-2">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
               <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
             </span>
             <div className="flex items-center gap-2.5 border-l border-gray-200 pl-4">
-              <div className="h-9 w-9 rounded-full bg-[#0f2a3f] text-white flex items-center justify-center font-bold text-xs">
-                ER
+              <div className="h-9 w-9 rounded-full bg-[#0f2a3f] text-white flex items-center justify-center font-bold text-xs uppercase">
+                {rol ? rol.substring(0, 2) : 'ER'}
               </div>
               <div className="flex flex-col text-left">
-                <span className="text-xs font-bold text-[#071d37]">Elena Rostova</span>
-                <span className="text-[10px] text-gray-400">Coordinación General ▾</span>
+                <span className="text-xs font-bold text-[#071d37] capitalize">{rol || 'Usuario'}</span>
+                <span className="text-[10px] text-gray-400">Opciones de cuenta ▾</span>
               </div>
             </div>
           </div>
