@@ -1,11 +1,10 @@
-import { useMemo, useState, useEffect, type ReactNode } from 'react';
-import { Link,useParams } from 'react-router-dom';
+import { useMemo, useState, useEffect } from 'react';
+import { Link, useParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { Header } from '../components/Header.tsx';
 import { Footer } from '../components/Footer.tsx';
 import * as Icons from "../assets/icons/index.ts";
 
-// Estilos de prioridad (Se mantienen de la maqueta)
 const PRIORITY_STYLES = {
   alta: { label: 'Alta Prioridad', className: 'bg-[#fee2e2] text-[#991b1b]', bar: 'bg-[#e53e3e]', dot: 'bg-[#e53e3e]' },
   media: { label: 'Media Prioridad', className: 'bg-[#e0e7ff] text-[#3730a3]', bar: 'bg-[#553c9a]', dot: 'bg-[#3182ce]' },
@@ -15,51 +14,102 @@ const PRIORITY_STYLES = {
 type PriorityFilter = 'todas' | 'alta' | 'media' | 'baja';
 
 export function FoundationProfile() {
-  const { id } = useParams();
+  const { id } = useParams<{ id: string }>();
   const [priorityFilter, setPriorityFilter] = useState<PriorityFilter>('todas');
   
-  // Estados Dinámicos
+  // Estados de datos Supabase
   const [fundacion, setFundacion] = useState<any>(null);
   const [necesidades, setNecesidades] = useState<any[]>([]);
   const [galeria, setGaleria] = useState<any[]>([]);
   const [resenas, setResenas] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Estados del Formulario de Contacto
+  // Estados interactivos
   const [formData, setFormData] = useState({ nombre: '', email: '', tipo: 'donaciones', mensaje: '' });
-  const [msgStatus, setMsgStatus] = useState<'idle'|'loading'|'success'|'error'>('idle');
+  const [msgStatus, setMsgStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     async function fetchProfileData() {
-      // 1. Traer la primera fundación aprobada (En producción esto se haría por el ID de la URL)
+      if (!id) {
+        setLoading(false);
+        return;
+      }
+
+      setLoading(true);
+
+      // 1. Consulta de Fundación (Manejo seguro con maybeSingle)
       const { data: fundData } = await supabase
         .from('fundaciones')
         .select('*')
-        .eq('estado', 'aprobada')
         .eq('id', id)
-        .limit(1)
-        .single();
+        .maybeSingle();
 
       if (fundData) {
         setFundacion(fundData);
 
-        // 2. Traer sus Necesidades
-        const { data: reqData } = await supabase.from('necesidades').select('*').eq('fundacion_id', fundData.id);
+        // 2. Necesidades asociadas
+        const { data: reqData } = await supabase
+          .from('necesidades')
+          .select('*')
+          .eq('fundacion_id', fundData.id)
+          .order('created_at', { ascending: false });
         if (reqData) setNecesidades(reqData);
 
-        // 3. Traer su Galería
-        const { data: galData } = await supabase.from('galeria_fundaciones').select('*').eq('fundacion_id', fundData.id);
+        // 3. Galería de fotos
+        const { data: galData } = await supabase
+          .from('galeria_fundaciones')
+          .select('*')
+          .eq('fundacion_id', fundData.id);
         if (galData) setGaleria(galData);
 
-        // 4. Traer sus Reseñas
-        const { data: revData } = await supabase.from('resenas').select('*').eq('fundacion_id', fundData.id);
+        // 4. Reseñas y calificaciones
+        const { data: revData } = await supabase
+          .from('resenas')
+          .select('*')
+          .eq('fundacion_id', fundData.id)
+          .order('created_at', { ascending: false });
         if (revData) setResenas(revData);
       }
+
       setLoading(false);
     }
+
     fetchProfileData();
   }, [id]);
 
+  // Cálculo dinámico de promedio de estrellas
+  const avgRating = useMemo(() => {
+    if (!resenas || resenas.length === 0) return '5.0';
+    const sum = resenas.reduce((acc, curr) => acc + (curr.rating || 5), 0);
+    return (sum / resenas.length).toFixed(1);
+  }, [resenas]);
+
+  // Filtrado de necesidades
+  const visibleNeeds = useMemo(() => {
+    if (priorityFilter === 'todas') return necesidades;
+    return necesidades.filter((need) => need.prioridad === priorityFilter);
+  }, [priorityFilter, necesidades]);
+
+  // Desplazamiento interactivo al formulario de contacto
+  const scrollToContact = (customMessage?: string) => {
+    if (customMessage) {
+      setFormData((prev) => ({ ...prev, mensaje: customMessage }));
+    }
+    const el = document.getElementById('seccion-contacto');
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
+  // Copiar enlace al portapapeles
+  const handleShare = () => {
+    navigator.clipboard.writeText(window.location.href);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2500);
+  };
+
+  // Envío del Formulario
   const handleContactSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!fundacion) return;
@@ -78,28 +128,51 @@ export function FoundationProfile() {
     } else {
       setMsgStatus('success');
       setFormData({ nombre: '', email: '', tipo: 'donaciones', mensaje: '' });
-      setTimeout(() => setMsgStatus('idle'), 3000);
+      setTimeout(() => setMsgStatus('idle'), 4000);
     }
   };
 
-  const visibleNeeds = useMemo(() => {
-    if (priorityFilter === 'todas') return necesidades;
-    return necesidades.filter((need) => need.prioridad === priorityFilter);
-  }, [priorityFilter, necesidades]);
+  if (loading) {
+    return (
+      <div className="min-h-svh flex items-center justify-center bg-[#f8fafc] text-gray-600 font-medium">
+        Cargando perfil institucional...
+      </div>
+    );
+  }
 
-  if (loading) return <div className="min-h-svh flex items-center justify-center">Cargando perfil...</div>;
-  if (!fundacion) return <div className="min-h-svh flex items-center justify-center">Fundación no encontrada</div>;
+  if (!fundacion) {
+    return (
+      <div className="min-h-svh flex flex-col items-center justify-center bg-[#f8fafc] gap-4">
+        <h2 className="text-xl font-bold text-[#071d37]">Fundación no encontrada</h2>
+        <p className="text-sm text-gray-500">El perfil solicitado no existe o no se encuentra activo.</p>
+        <Link to="/" className="text-sm font-bold text-[#005684] hover:underline">
+          ← Volver a la página principal
+        </Link>
+      </div>
+    );
+  }
 
-  // Helpers visuales
-  const initials = fundacion.nombre_legal.replace('Fundación', '').replace('Corporación', '').trim().substring(0, 2).toUpperCase();
-  const heroImage = fundacion.foto_portada_url && fundacion.foto_portada_url.trim() !== '' ? fundacion.foto_portada_url : 'https://images.unsplash.com/photo-1593113563332-f36e4b9317b6?auto=format&fit=crop&w=1920&q=80';
+  // Fallbacks de imágenes y contactos
+  const initials = fundacion.nombre_legal
+    .replace('Fundación', '')
+    .replace('Corporación', '')
+    .trim()
+    .substring(0, 2)
+    .toUpperCase();
+
+  const heroImage =
+    fundacion.foto_portada_url ||
+    fundacion.portada_url ||
+    'https://images.unsplash.com/photo-1593113563332-f36e4b9317b6?auto=format&fit=crop&w=1920&q=80';
+
+  const emailContacto = fundacion.email_contacto || fundacion.email_institucional || 'No registrado';
 
   return (
     <div className="flex min-h-svh w-full flex-col bg-[#f8fafc] text-left text-[15px] leading-normal text-[#2d3748] font-sans">
-      <SiteHeader />
+      <Header />
 
       <main className="flex-1 pb-12">
-        {/* Hero Section */}
+        {/* Hero Banner */}
         <section className="relative h-[280px] overflow-hidden md:h-[360px] bg-[#0f2a3f]">
           <img src={heroImage} alt="Portada de la fundación" className="h-full w-full object-cover opacity-80" />
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
@@ -108,7 +181,7 @@ export function FoundationProfile() {
         <div className="relative w-full flex justify-center px-4 md:px-8">
           <div className="w-full max-w-[1240px]">
             
-            {/* Tarjeta Perfil Header */}
+            {/* Header Tarjeta Perfil */}
             <section style={{ marginBottom: '2.5rem' }} className="relative z-20 -mt-16 md:-mt-24 mb-[40px] rounded-3xl bg-white p-6 shadow-[0_10px_35px_rgba(0,0,0,0.03)] border border-gray-100 md:p-8">
               <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between w-full">
                   
@@ -125,7 +198,7 @@ export function FoundationProfile() {
                   
                   <div className="flex flex-col justify-center">
                     <div className="mb-2 flex flex-wrap items-center gap-3">
-                      <h1 className="!m-0 !text-3xl !font-bold !text-[#071d37] !md:text-3xl !tracking-tight">
+                      <h1 className="!m-0 !text-3xl !font-bold !text-[#071d37] !tracking-tight">
                         {fundacion.nombre_legal}
                       </h1>
                       {fundacion.estado === 'aprobada' && (
@@ -137,7 +210,7 @@ export function FoundationProfile() {
 
                     <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs font-medium text-[#64748b] md:text-sm">
                       <span className="flex items-center gap-1"><span className="opacity-60"><img src={Icons.NitIcon} alt="NIT"/></span> NIT: {fundacion.nit}</span>
-                      <span className="flex items-center gap-1"><span className="text-blue-500"><img src={Icons.UbicacionIcon} alt="Ubicación"/></span> {fundacion.ubicacion}</span>
+                      <span className="flex items-center gap-1"><span className="text-blue-500"><img src={Icons.UbicacionIcon} alt="Ubicación"/></span> {fundacion.ubicacion || 'Colombia'}</span>
                       <span className="flex items-center gap-1 text-[#047857] font-bold"><span><img src={Icons.CheckVerifyIcon} alt="Vigente"/></span> RUT y Personería Vigente</span>
                     </div>
 
@@ -149,25 +222,44 @@ export function FoundationProfile() {
                   </div>
                 </div>
 
+                {/* Acciones principales */}
                 <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto justify-start lg:justify-end">
-                  <button type="button" className="flex items-center justify-center gap-2 rounded-xl bg-[#e8f2ff] px-5 py-2.5 text-sm font-bold text-[#005684] transition hover:bg-[#d4e7fe] flex-1 sm:flex-none">
-                    <span><img src={Icons.MensajeIcon} alt='Contacto'/></span> Contactar
+                  <button
+                    type="button"
+                    onClick={() => scrollToContact()}
+                    className="flex items-center justify-center gap-2 rounded-xl bg-[#e8f2ff] px-5 py-2.5 text-sm font-bold text-[#005684] transition hover:bg-[#d4e7fe] flex-1 sm:flex-none"
+                  >
+                    <img src={Icons.MensajeIcon} alt='Contacto'/> Contactar
                   </button>
-                  <button type="button" className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-[#e8f2ff] text-[#005684] transition hover:bg-[#d4e7fe]">
-                    <span className="text-sm"><img src={Icons.CompartirIcon} alt='Compartir'/></span>
+                  <button
+                    type="button"
+                    onClick={handleShare}
+                    title="Copiar enlace"
+                    className="relative flex size-10 shrink-0 items-center justify-center rounded-xl bg-[#e8f2ff] text-[#005684] transition hover:bg-[#d4e7fe]"
+                  >
+                    <img src={Icons.CompartirIcon} alt='Compartir'/>
+                    {copied && (
+                      <span className="absolute -bottom-8 left-1/2 -translate-x-1/2 rounded bg-black/80 px-2 py-0.5 text-[10px] font-bold text-white whitespace-nowrap">
+                        ¡Copiado!
+                      </span>
+                    )}
                   </button>
-                  <button type="button" className="flex items-center justify-center gap-2 rounded-xl bg-[#005684] px-6 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-[#00456a] flex-1 sm:flex-none">
-                    <span><img src={Icons.ManoIcon} alt='Donar'/></span> Donar ahora
+                  <button
+                    type="button"
+                    onClick={() => scrollToContact('Deseo coordinar una donación directa.')}
+                    className="flex items-center justify-center gap-2 rounded-xl bg-[#005684] px-6 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-[#00456a] flex-1 sm:flex-none"
+                  >
+                    <img src={Icons.ManoIcon} alt='Donar'/> Donar ahora
                   </button>
                 </div>
               </div>
             </section>
 
-           {/* Estadísticas */}
-            <div style={{ marginBottom: '2.5rem' }}  className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {/* Estadísticas Reales */}
+            <div style={{ marginBottom: '2.5rem' }} className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
               <Stat label="Trayectoria" value={fundacion.anos_operacion?.toString() || "0"} unit="años continuos" hint="Operación certificada" icon={Icons.TrayectoriaIcon} />
               <Stat label="Población Activa" value={fundacion.familias_acompanadas?.toString() || "0"} unit="beneficiarios" hint="En territorio" hintColor="text-[#10b981]" icon={Icons.PersonsIcon} />
-              <Stat label="Reputación Social" value="4.9" unit="⭐⭐⭐⭐⭐" hint={`${resenas.length} opiniones auditadas`} icon={Icons.StarIcon} />
+              <Stat label="Reputación Social" value={avgRating} unit="⭐⭐⭐⭐⭐" hint={`${resenas.length} opiniones auditadas`} icon={Icons.StarIcon} />
               <Stat label="Efectividad" value={fundacion.necesidades_resueltas?.toString() || "0"} unit="necesidades resueltas" hint="100% rendición verificada" hintColor="text-[#005684] font-bold" icon={Icons.CheckVerifyIcon} />
             </div>
 
@@ -187,15 +279,15 @@ export function FoundationProfile() {
                   </p>
 
                   <div className="mt-6 grid gap-4 sm:grid-cols-3">
-                    <InfoChip icon={Icons.EntidadIcon} title="Tipo de entidad" value="Fundación sin ánimo de lucro" />
+                    <InfoChip icon={Icons.EntidadIcon} title="Tipo de entidad" value={fundacion.personeria_juridica || "Fundación sin ánimo de lucro"} />
                     <InfoChip icon="⚖️" title="Cobertura legal" value="Registro Cámara de Comercio" />
-                    <InfoChip icon={Icons.IconVerify} title="Confianza" value="Comité de transparencia 7:34 AM" />
+                    <InfoChip icon={Icons.IconVerify} title="Confianza" value="Comité de transparencia activo" />
                   </div>
 
                   <div className="mt-8 flex items-center gap-5 rounded-xl border border-[#e2e8f0] bg-[#f8fafc] p-5">
                     <TransparencyRing value={fundacion.indice_transparencia || 0} />
                     <div>
-                      <p className="m-0 text-[15px] font-extrabold text-[#0f2a3f]">{fundacion.indice_transparencia}% Índice de transparencia</p>
+                      <p className="m-0 text-[15px] font-extrabold text-[#0f2a3f]">{fundacion.indice_transparencia || 0}% Índice de transparencia</p>
                       <p className="mt-1 mb-0 text-sm text-[#718096] leading-snug">
                         Reportes de rendición publicados cada trimestre y necesidades auditadas por el comité.
                       </p>
@@ -203,7 +295,7 @@ export function FoundationProfile() {
                   </div>
                 </section>
 
-                {/* Necesidades */}
+                {/* Necesidades Publicadas */}
                 <section className="rounded-2xl bg-white p-6 shadow-sm border border-[#e2e8f0] md:p-8">
                   <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-end md:justify-between border-b border-[#e2e8f0] pb-4">
                     <div>
@@ -211,16 +303,16 @@ export function FoundationProfile() {
                       <p className="mt-1 mb-0 text-sm font-medium text-[#718096]">Requerimientos verificados para esta fundación en territorio.</p>
                     </div>
                     <div className="!flex !flex-wrap !gap-2 !rounded-lg !bg-[#f0f4f8] !p-1.5">
-                      {(['todas', 'alta', 'media', 'baja'] as const).map((id) => (
+                      {(['todas', 'alta', 'media', 'baja'] as const).map((filterId) => (
                         <button
-                          key={id}
+                          key={filterId}
                           type="button"
-                          onClick={() => setPriorityFilter(id)}
+                          onClick={() => setPriorityFilter(filterId)}
                           className={`!rounded-md !px-4 !py-1.5 !text-xs !font-bold !transition capitalize ${
-                            priorityFilter === id ? '!bg-white !text-[#005684] !shadow-sm' : '!text-[#64748b] !hover:text-[#0f2a3f]'
+                            priorityFilter === filterId ? '!bg-white !text-[#005684] !shadow-sm' : '!text-[#64748b] !hover:text-[#0f2a3f]'
                           }`}
                         >
-                          {id}
+                          {filterId}
                         </button>
                       ))}
                     </div>
@@ -230,7 +322,9 @@ export function FoundationProfile() {
                     {visibleNeeds.length === 0 ? (
                       <p className="text-gray-500 text-sm">No hay necesidades publicadas con esta prioridad.</p>
                     ) : (
-                      visibleNeeds.map((need) => <NeedCard key={need.id} need={need} />)
+                      visibleNeeds.map((need) => (
+                        <NeedCard key={need.id} need={need} onSupport={scrollToContact} />
+                      ))
                     )}
                   </div>
                 </section>
@@ -248,28 +342,27 @@ export function FoundationProfile() {
                         <div key={photo.id} className="!group !relative !overflow-hidden !rounded-xl bg-gray-100">
                           <img
                             src={photo.imagen_url}
-                            alt={photo.alt_texto}
+                            alt={photo.alt_texto || 'Actividad en terreno'}
                             className="!h-32 !w-full !object-cover !transition-transform !duration-300 !group-hover:scale-110 !md:h-36"
                           />
-                          <div className="!absolute !inset-0 !bg-black/10 !transition-opacity !group-hover:opacity-0" />
                         </div>
                       ))}
                     </div>
                   )}
                 </section>
 
-                {/* Reseñas */}
+                {/* Reseñas Dinámicas */}
                 <section className="!rounded-2xl !bg-white !p-6 !shadow-sm !border !border-[#e2e8f0] !md:p-8">
                   <div className="!mb-6 !flex !items-center !justify-between !border-b !border-[#e2e8f0] !pb-4">
                     <h2 className="!m-0 !text-xl !font-extrabold !text-[#0f2a3f]">Calificaciones y comentarios</h2>
                     <div className="!flex !items-center !gap-2">
-                      <span className="!text-xl !font-black !text-[#005684]">4.9</span>
+                      <span className="!text-xl !font-black !text-[#005684]">{avgRating}</span>
                       <span className="!text-[#f59e0b] text-lg">★</span>
                     </div>
                   </div>
                   <div className="!flex !flex-col !gap-6">
                     {resenas.length === 0 ? (
-                       <p className="text-sm text-gray-500">Aún no hay reseñas para esta fundación.</p>
+                       <p className="text-sm text-gray-500">Aún no hay reseñas registradas para esta fundación.</p>
                     ) : (
                       resenas.map((review) => (
                         <article key={review.id} className="!flex !gap-4 !border-b !border-[#f1f5f9] !pb-6 !last:border-0 !last:pb-0">
@@ -279,8 +372,8 @@ export function FoundationProfile() {
                               <h3 className="!m-0 !text-[15px] !font-bold !text-[#0f2a3f]">{review.nombre_autor}</h3>
                               <span className="!text-xs !font-medium !text-[#94a3b8]">Verificado</span>
                             </div>
-                            <p className="!mt-0.5 !mb-1.5 !text-xs !font-bold !text-[#005684] !uppercase !tracking-wide">{review.rol_autor}</p>
-                            <p className="!m-0 !text-sm !text-[#f59e0b] !tracking-widest">{'★'.repeat(review.rating)}{'☆'.repeat(5 - review.rating)}</p>
+                            <p className="!mt-0.5 !mb-1.5 !text-xs !font-bold !text-[#005684] !uppercase !tracking-wide">{review.rol_autor || 'Voluntario'}</p>
+                            <p className="!m-0 !text-sm !text-[#f59e0b] !tracking-widest">{'★'.repeat(review.rating || 5)}{'☆'.repeat(5 - (review.rating || 5))}</p>
                             <p className="!mt-2.5 !mb-0 !text-sm !leading-relaxed !text-[#4a5568]">{review.texto_comentario}</p>
                           </div>
                         </article>
@@ -293,104 +386,185 @@ export function FoundationProfile() {
               {/* Columna Derecha (Sidebar) */}
               <aside className="flex flex-col gap-6 top-24 h-fit">
                 
-              {/* Tarjeta de Contacto */}
-              <section className="rounded-3xl bg-white p-6 shadow-[0_4px_25px_rgba(0,0,0,0.02)] border border-gray-100 flex flex-col gap-5">
-                <div className="flex items-start gap-3">
-                  <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-[#e6f0ff] text-[#005684]">
-                    <span className="text-lg"><img src={Icons.EnviarIcon} alt="Enviar"/></span> 
-                  </div>
-                  <div>
-                    <h3 className="m-0 text-[15px] font-bold text-[#071d37]">Contacto Directo</h3>
-                    <p className="m-0 text-xs text-[#64748b] mt-0.5">Respuesta promedio en menos de 4 horas</p>
-                  </div>
-                </div>
-
-                <form className="flex flex-col gap-3.5" onSubmit={handleContactSubmit}>
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-bold text-[#475569]">Nombre completo</label>
-                    <input type="text" required value={formData.nombre} onChange={e => setFormData({...formData, nombre: e.target.value})} placeholder="Ej. María Fernanda Ospina" className="w-full text-xs px-3.5 py-3 bg-[#f4f7fc] border border-transparent rounded-xl focus:outline-none focus:bg-white focus:border-[#005684] text-[#2d3748] font-medium" />
-                  </div>
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-bold text-[#475569]">Correo electrónico</label>
-                    <input type="email" required value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} placeholder="maria@ejemplo.com" className="w-full text-xs px-3.5 py-3 bg-[#f4f7fc] border border-transparent rounded-xl focus:outline-none focus:bg-white focus:border-[#005684] text-[#2d3748] font-medium" />
-                  </div>
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-bold text-[#475569]">Tipo de consulta</label>
-                    <div className="relative">
-                      <select value={formData.tipo} onChange={e => setFormData({...formData, tipo: e.target.value})} className="w-full text-xs px-3.5 py-3 bg-[#f4f7fc] border border-transparent rounded-xl focus:outline-none focus:bg-white focus:border-[#005684] text-[#2d3748] font-medium appearance-none cursor-pointer">
-                        <option value="donaciones">Quiero entregar donaciones físicas</option>
-                        <option value="voluntariado">Quiero ser voluntario</option>
-                        <option value="informacion">Solicitar información institucional</option>
-                      </select>
-                      <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none text-[10px]">▼</span>
-                    </div>
-                  </div>
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-bold text-[#475569]">Mensaje</label>
-                    <textarea required value={formData.mensaje} onChange={e => setFormData({...formData, mensaje: e.target.value})} placeholder="¿Cómo te gustaría colaborar?" rows={3} className="w-full text-xs px-3.5 py-3 bg-[#f4f7fc] border border-transparent rounded-xl focus:outline-none focus:bg-white focus:border-[#005684] text-[#2d3748] font-medium resize-none" />
-                  </div>
-
-                  {msgStatus === 'success' && <p className="text-xs font-bold text-green-600 bg-green-50 p-2 rounded-lg text-center">¡Mensaje enviado con éxito!</p>}
-                  {msgStatus === 'error' && <p className="text-xs font-bold text-red-600 text-center">Hubo un error al enviar.</p>}
-
-                  <button type="submit" disabled={msgStatus === 'loading'} className="w-full flex items-center justify-center gap-2 text-xs font-bold text-white bg-[#005684] py-3 rounded-xl hover:bg-[#00456a] transition-all shadow-sm mt-1 disabled:opacity-50">
-                    <span><img src={Icons.EnviarIconWhite} alt="Enviar"/></span> {msgStatus === 'loading' ? 'Enviando...' : 'Enviar mensaje a coordinación'}
-                  </button>
-                </form>
-
-                <div className="border-t border-gray-100/80 my-1" />
-
-                <div className="flex flex-col gap-4">
+                {/* Formulario de Contacto Directo */}
+                <section id="seccion-contacto" className="rounded-3xl bg-white p-6 shadow-[0_4px_25px_rgba(0,0,0,0.02)] border border-gray-100 flex flex-col gap-5">
                   <div className="flex items-start gap-3">
-                    <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-[#e6f0ff] text-[#005684]"><span className="text-xs"><img src={Icons.PhoneIcon}/></span></div>
-                    <div className="flex flex-col">
-                      <span className="text-[11px] font-bold text-[#a0aec0] tracking-wide uppercase">Línea Verificada</span>
-                      <span className="text-xs font-bold text-[#071d37] mt-0.5">{fundacion.telefono || 'No registrado'}</span>
+                    <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-[#e6f0ff] text-[#005684]">
+                      <img src={Icons.EnviarIcon} alt="Enviar"/>
+                    </div>
+                    <div>
+                      <h3 className="m-0 text-[15px] font-bold text-[#071d37]">Contacto Directo</h3>
+                      <p className="m-0 text-xs text-[#64748b] mt-0.5">Respuesta promedio en menos de 4 horas</p>
                     </div>
                   </div>
-                  <div className="flex items-start gap-3">
-                    <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-[#e6f0ff] text-[#005684]"><span className="text-xs"><img src={Icons.CorreoIcon}/></span></div>
-                    <div className="flex flex-col min-w-0">
-                      <span className="text-[11px] font-bold text-[#a0aec0] tracking-wide uppercase">Correo Institucional</span>
-                      <span className="text-xs font-bold text-[#071d37] mt-0.5 truncate">{fundacion.email_institucional}</span>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-[#e6f0ff] text-[#005684]"><span className="text-xs"><img src={Icons.UbicacionIcon}/></span></div>
-                    <div className="flex flex-col">
-                      <span className="text-[11px] font-bold text-[#a0aec0] tracking-wide uppercase">Sede de Acopio y Atención</span>
-                      <span className="text-xs font-bold text-[#475569] mt-0.5 leading-normal">{fundacion.direccion_fisica || fundacion.ubicacion}</span>
-                    </div>
-                  </div>
-                </div>
 
-                <div className="border-t border-gray-100/80 mt-1" />
-                <div className="flex items-center justify-between w-full pt-1">
-                  <span className="text-xs font-bold text-[#475569]">Canales digitales:</span>
-                  <div className="flex items-center gap-2">
-                    <button className="flex size-8 items-center justify-center rounded-lg bg-[#f4f7fc] text-[#005684] hover:bg-[#e6f0ff] text-xs"><img src={Icons.CameraIcon}/></button>
-                    <button className="flex size-8 items-center justify-center rounded-lg bg-[#f4f7fc] text-[#005684] hover:bg-[#e6f0ff] text-xs"><img src={Icons.MundoIcon}/></button>
-                    <button className="flex size-8 items-center justify-center rounded-lg bg-[#f4f7fc] text-[#005684] hover:bg-[#e6f0ff] text-xs"><img src={Icons.RedIcon}/></button>
+                  <form className="flex flex-col gap-3.5" onSubmit={handleContactSubmit}>
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-bold text-[#475569]">Nombre completo</label>
+                      <input
+                        type="text"
+                        required
+                        value={formData.nombre}
+                        onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
+                        placeholder="Ej. María Fernanda Ospina"
+                        className="w-full text-xs px-3.5 py-3 bg-[#f4f7fc] border border-transparent rounded-xl focus:outline-none focus:bg-white focus:border-[#005684] text-[#2d3748] font-medium"
+                      />
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-bold text-[#475569]">Correo electrónico</label>
+                      <input
+                        type="email"
+                        required
+                        value={formData.email}
+                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                        placeholder="maria@ejemplo.com"
+                        className="w-full text-xs px-3.5 py-3 bg-[#f4f7fc] border border-transparent rounded-xl focus:outline-none focus:bg-white focus:border-[#005684] text-[#2d3748] font-medium"
+                      />
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-bold text-[#475569]">Tipo de consulta</label>
+                      <div className="relative">
+                        <select
+                          value={formData.tipo}
+                          onChange={(e) => setFormData({ ...formData, tipo: e.target.value })}
+                          className="w-full text-xs px-3.5 py-3 bg-[#f4f7fc] border border-transparent rounded-xl focus:outline-none focus:bg-white focus:border-[#005684] text-[#2d3748] font-medium appearance-none cursor-pointer"
+                        >
+                          <option value="donaciones">Quiero entregar donaciones físicas</option>
+                          <option value="voluntariado">Quiero ser voluntario</option>
+                          <option value="informacion">Solicitar información institucional</option>
+                        </select>
+                        <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none text-[10px]">▼</span>
+                      </div>
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-bold text-[#475569]">Mensaje</label>
+                      <textarea
+                        required
+                        value={formData.mensaje}
+                        onChange={(e) => setFormData({ ...formData, mensaje: e.target.value })}
+                        placeholder="¿Cómo te gustaría colaborar?"
+                        rows={3}
+                        className="w-full text-xs px-3.5 py-3 bg-[#f4f7fc] border border-transparent rounded-xl focus:outline-none focus:bg-white focus:border-[#005684] text-[#2d3748] font-medium resize-none"
+                      />
+                    </div>
+
+                    {msgStatus === 'success' && (
+                      <p className="text-xs font-bold text-green-600 bg-green-50 p-2 rounded-lg text-center">
+                        ¡Mensaje enviado con éxito!
+                      </p>
+                    )}
+                    {msgStatus === 'error' && (
+                      <p className="text-xs font-bold text-red-600 text-center">
+                        Hubo un error al enviar el mensaje.
+                      </p>
+                    )}
+
+                    <button
+                      type="submit"
+                      disabled={msgStatus === 'loading'}
+                      className="w-full flex items-center justify-center gap-2 text-xs font-bold text-white bg-[#005684] py-3 rounded-xl hover:bg-[#00456a] transition-all shadow-sm mt-1 disabled:opacity-50"
+                    >
+                      <img src={Icons.EnviarIconWhite} alt="Enviar"/>
+                      {msgStatus === 'loading' ? 'Enviando...' : 'Enviar mensaje a coordinación'}
+                    </button>
+                  </form>
+
+                  <div className="border-t border-gray-100/80 my-1" />
+
+                  <div className="flex flex-col gap-4">
+                    <div className="flex items-start gap-3">
+                      <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-[#e6f0ff] text-[#005684]">
+                        <img src={Icons.PhoneIcon} alt="Teléfono"/>
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="text-[11px] font-bold text-[#a0aec0] tracking-wide uppercase">Línea Verificada</span>
+                        <span className="text-xs font-bold text-[#071d37] mt-0.5">{fundacion.telefono || 'No registrado'}</span>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-[#e6f0ff] text-[#005684]">
+                        <img src={Icons.CorreoIcon} alt="Correo"/>
+                      </div>
+                      <div className="flex flex-col min-w-0">
+                        <span className="text-[11px] font-bold text-[#a0aec0] tracking-wide uppercase">Correo Institucional</span>
+                        <span className="text-xs font-bold text-[#071d37] mt-0.5 truncate">{emailContacto}</span>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-[#e6f0ff] text-[#005684]">
+                        <img src={Icons.UbicacionIcon} alt="Ubicación"/>
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="text-[11px] font-bold text-[#a0aec0] tracking-wide uppercase">Sede de Acopio y Atención</span>
+                        <span className="text-xs font-bold text-[#475569] mt-0.5 leading-normal">
+                          {fundacion.direccion_fisica || fundacion.ubicacion || 'Colombia'}
+                        </span>
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </section>
+
+                  {/* Canales Digitales Dinámicos */}
+                  <div className="border-t border-gray-100/80 mt-1" />
+                  <div className="flex items-center justify-between w-full pt-1">
+                    <span className="text-xs font-bold text-[#475569]">Canales digitales:</span>
+                    <div className="flex items-center gap-2">
+                      {fundacion.instagram && (
+                        <a
+                          href={fundacion.instagram.startsWith('http') ? fundacion.instagram : `https://instagram.com/${fundacion.instagram}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex size-8 items-center justify-center rounded-lg bg-[#f4f7fc] text-[#005684] hover:bg-[#e6f0ff]"
+                        >
+                          <img src={Icons.CameraIcon} alt="Instagram" />
+                        </a>
+                      )}
+                      {fundacion.sitio_web && (
+                        <a
+                          href={fundacion.sitio_web.startsWith('http') ? fundacion.sitio_web : `https://${fundacion.sitio_web}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex size-8 items-center justify-center rounded-lg bg-[#f4f7fc] text-[#005684] hover:bg-[#e6f0ff]"
+                        >
+                          <img src={Icons.MundoIcon} alt="Sitio Web" />
+                        </a>
+                      )}
+                      {fundacion.telefono_whatsapp && (
+                        <a
+                          href={`https://wa.me/${fundacion.telefono_whatsapp.replace(/[^0-9]/g, '')}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex size-8 items-center justify-center rounded-lg bg-[#f4f7fc] text-[#005684] hover:bg-[#e6f0ff]"
+                        >
+                          <img src={Icons.RedIcon} alt="WhatsApp" />
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                </section>
 
                 <SidebarCard title="Ubicación en territorio">
                   <div className="overflow-hidden rounded-xl border border-[#e2e8f0] shadow-sm bg-gray-100 flex items-center justify-center h-48 relative">
-                    <iframe title="Mapa" className="absolute inset-0 h-full w-full border-0" src="https://www.openstreetmap.org/export/embed.html?bbox=-74.075%2C4.630%2C-74.045%2C4.655&layer=mapnik&marker=4.643%2C-74.063" loading="lazy" />
+                    <iframe
+                      title="Mapa de ubicación"
+                      className="absolute inset-0 h-full w-full border-0"
+                      src="https://www.openstreetmap.org/export/embed.html?bbox=-74.075%2C4.630%2C-74.045%2C4.655&layer=mapnik&marker=4.643%2C-74.063"
+                      loading="lazy"
+                    />
                   </div>
                   <div className="mt-3 flex items-start gap-2">
-                    <span className="text-[#005684]"><img src={Icons.UbicacionIcon}/></span>
-                    <p className="m-0 text-sm font-medium text-[#475569]">{fundacion.ubicacion}<br/><span className="text-xs text-[#94a3b8]">Colombia</span></p>
+                    <span className="text-[#005684]"><img src={Icons.UbicacionIcon} alt="Ubicación"/></span>
+                    <p className="m-0 text-sm font-medium text-[#475569]">
+                      {fundacion.ubicacion || 'Colombia'}
+                    </p>
                   </div>
                 </SidebarCard>
                 
                 <div className="rounded-3xl bg-[#f4f7fc] p-6 border border-transparent flex gap-4 items-start w-full max-w-[380px]">
                   <div className="text-[#005684] shrink-0 mt-0.5 bg-transparent size-8 rounded-xl flex items-center justify-center">
-                    <span className="text-base font-bold"><img className="w-[16px] h-[20px]" src={Icons.IconVerify}/></span> 
+                    <img className="w-[16px] h-[20px]" src={Icons.IconVerify} alt="Verificado"/>
                   </div>
                   <div className="flex flex-col gap-1">
-                    <h4 className="m-0 text-[15px] font-bold text-[#071d37] tracking-tight">Validado por 7:34 AM</h4>
+                    <h4 className="m-0 text-[15px] font-bold text-[#071d37] tracking-tight">Validado por la plataforma</h4>
                     <p className="m-0 text-xs leading-relaxed text-[#475569] font-medium">Esta organización fue auditada fiscal y territorialmente. Cumple con la trazabilidad digital de recursos.</p>
                   </div>
                 </div>
@@ -413,20 +587,17 @@ export function FoundationProfile() {
           </div>
         </div>
       </section>
-      <SiteFooter />
+      <Footer />
     </div>
   );
 }
-
-function SiteHeader() { return <Header />; }
-function SiteFooter() { return <Footer />; }
 
 function Stat({ value, label, unit, hint, hintColor = "text-[#64748b]", icon }: any) {
   return (
     <div className="flex flex-col justify-between rounded-2xl border border-gray-100/80 bg-white p-5 shadow-[0_4px_20px_rgba(0,0,0,0.015)] transition-shadow hover:shadow-sm">
       <div className="flex items-center justify-between w-full mb-4">
         <span className="text-xs font-semibold text-[#64748b] tracking-tight">{label}</span>
-        <div className="text-sm opacity-80 shrink-0"><img src={icon}/></div>
+        <div className="text-sm opacity-80 shrink-0"><img src={icon} alt=""/></div>
       </div>
       <div className="flex items-baseline gap-1.5 mb-1">
         <span className="text-3xl font-bold text-[#071d37] tracking-tight">{value}</span>
@@ -438,10 +609,14 @@ function Stat({ value, label, unit, hint, hintColor = "text-[#64748b]", icon }: 
 }
 
 function InfoChip({ icon, title, value }: any) {
+  const isImageIcon = typeof icon === 'string' && (icon.includes('/') || icon.includes('data:') || icon.includes('static'));
+
   return (
     <div className="flex flex-col rounded-xl bg-[#f8fafc] border border-[#e2e8f0] p-4">
       <div className="flex items-center gap-2 mb-2">
-        <span className="text-lg"><img src={icon}/></span>
+        <span className="text-lg">
+          {isImageIcon ? <img src={icon} alt={title} className="size-5 object-contain" /> : icon}
+        </span>
         <p className="m-0 text-[11px] font-extrabold tracking-wider text-[#005684] uppercase">{title}</p>
       </div>
       <p className="m-0 text-sm font-bold text-[#0f2a3f]">{value}</p>
@@ -473,8 +648,9 @@ function TransparencyRing({ value }: { value: number }) {
   );
 }
 
-function NeedCard({ need }: any) {
+function NeedCard({ need, onSupport }: { need: any; onSupport: (msg: string) => void }) {
   const style = PRIORITY_STYLES[need.prioridad as keyof typeof PRIORITY_STYLES] || PRIORITY_STYLES.media;
+  
   return (
     <article className="relative overflow-hidden rounded-xl border border-[#e2e8f0] bg-white p-5 shadow-sm transition hover:shadow-md">
       <span className={`absolute inset-x-0 top-0 h-1.5 ${style.dot}`} />
@@ -487,20 +663,24 @@ function NeedCard({ need }: any) {
       
       <div className="rounded-xl bg-[#f8fafc] border border-[#f1f5f9] p-4">
         <div className="mb-2.5 flex justify-between text-xs font-bold text-[#475569]">
-          <span>Categoría: <span className="text-[#005684]">{need.categoria}</span></span>
-          <span>Recaudado: {need.porcentaje_recaudado}%</span>
+          <span>Categoría: <span className="text-[#005684]">{need.categoria || 'General'}</span></span>
+          <span>Recaudado: {need.porcentaje_recaudado || 0}%</span>
         </div>
         <div className="h-2 overflow-hidden rounded-full bg-[#e2e8f0]">
-          <div className={`h-full rounded-full ${style.bar}`} style={{ width: `${need.porcentaje_recaudado}%` }} />
+          <div className={`h-full rounded-full ${style.bar}`} style={{ width: `${Math.min(need.porcentaje_recaudado || 0, 100)}%` }} />
         </div>
-        <p className="mt-2 mb-0 text-right text-xs font-semibold text-[#64748b]">{need.meta_texto}</p>
+        <p className="mt-2 mb-0 text-right text-xs font-semibold text-[#64748b]">{need.meta_texto || 'Sin meta especificada'}</p>
       </div>
       
       <div className="mt-4 flex items-center justify-between pt-2">
         <span className="flex items-center gap-1.5 text-xs font-extrabold text-[#047857]">
           <img src={Icons.IconVerify} alt="Verificado" className="size-3.5" /> Verificada
         </span>
-        <button type="button" className="rounded-full bg-[#005684] px-5 py-2 text-xs font-bold text-white shadow-sm transition hover:bg-[#00456a]">
+        <button
+          type="button"
+          onClick={() => onSupport(`Deseo apoyar la necesidad: "${need.titulo}"`)}
+          className="rounded-full bg-[#005684] px-5 py-2 text-xs font-bold text-white shadow-sm transition hover:bg-[#00456a]"
+        >
           Apoyar esta necesidad →
         </button>
       </div>
