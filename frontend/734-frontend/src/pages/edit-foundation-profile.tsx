@@ -39,6 +39,7 @@ interface FundacionData {
   localidad?: string | null;
   direccion_fisica?: string | null;
   telefono_whatsapp?: string | null;
+  telefono?: string | null;
   email_contacto?: string | null;
   email_institucional?: string | null;
   instagram?: string | null;
@@ -80,6 +81,7 @@ export function EditFoundationProfile() {
   const [direccionEntrega, setDireccionEntrega] = useState('');
 
   const [whatsapp, setWhatsapp] = useState('');
+  const [telFijo, setTelFijo] = useState('');
   const [email, setEmail] = useState('');
   const [instagram, setInstagram] = useState('');
   const [sitioWeb, setSitioWeb] = useState('');
@@ -134,6 +136,7 @@ export function EditFoundationProfile() {
         setLocalidad(fund.localidad || '');
         setDireccionEntrega(fund.direccion_fisica || '');
         setWhatsapp(fund.telefono_whatsapp || '');
+        setTelFijo(fund.telefono || '');
         setEmail(fund.email_contacto || fund.email_institucional || '');
         setInstagram(fund.instagram || '');
         setSitioWeb(fund.sitio_web || '');
@@ -183,6 +186,7 @@ export function EditFoundationProfile() {
         localidad: localidad,
         direccion_fisica: direccionEntrega,
         telefono_whatsapp: whatsapp,
+        telefono:telFijo,
         email_contacto: email,
         email_institucional: email,
         instagram: instagram,
@@ -362,7 +366,7 @@ export function EditFoundationProfile() {
             
             <div className="flex items-center gap-3 shrink-0 mt-4 md:mt-0">
               <button 
-                onClick={() => navigate(`/fundacion/${foundationId || id}`)}
+                onClick={() => navigate(`/fundacion/${foundationId}`)}
                 className="bg-white text-[#005684] px-4 py-2.5 rounded-xl text-xs font-bold hover:bg-[#eef6ff] transition flex items-center gap-2 border border-[#dbeafe] cursor-pointer"
               >
                 Ver Perfil Público ↗
@@ -793,6 +797,19 @@ export function EditFoundationProfile() {
                           type="text" 
                           value={whatsapp} 
                           onChange={(e) => { setWhatsapp(e.target.value); markUnsaved(); }} 
+                          placeholder="+57 300 000 0000"
+                          className="w-full bg-[#f8fafc] border border-[#e2e8f0] focus:border-[#005684] rounded-xl pl-9 pr-4 py-2 text-xs font-semibold text-[#071d37] outline-none transition" 
+                        />
+                     </div>
+                   </div>
+                   <div>
+                     <label className="text-[9px] font-extrabold text-[#94a3b8] uppercase block mb-1">Telefono Fijo</label>
+                     <div className="relative">
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-emerald-500">💬</span>
+                        <input 
+                          type="text" 
+                          value={telFijo} 
+                          onChange={(e) => { setTelFijo(e.target.value); markUnsaved(); }} 
                           placeholder="+57 300 000 0000"
                           className="w-full bg-[#f8fafc] border border-[#e2e8f0] focus:border-[#005684] rounded-xl pl-9 pr-4 py-2 text-xs font-semibold text-[#071d37] outline-none transition" 
                         />
