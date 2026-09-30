@@ -7,6 +7,7 @@ export function DashboardLayout() {
   const navigate = useNavigate();
   const location = useLocation();
   const [rol, setRol] = useState<string | null>(null);
+  const [profileData, setProfileData] = useState<{ name: string; avatar: string | null; id: string} | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -15,9 +16,10 @@ export function DashboardLayout() {
         const { data: { session } } = await supabase.auth.getSession();
         
         if (session?.user) {
+          // 1. Obtener el rol del perfil
           const { data: perfil, error } = await supabase
             .from('perfiles')
-            .select('rol')
+            .select('rol,id')
             .eq('id', session.user.id)
             .maybeSingle();
 
@@ -25,6 +27,36 @@ export function DashboardLayout() {
             console.error("Error obteniendo el rol del layout:", error.message);
           } else if (perfil) {
             setRol(perfil.rol);
+            // 2. Obtener datos específicos según el rol para el Header
+            if (perfil.rol === 'fundacion') {
+              const { data: fund } = await supabase
+                .from('fundaciones')
+                .select('nombre_legal, logo_url, id',)
+                .eq('id', session.user.id)
+                .single();
+              setProfileData({ 
+                name: fund?.nombre_legal || 'Fundación', 
+                avatar: fund?.logo_url,
+                id: fund?.id
+              });
+            } else if (perfil.rol === 'voluntario') {
+              const { data: vol } = await supabase
+                .from('voluntarios')
+                .select('nombre_completo, avatar_url, id')
+                .eq('id', session.user.id)
+                .single();
+              setProfileData({ 
+                name: vol?.nombre_completo || 'Voluntario', 
+                avatar: vol?.avatar_url,
+                id: vol?.id
+              });
+            } else if (perfil.rol === 'administrador' || perfil.rol === 'admin') {
+              setProfileData({ 
+                name: 'Administrador', 
+                avatar: null,
+                id: perfil.id
+              });
+            }
           }
         } else {
           // Si no hay sesión activa, redirigir al login
@@ -78,7 +110,7 @@ export function DashboardLayout() {
           </div>
 
           {/* VALIDACIÓN: Mostrar solo si es Administrador */}
-          {rol === 'administrador' && (
+          {(rol === 'administrador' || rol === 'admin') && (
             <div className="flex flex-col gap-2">
               <span className="text-[11px] font-extrabold text-[#94a3b8] uppercase tracking-wider">Panel Admin</span>
               <nav className="flex flex-col gap-1">
@@ -94,7 +126,6 @@ export function DashboardLayout() {
                 <Link to="/dashboard/admin-voluntarios" className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition ${isActive('/admin-voluntarios') ? 'bg-[#005684] text-white shadow-sm' : 'text-[#64748b] hover:bg-gray-50'}`}>
                   <span>👥</span> Voluntarios
                 </Link>
-                {/* Agrega aquí más opciones exclusivas del admin */}
               </nav>
             </div>
           )}
@@ -108,7 +139,8 @@ export function DashboardLayout() {
               {rol === 'voluntario' && (
                 <nav className="flex flex-col gap-1">
                   <Link 
-                    to="/dashboard/voluntario/editar" 
+                    to={`/dashboard/voluntario/editar/${profileData?.id ?? ''}`}
+
                     className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition ${isActive('/voluntario/editar') ? 'bg-[#005684] text-white shadow-sm' : 'text-[#64748b] hover:bg-gray-50 font-semibold'}`}
                   >
                     <span>👤</span> Editar Perfil Voluntario
@@ -120,7 +152,7 @@ export function DashboardLayout() {
               {rol === 'fundacion' && (
                 <nav className="flex flex-col gap-1">
                   <Link 
-                    to="/dashboard/fundacion/editar" 
+                    to={`/dashboard/fundacion/editar/${profileData?.id ?? ''}`} 
                     className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition ${isActive('/fundacion/editar') ? 'bg-[#005684] text-white shadow-sm' : 'text-[#64748b] hover:bg-gray-50 font-semibold'}`}
                   >
                     <span>🏢</span> Editar Perfil Fundación
@@ -130,7 +162,7 @@ export function DashboardLayout() {
             </div>
           )}
 
-          {/* Opciones Generales del Sistema (Todos los roles pueden acceder a sus ajustes) */}
+          {/* Opciones Generales del Sistema */}
           <div className="flex flex-col gap-2">
             <span className="text-[11px] font-extrabold text-[#94a3b8] uppercase tracking-wider">Sistema</span>
             <nav className="flex flex-col gap-1">
@@ -163,6 +195,7 @@ export function DashboardLayout() {
       {/* CONTENEDOR DERECHO */}
       <div className="flex-1 flex flex-col min-h-screen relative">
         
+        {/* HEADER ACTUALIZADO CON CONEXIÓN A DB */}
         <header className="bg-[#EFF4FF] border-b border-[#e2e8f0] px-8 py-4 flex items-center justify-between sticky top-0 z-30">
           <div className="flex items-center gap-2 text-xs font-semibold text-[#64748b]">
             <span>Dashboard</span>
@@ -170,38 +203,47 @@ export function DashboardLayout() {
             <span className="text-[#071d37] font-bold capitalize">{rol || 'Administración'}</span>
           </div>
           
-          <div className="flex items-center bg-[#f8fafc] border border-[#e2e8f0] rounded-xl px-3 py-2 w-60 gap-2">
-            <span className="text-gray-400 text-xs">
-                <img src={Icons.SearchIcon} alt="Buscar" />
-            </span>
-            <input type="text" placeholder="Buscar voluntarios, solicitudes..." className="bg-transparent text-xs w-full focus:outline-none" />
-          </div>
-
+          {(rol === 'administrador' || rol === 'admin') && (
+            <div className="flex items-center bg-[#f8fafc] border border-[#e2e8f0] rounded-xl px-3 py-2 w-60 gap-2">
+              <span className="text-gray-400 text-xs">
+                  <img src={Icons.SearchIcon} alt="Buscar" />
+              </span>
+              <input type="text" placeholder="Buscar voluntarios, solicitudes..." className="bg-transparent text-xs w-full focus:outline-none" />
+            </div>
+          )}
           <div className="flex items-center gap-4">
             {/* Badges de rol dinámicos */}
             <div className="flex items-center gap-1 bg-gray-100 p-1 rounded-xl text-[11px] font-bold text-gray-600">
-              <span className={`px-2.5 py-1 rounded-lg transition ${rol === 'administrador' ? 'bg-[#006194] text-white shadow-xs' : 'bg-[#DAE2FD] text-[#3F4850]'}`}>Admin</span>
+              <span className={`px-2.5 py-1 rounded-lg transition ${rol === 'administrador' || rol === 'admin' ? 'bg-[#006194] text-white shadow-xs' : 'bg-[#DAE2FD] text-[#3F4850]'}`}>Admin</span>
               <span className={`px-2.5 py-1 rounded-lg transition ${rol === 'fundacion' ? 'bg-[#006194] text-white shadow-xs' : 'bg-[#DAE2FD] text-[#3F4850]'}`}>Fundación</span>
               <span className={`px-2.5 py-1 rounded-lg transition ${rol === 'voluntario' ? 'bg-[#006194] text-white shadow-xs' : 'bg-[#DAE2FD] text-[#3F4850]'}`}>Voluntario</span>
             </div>
+            
             <img src={Icons.CampanaIcon2} alt="Notificaciones" />
+            
             <span className="relative flex h-2 w-2">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
               <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
             </span>
+            
+            {/* Perfil del Usuario Dinámico */}
             <div className="flex items-center gap-2.5 border-l border-gray-200 pl-4">
-              <div className="h-9 w-9 rounded-full bg-[#0f2a3f] text-white flex items-center justify-center font-bold text-xs uppercase">
-                {rol ? rol.substring(0, 2) : 'ER'}
+              <div className="h-9 w-9 rounded-full bg-[#0f2a3f] text-white flex items-center justify-center font-bold text-xs uppercase overflow-hidden">
+                {profileData?.avatar ? (
+                  <img src={profileData.avatar} alt="Perfil" className="w-full h-full object-cover" />
+                ) : (
+                  profileData?.name ? profileData.name.substring(0, 2) : 'US'
+                )}
               </div>
               <div className="flex flex-col text-left">
-                <span className="text-xs font-bold text-[#071d37] capitalize">{rol || 'Usuario'}</span>
-                <span className="text-[10px] text-gray-400">Opciones de cuenta ▾</span>
+                <span className="text-xs font-bold text-[#071d37]">{profileData?.name || 'Usuario'}</span>
               </div>
             </div>
+
           </div>
         </header>
 
-        {/* AQUÍ SE INYECTA EL CONTENIDO DE LA PÁGINA (AccountSettings o EditVolunteerProfile) */}
+        {/* CONTENIDO DE LA PÁGINA */}
         <div className="p-4 max-w-[1400px] w-full mx-auto flex flex-col gap-6">
             <Outlet /> 
         </div>

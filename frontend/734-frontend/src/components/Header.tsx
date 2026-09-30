@@ -19,7 +19,7 @@ export function Header({
   const [profileData, setProfileData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+ useEffect(() => {
     async function getAuthUser() {
       // 1. Obtener la sesión actual de Supabase Auth
       const { data: { session } } = await supabase.auth.getSession();
@@ -28,45 +28,52 @@ export function Header({
         setUser(session.user);
 
         // 2. Consultar la tabla perfiles para saber el rol y buscar su nombre real
-        const { data: perfil,error: perfilError } = await supabase
+        const { data: perfil, error: perfilError } = await supabase
           .from('perfiles')
           .select('*')
           .eq('id', session.user.id)
           .maybeSingle();
-          if (perfilError) {
-            console.error("Error cargando perfil:", perfilError.message);
-          }
+
+        if (perfilError) {
+          console.error("Error cargando perfil:", perfilError.message);
+        }
+
         if (perfil) {
           if (perfil.rol === 'fundacion') {
-            const { data: fund,error: fundacionError } = await supabase
+            const { data: fund, error: fundacionError } = await supabase
               .from('fundaciones')
               .select('nombre_legal, logo_url')
               .eq('id', session.user.id)
               .maybeSingle();
+
+            if (fundacionError) {
+              console.error("Error cargando perfil fundacion:", fundacionError.message);
+            }
+
             setProfileData({ 
               name: fund?.nombre_legal || 'Fundación', 
               avatar: fund?.logo_url,
               rol: perfil.rol 
             });
-            if (fundacionError) {
-            console.error("Error cargando perfil:", fundacionError.message);
-          }
+
           } else if (perfil.rol === 'voluntario') {
-            const { data: vol ,error: voluntarioError } = await supabase
+            const { data: vol, error: voluntarioError } = await supabase
               .from('voluntarios')
               .select('nombre_completo, avatar_url')
               .eq('id', session.user.id)
               .maybeSingle();
-              if (voluntarioError) {
-            console.error("Error cargando perfil:", voluntarioError.message);
+
+            if (voluntarioError) {
+              console.error("Error cargando perfil voluntario:", voluntarioError.message);
             }
+
             setProfileData({ 
               name: vol?.nombre_completo || 'Voluntario', 
               avatar: vol?.avatar_url,
               rol: perfil.rol 
             });
             
-          } else if (perfil.rol === 'admin') {
+          } else if (perfil.rol === 'administrador') {
             setProfileData({ 
               name: 'Administrador', 
               avatar: null,
@@ -84,6 +91,7 @@ export function Header({
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       if (session?.user) {
         setUser(session.user);
+        // Opcional: Podrías volver a ejecutar getAuthUser() aquí si quieres actualizar el perfil automáticamente al cambiar de usuario
       } else {
         setUser(null);
         setProfileData(null);
@@ -105,18 +113,20 @@ export function Header({
     return Icons.PersonIcon;
   };
 
-  // Función para determinar la ruta del dashboard según el rol
+  // FUNCIÓN CORREGIDA: Ahora usa el estado 'user' en lugar de la variable local 'session'
   const getDashboardPath = () => {
     switch (profileData?.rol) {
-      case 'admin':
+      case 'administrador':
         return '/dashboard/admin-dashboard';
       case 'fundacion':
-        return '/dashboard/fundacion/editar';
+        return user?.id ? `/dashboard/fundacion/editar/${user.id}` : '/dashboard';
       case 'voluntario':
       default:
-        return '/dashboard/voluntario/editar';
+        return user?.id ? `/dashboard/voluntario/editar/${user.id}` : '/dashboard';
     }
   };
+
+
 
   return (
     <header className="home-header">

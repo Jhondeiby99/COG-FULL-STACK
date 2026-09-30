@@ -82,16 +82,17 @@ export function SignUp() {
 
 		// 3. Insertar en la tabla específica según el rol
 		if (activeRole === 'fundacion') {
-			await supabase.from('fundaciones').insert([{
-				id: userId,
-				nombre_legal: formData.nombreLegal,
-				nit: formData.nit,
-				representante_legal: formData.representante,
-				telefono: formData.telefono,
-				email_institucional: formData.email,
-				ubicacion: formData.ubicacion,
-				estado: 'pendiente'
-			}]);
+            await supabase.from('fundaciones').insert([{
+                id: userId,
+                nombre_legal: formData.nombreLegal,
+                nit: formData.nit,
+                representante_legal: formData.representante,
+                telefono: formData.telefono,
+                email_institucional: formData.email,
+                ubicacion: formData.ubicacion,
+                estado: 'pendiente',
+                fecha_solicitud: new Date().toISOString() // 👈 Asegura la fecha y hora exacta
+            }]);
 		} else {
 			await supabase.from('voluntarios').insert([{
 				id: userId,
