@@ -19,6 +19,7 @@ import { AdminVolunteers } from './pages/admin-volunteers';
 import { AccountNotifications } from './pages/account-notifications';
 
 // Componente opcional para proteger paneles exclusivos (Ej: Admin o Edición)
+// Reemplaza tu función ProtectedRoute en App.tsx por esta:
 function ProtectedRoute({ children, requiredRole }: { children: React.ReactNode; requiredRole?: string }) {
   const [authStatus, setAuthStatus] = useState<{ loading: boolean; session: boolean; role?: string }>({
     loading: true,
@@ -26,29 +27,38 @@ function ProtectedRoute({ children, requiredRole }: { children: React.ReactNode;
   });
 
   useEffect(() => {
-    async function checkAuth() {
-      const { data: { session } } = await supabase.auth.getSession();
-      
+    let isMounted = true;
+
+    async function resolveSession(session: any) {
       if (!session) {
-        setAuthStatus({ loading: false, session: false });
+        if (isMounted) setAuthStatus({ loading: false, session: false });
         return;
       }
 
-      // Si requiere un rol específico, lo consultamos en la tabla perfiles
       if (requiredRole) {
-        const { data: perfil } = await supabase
-          .from('perfiles')
-          .select('rol')
-          .eq('id', session.user.id)
-          .single();
-
-        setAuthStatus({ loading: false, session: true, role: perfil?.rol });
+        const { data: perfil } = await supabase.from('perfiles').select('rol').eq('id', session.user.id).single();
+        if (isMounted) setAuthStatus({ loading: false, session: true, role: perfil?.rol });
       } else {
-        setAuthStatus({ loading: false, session: true });
+        if (isMounted) setAuthStatus({ loading: false, session: true });
       }
     }
 
-    checkAuth();
+    // 1. Revisión inicial al cargar la página
+    supabase.auth.getSession().then(({ data: { session } }) => resolveSession(session));
+
+    // 2. VIGILANTE EN TIEMPO REAL: Si la sesión muere, expulsa al usuario al instante
+    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_OUT' || !session) {
+        if (isMounted) setAuthStatus({ loading: false, session: false });
+      } else {
+        resolveSession(session);
+      }
+    });
+
+    return () => {
+      isMounted = false;
+      authListener.subscription.unsubscribe();
+    };
   }, [requiredRole]);
 
   if (authStatus.loading) {
@@ -59,12 +69,11 @@ function ProtectedRoute({ children, requiredRole }: { children: React.ReactNode;
     );
   }
 
-  // Si no hay sesión, al login
+  // Si se detecta que no hay sesión, expulsa inmediatamente a /login
   if (!authStatus.session) {
     return <Navigate to="/login" replace />;
   }
 
-  // Si se pedía un rol y no coincide, redirigir al inicio
   if (requiredRole && authStatus.role !== requiredRole) {
     return <Navigate to="/" replace />;
   }

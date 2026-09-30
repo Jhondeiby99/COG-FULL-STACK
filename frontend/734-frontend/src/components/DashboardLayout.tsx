@@ -1,7 +1,15 @@
 import { useNavigate, Outlet, Link, useLocation } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import * as Icons from "../assets/icons/index.ts";
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+
+interface Notificacion {
+  id: string;
+  titulo: string;
+  descripcion: string;
+  leido: boolean;
+  created_at: string;
+}
 
 export function DashboardLayout() {
   const navigate = useNavigate();
@@ -9,75 +17,123 @@ export function DashboardLayout() {
   const [rol, setRol] = useState<string | null>(null);
   const [profileData, setProfileData] = useState<{ name: string; avatar: string | null; id: string} | null>(null);
   const [loading, setLoading] = useState(true);
+  
+  // Estado para notificaciones
+  const [notificaciones, setNotificaciones] = useState<Notificacion[]>([]);
+  const [showNotifs, setShowNotifs] = useState(false);
+  const notifRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    let isMounted = true; // <-- Bandera de seguridad
+
     async function getSessionAndRol() {
       try {
         const { data: { session } } = await supabase.auth.getSession();
         
         if (session?.user) {
-          // 1. Obtener el rol del perfil
-          const { data: perfil, error } = await supabase
+          const { data: notifs } = await supabase
+            .from('notificaciones')
+            .select('*')
+            .eq('user_id', session.user.id)
+            .order('created_at', { ascending: false })
+            .limit(5);
+            
+          if (!isMounted) return; // Aborta si la sesión se cerró mientras cargaba
+          if (notifs) setNotificaciones(notifs);
+
+          const { data: perfil } = await supabase
             .from('perfiles')
             .select('rol,id')
             .eq('id', session.user.id)
             .maybeSingle();
 
-          if (error) {
-            console.error("Error obteniendo el rol del layout:", error.message);
-          } else if (perfil) {
+          if (!isMounted) return; // Aborta de nuevo por seguridad
+
+          if (perfil) {
             setRol(perfil.rol);
-            // 2. Obtener datos específicos según el rol para el Header
             if (perfil.rol === 'fundacion') {
-              const { data: fund } = await supabase
-                .from('fundaciones')
-                .select('nombre_legal, logo_url, id',)
-                .eq('id', session.user.id)
-                .single();
-              setProfileData({ 
-                name: fund?.nombre_legal || 'Fundación', 
-                avatar: fund?.logo_url,
-                id: fund?.id
-              });
+              const { data: fund } = await supabase.from('fundaciones').select('nombre_legal, logo_url, id').eq('id', session.user.id).single();
+              if (isMounted) setProfileData({ name: fund?.nombre_legal || 'Fundación', avatar: fund?.logo_url, id: fund?.id });
             } else if (perfil.rol === 'voluntario') {
-              const { data: vol } = await supabase
-                .from('voluntarios')
-                .select('nombre_completo, avatar_url, id')
-                .eq('id', session.user.id)
-                .single();
-              setProfileData({ 
-                name: vol?.nombre_completo || 'Voluntario', 
-                avatar: vol?.avatar_url,
-                id: vol?.id
-              });
+              const { data: vol } = await supabase.from('voluntarios').select('nombre_completo, avatar_url, id').eq('id', session.user.id).single();
+              if (isMounted) setProfileData({ name: vol?.nombre_completo || 'Voluntario', avatar: vol?.avatar_url, id: vol?.id });
             } else if (perfil.rol === 'administrador' || perfil.rol === 'admin') {
-              setProfileData({ 
-                name: 'Administrador', 
-                avatar: null,
-                id: perfil.id
-              });
+              if (isMounted) setProfileData({ name: 'Administrador', avatar: null, id: perfil.id });
             }
           }
         } else {
-          // Si no hay sesión activa, redirigir al login
-          navigate('/login');
+          navigate('/login', { replace: true });
         }
       } catch (err) {
-        console.error("Error inesperado en sesión:", err);
+        console.error("Error en sesión:", err);
       } finally {
-        setLoading(false);
+        if (isMounted) setLoading(false);
       }
     }
 
     getSessionAndRol();
+
+    return () => { isMounted = false; }; // Se ejecuta al ser expulsado
+  }, [navigate]);
+
+  // 2. LISTENER EN TIEMPO REAL (Con expulsión agresiva)
+  useEffect(() => {
+    const dbSessionId = localStorage.getItem('db_session_id');
+    if (!dbSessionId) return; 
+
+    const channel = supabase
+      .channel('sesiones_listener')
+      .on(
+        'postgres_changes',
+        { event: 'DELETE', schema: 'public', table: 'sesiones_usuario', filter: `id=eq.${dbSessionId}` },
+        async () => {
+          localStorage.removeItem('db_session_id');
+          await supabase.auth.signOut();
+          navigate('/login', { replace: true }); // Expulsión inmediata
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'sesiones_usuario', filter: `id=eq.${dbSessionId}` },
+        async (payload) => {
+          if (payload.new && payload.new.es_actual === false) {
+            localStorage.removeItem('db_session_id');
+            await supabase.auth.signOut();
+            navigate('/login', { replace: true }); // Expulsión inmediata
+          }
+        }
+      )
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
   }, [navigate]);
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
-    navigate('/login');
+    try {
+      const dbSessionId = localStorage.getItem('db_session_id');
+      if (dbSessionId) {
+        await supabase.from('sesiones_usuario').update({ es_actual: false }).eq('id', dbSessionId); 
+        localStorage.removeItem('db_session_id');
+      }
+    } catch (error) {
+      console.error("Error al registrar el cierre de sesión en BD:", error);
+    } finally {
+      await supabase.auth.signOut();
+      navigate('/login', { replace: true }); // Destruye el historial de navegación
+    }
+  };
+
+
+
+  const marcarLeidas = async () => {
+    const ids = notificaciones.filter(n => !n.leido).map(n => n.id);
+    if (ids.length === 0) return;
+    setNotificaciones(prev => prev.map(n => ({ ...n, leido: true })));
+    await supabase.from('notificaciones').update({ leido: true }).in('id', ids);
   };
 
   const isActive = (path: string) => location.pathname.includes(path);
+  const unreadCount = notificaciones.filter(n => !n.leido).length;
 
   if (loading) {
     return (
@@ -96,9 +152,7 @@ export function DashboardLayout() {
           
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2.5">
-              <div className="h-8 w-8 rounded-xl bg-[#0f2a3f] text-white flex items-center justify-center font-bold text-xs shadow-sm">
-                7
-              </div>
+              <div className="h-8 w-8 rounded-xl bg-[#0f2a3f] text-white flex items-center justify-center font-bold text-xs shadow-sm">7</div>
               <span className="font-extrabold text-[#071d37] text-lg tracking-tight">7:34 AM</span>
             </div>
             <button className="text-gray-400 hover:text-gray-600 cursor-pointer">☰</button>
@@ -109,84 +163,45 @@ export function DashboardLayout() {
             OPERATIVO ACTIVO
           </div>
 
-          {/* VALIDACIÓN: Mostrar solo si es Administrador */}
           {(rol === 'administrador' || rol === 'admin') && (
             <div className="flex flex-col gap-2">
               <span className="text-[11px] font-extrabold text-[#94a3b8] uppercase tracking-wider">Panel Admin</span>
               <nav className="flex flex-col gap-1">
-                <Link to="/dashboard/admin-dashboard" className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition ${isActive('/admin-dashboard') ? 'bg-[#005684] text-white shadow-sm' : 'text-[#64748b] hover:bg-gray-50'}`}>
-                  <span>🗂️</span> Resumen
-                </Link>
-                <Link to="/dashboard/admin-aprobaciones" className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition ${isActive('/admin-aprobaciones') ? 'bg-[#005684] text-white shadow-sm' : 'text-[#64748b] hover:bg-gray-50'}`}>
-                  <span>🗂️</span> Aprobaciones
-                </Link>
-                <Link to="/dashboard/admin-fundaciones" className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition ${isActive('/admin-fundaciones') ? 'bg-[#005684] text-white shadow-sm' : 'text-[#64748b] hover:bg-gray-50'}`}>
-                  <span>🗂️</span> Fundaciones
-                </Link>
-                <Link to="/dashboard/admin-voluntarios" className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition ${isActive('/admin-voluntarios') ? 'bg-[#005684] text-white shadow-sm' : 'text-[#64748b] hover:bg-gray-50'}`}>
-                  <span>👥</span> Voluntarios
-                </Link>
+                <Link to="/dashboard/admin-dashboard" className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition ${isActive('/admin-dashboard') ? 'bg-[#005684] text-white shadow-sm' : 'text-[#64748b] hover:bg-gray-50'}`}><span>🗂️</span> Resumen</Link>
+                <Link to="/dashboard/admin-aprobaciones" className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition ${isActive('/admin-aprobaciones') ? 'bg-[#005684] text-white shadow-sm' : 'text-[#64748b] hover:bg-gray-50'}`}><span>🗂️</span> Aprobaciones</Link>
+                <Link to="/dashboard/admin-fundaciones" className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition ${isActive('/admin-fundaciones') ? 'bg-[#005684] text-white shadow-sm' : 'text-[#64748b] hover:bg-gray-50'}`}><span>🗂️</span> Fundaciones</Link>
+                <Link to="/dashboard/admin-voluntarios" className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition ${isActive('/admin-voluntarios') ? 'bg-[#005684] text-white shadow-sm' : 'text-[#64748b] hover:bg-gray-50'}`}><span>👥</span> Voluntarios</Link>
               </nav>
             </div>
           )}
 
-          {/* VALIDACIÓN: Mostrar sección Usuario solo para Voluntarios o Fundaciones */}
           {(rol === 'voluntario' || rol === 'fundacion') && (
             <div className="flex flex-col gap-2">
               <span className="text-[11px] font-extrabold text-[#94a3b8] uppercase tracking-wider">Usuario</span>
-              
-              {/* Opción exclusiva para Voluntarios */}
               {rol === 'voluntario' && (
                 <nav className="flex flex-col gap-1">
-                  <Link 
-                    to={`/dashboard/voluntario/editar/${profileData?.id ?? ''}`}
-
-                    className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition ${isActive('/voluntario/editar') ? 'bg-[#005684] text-white shadow-sm' : 'text-[#64748b] hover:bg-gray-50 font-semibold'}`}
-                  >
-                    <span>👤</span> Editar Perfil Voluntario
-                  </Link>
+                  <Link to={`/dashboard/voluntario/editar/${profileData?.id ?? ''}`} className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition ${isActive('/voluntario/editar') ? 'bg-[#005684] text-white shadow-sm' : 'text-[#64748b] hover:bg-gray-50 font-semibold'}`}><span>👤</span> Editar Perfil Voluntario</Link>
                 </nav>
               )}
-
-              {/* Opción exclusiva para Fundaciones */}
               {rol === 'fundacion' && (
                 <nav className="flex flex-col gap-1">
-                  <Link 
-                    to={`/dashboard/fundacion/editar/${profileData?.id ?? ''}`} 
-                    className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition ${isActive('/fundacion/editar') ? 'bg-[#005684] text-white shadow-sm' : 'text-[#64748b] hover:bg-gray-50 font-semibold'}`}
-                  >
-                    <span>🏢</span> Editar Perfil Fundación
-                  </Link>
+                  <Link to={`/dashboard/fundacion/editar/${profileData?.id ?? ''}`} className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition ${isActive('/fundacion/editar') ? 'bg-[#005684] text-white shadow-sm' : 'text-[#64748b] hover:bg-gray-50 font-semibold'}`}><span>🏢</span> Editar Perfil Fundación</Link>
                 </nav>
               )}
             </div>
           )}
 
-          {/* Opciones Generales del Sistema */}
           <div className="flex flex-col gap-2">
             <span className="text-[11px] font-extrabold text-[#94a3b8] uppercase tracking-wider">Sistema</span>
             <nav className="flex flex-col gap-1">
-              <Link 
-                to="/dashboard/ajustes" 
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition ${isActive('/ajustes') ? 'bg-[#005684] text-white shadow-sm' : 'text-[#64748b] hover:bg-gray-50 font-semibold'}`}
-              >
-                <span>⚙️</span> Seguridad
-              </Link>
-              <Link 
-                  to="/dashboard/admin-notificaciones" 
-                  className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition ${isActive('/admin-notificaciones') ? 'bg-[#005684] text-white shadow-sm' : 'text-[#64748b] hover:bg-gray-50 font-semibold'}`}
-                >
-                  <span>🔔</span> Notificaciones
-                </Link>
+              <Link to="/dashboard/ajustes" className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition ${isActive('/ajustes') ? 'bg-[#005684] text-white shadow-sm' : 'text-[#64748b] hover:bg-gray-50 font-semibold'}`}><span>⚙️</span> Seguridad</Link>
+              <Link to="/dashboard/admin-notificaciones" className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition ${isActive('/admin-notificaciones') ? 'bg-[#005684] text-white shadow-sm' : 'text-[#64748b] hover:bg-gray-50 font-semibold'}`}><span>🔔</span> Notificaciones</Link>
             </nav>
           </div>
         </div>
 
         <div className="pt-4 border-t border-gray-100">
-          <button 
-            onClick={handleLogout}
-            className="flex items-center gap-2 text-red-600 hover:text-red-700 text-xs font-bold transition w-full px-3 py-2 rounded-xl hover:bg-red-50 cursor-pointer"
-          >
+          <button onClick={handleLogout} className="flex items-center gap-2 text-red-600 hover:text-red-700 text-xs font-bold transition w-full px-3 py-2 rounded-xl hover:bg-red-50 cursor-pointer">
             <span><img src={Icons.LogoutIcon} alt="Cerrar sesión" /></span> Cerrar Sesión
           </button>
         </div>
@@ -194,8 +209,6 @@ export function DashboardLayout() {
 
       {/* CONTENEDOR DERECHO */}
       <div className="flex-1 flex flex-col min-h-screen relative">
-        
-        {/* HEADER ACTUALIZADO CON CONEXIÓN A DB */}
         <header className="bg-[#EFF4FF] border-b border-[#e2e8f0] px-8 py-4 flex items-center justify-between sticky top-0 z-30">
           <div className="flex items-center gap-2 text-xs font-semibold text-[#64748b]">
             <span>Dashboard</span>
@@ -205,35 +218,65 @@ export function DashboardLayout() {
           
           {(rol === 'administrador' || rol === 'admin') && (
             <div className="flex items-center bg-[#f8fafc] border border-[#e2e8f0] rounded-xl px-3 py-2 w-60 gap-2">
-              <span className="text-gray-400 text-xs">
-                  <img src={Icons.SearchIcon} alt="Buscar" />
-              </span>
-              <input type="text" placeholder="Buscar voluntarios, solicitudes..." className="bg-transparent text-xs w-full focus:outline-none" />
+              <span className="text-gray-400 text-xs"><img src={Icons.SearchIcon} alt="Buscar" /></span>
+              <input type="text" placeholder="Buscar voluntarios..." className="bg-transparent text-xs w-full focus:outline-none" />
             </div>
           )}
           <div className="flex items-center gap-4">
-            {/* Badges de rol dinámicos */}
             <div className="flex items-center gap-1 bg-gray-100 p-1 rounded-xl text-[11px] font-bold text-gray-600">
               <span className={`px-2.5 py-1 rounded-lg transition ${rol === 'administrador' || rol === 'admin' ? 'bg-[#006194] text-white shadow-xs' : 'bg-[#DAE2FD] text-[#3F4850]'}`}>Admin</span>
               <span className={`px-2.5 py-1 rounded-lg transition ${rol === 'fundacion' ? 'bg-[#006194] text-white shadow-xs' : 'bg-[#DAE2FD] text-[#3F4850]'}`}>Fundación</span>
               <span className={`px-2.5 py-1 rounded-lg transition ${rol === 'voluntario' ? 'bg-[#006194] text-white shadow-xs' : 'bg-[#DAE2FD] text-[#3F4850]'}`}>Voluntario</span>
             </div>
             
-            <img src={Icons.CampanaIcon2} alt="Notificaciones" />
+            {/* COMPONENTE NOTIFICACIONES */}
+            <div className="relative" ref={notifRef}>
+              <button 
+                onClick={() => setShowNotifs(!showNotifs)}
+                className="relative p-2 hover:bg-gray-100 rounded-full transition cursor-pointer"
+              >
+                <img src={Icons.CampanaIcon2} alt="Notificaciones" />
+                {unreadCount > 0 && (
+                  <span className="absolute top-1 right-1 flex h-2.5 w-2.5">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500"></span>
+                  </span>
+                )}
+              </button>
+
+              {/* MODAL DROPDOWN */}
+              {showNotifs && (
+                <div className="absolute right-0 mt-2 w-80 bg-white border border-[#e2e8f0] rounded-2xl shadow-xl z-50 overflow-hidden flex flex-col">
+                  <div className="p-3 bg-[#f8fafc] border-b border-[#e2e8f0] flex justify-between items-center">
+                    <span className="text-xs font-bold text-[#071d37]">Notificaciones</span>
+                    {unreadCount > 0 && (
+                      <button onClick={marcarLeidas} className="text-[10px] text-[#005684] hover:underline cursor-pointer">
+                        Marcar todas leídas
+                      </button>
+                    )}
+                  </div>
+                  <div className="max-h-64 overflow-y-auto flex flex-col">
+                    {notificaciones.length === 0 ? (
+                      <div className="p-4 text-center text-xs text-gray-500">No hay notificaciones.</div>
+                    ) : (
+                      notificaciones.map((n) => (
+                        <div key={n.id} className={`p-3 border-b border-gray-100 flex flex-col gap-1 hover:bg-gray-50 transition ${!n.leido ? 'bg-[#f0f9ff]' : ''}`}>
+                          <span className="text-xs font-bold text-[#071d37]">{n.titulo}</span>
+                          <span className="text-[11px] text-gray-500 line-clamp-2">{n.descripcion}</span>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                  <Link to="/dashboard/admin-notificaciones" className="p-2 text-center text-[11px] font-bold text-[#005684] bg-gray-50 hover:bg-gray-100 transition">
+                    Ver todas
+                  </Link>
+                </div>
+              )}
+            </div>
             
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
-            </span>
-            
-            {/* Perfil del Usuario Dinámico */}
             <div className="flex items-center gap-2.5 border-l border-gray-200 pl-4">
               <div className="h-9 w-9 rounded-full bg-[#0f2a3f] text-white flex items-center justify-center font-bold text-xs uppercase overflow-hidden">
-                {profileData?.avatar ? (
-                  <img src={profileData.avatar} alt="Perfil" className="w-full h-full object-cover" />
-                ) : (
-                  profileData?.name ? profileData.name.substring(0, 2) : 'US'
-                )}
+                {profileData?.avatar ? <img src={profileData.avatar} alt="Perfil" className="w-full h-full object-cover" /> : profileData?.name ? profileData.name.substring(0, 2) : 'US'}
               </div>
               <div className="flex flex-col text-left">
                 <span className="text-xs font-bold text-[#071d37]">{profileData?.name || 'Usuario'}</span>
@@ -243,7 +286,6 @@ export function DashboardLayout() {
           </div>
         </header>
 
-        {/* CONTENIDO DE LA PÁGINA */}
         <div className="p-4 max-w-[1400px] w-full mx-auto flex flex-col gap-6">
             <Outlet /> 
         </div>
