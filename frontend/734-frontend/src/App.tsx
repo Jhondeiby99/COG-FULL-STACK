@@ -85,21 +85,6 @@ function App() {
         <Route path="/voluntario/:id" element={<VolunteerProfile />} />
         <Route path="/fundacion/:id" element={<FoundationProfile />} />
 
-        {/* ================================================================== */}
-        {/* RUTAS PRIVADAS / PROTEGIDAS (Próximas a crear)                     */}
-        {/* ================================================================== */}
-        
-        {/* Ejemplo para el Panel de Administración */}
-        {/* 
-        <Route 
-          path="/admin" 
-          element={
-            <ProtectedRoute requiredRole="administrador">
-              <AdminDashboard />
-            </ProtectedRoute>
-          } 
-        /> 
-        */}
         <Route 
          path='/ajustes'
          element={
@@ -108,15 +93,17 @@ function App() {
         />
         <Route path="/dashboard" element={<ProtectedRoute><DashboardLayout /></ProtectedRoute>}>
           <Route path="ajustes" element={<AccountSettings />} />
-          <Route path="voluntario/editar" element={<EditVolunteerProfile />} />
-          <Route path="fundacion/editar" element={<EditFoundationProfile />} />
+          {/* Rutas modificadas con el parámetro :id */}
+          <Route path="voluntario/editar/:id" element={<EditVolunteerProfile />} />
+          <Route path="fundacion/editar/:id" element={<EditFoundationProfile />} />
+          
           <Route path="admin-dashboard" element={<AdminDashboard />} />
           <Route path="admin-aprobaciones" element={<AdminApproval />} />
-           <Route path="admin-fundaciones" element={<AdminFoundations />} />
-           <Route path="admin-voluntarios" element={<AdminVolunteers />} />
-           <Route path="admin-notificaciones" element={<AdminNotifications />} />
-        {/* Otras rutas del dashboard */}
-        </Route>
+          <Route path="admin-fundaciones" element={<AdminFoundations />} />
+          <Route path="admin-voluntarios" element={<AdminVolunteers />} />
+          <Route path="admin-notificaciones" element={<AdminNotifications />} />
+          {/* Otras rutas del dashboard */}
+       </Route>
 
         {/* Redirección por defecto ante cualquier ruta extraña */}
         <Route path="*" element={<Navigate to="/" replace />} />
