@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import * as Icons from "../assets/icons/index.ts";
 import { RealtimeChannel } from '@supabase/supabase-js';
+import { useNotifications } from '../hooks/useNotifications';
 
 interface HeaderProps {
   onSearchChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
@@ -21,30 +22,20 @@ export function Header({ onSearchChange, onFilterClick, searchPlaceholder = "Cau
   const [profileData, setProfileData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
-  // Estado del Modal de Expulsión
   const [modalExpulsion, setModalExpulsion] = useState(false);
 
-  // Estado de Notificaciones
-  const [notificaciones, setNotificaciones] = useState<any[]>([]);
+  // Hook de Notificaciones
+  const { notificaciones, unreadCount, marcarComoLeidas } = useNotifications(user?.id, { limit: 5 });
   const [showNotifs, setShowNotifs] = useState(false);
   const notifRef = useRef<HTMLDivElement>(null);
 
-  // 1. CARGA DE USUARIO, NOTIFICACIONES Y PERFIL
+  // 1. CARGA DE USUARIO Y PERFIL
   useEffect(() => {
     async function getAuthUser() {
       const { data: { session } } = await supabase.auth.getSession();
 
       if (session?.user) {
         setUser(session.user);
-
-        // Cargar Notificaciones
-        const { data: notifs } = await supabase
-          .from('notificaciones')
-          .select('*')
-          .eq('user_id', session.user.id)
-          .order('created_at', { ascending: false })
-          .limit(5);
-        if (notifs) setNotificaciones(notifs);
 
         const { data: perfil } = await supabase.from('perfiles').select('*').eq('id', session.user.id).maybeSingle();
 
@@ -71,7 +62,6 @@ export function Header({ onSearchChange, onFilterClick, searchPlaceholder = "Cau
       } else {
         setUser(null);
         setProfileData(null);
-        setNotificaciones([]);
       }
     });
 
@@ -86,9 +76,9 @@ export function Header({ onSearchChange, onFilterClick, searchPlaceholder = "Cau
     };
   }, []);
 
-  // 2. VALIDACIÓN Y ESCUCHA EN TIEMPO REAL DE LA SESIÓN EN BD (PÁGINAS PÚBLICAS)
+  // 2. VALIDACIÓN Y ESCUCHA EN TIEMPO REAL DE LA SESIÓN EN BD
   useEffect(() => {
-    if (!user) return; // Solo activa la verificación si el usuario está logueado
+    if (!user) return;
 
     const dbSessionId = localStorage.getItem('db_session_id');
     if (!dbSessionId) return;
@@ -138,7 +128,6 @@ export function Header({ onSearchChange, onFilterClick, searchPlaceholder = "Cau
     };
   }, [user]);
 
-  // Manejador del botón del modal de expulsión
   const handleAceptarExpulsion = async () => {
     await supabase.auth.signOut({ scope: 'local' });
     setModalExpulsion(false);
@@ -147,7 +136,6 @@ export function Header({ onSearchChange, onFilterClick, searchPlaceholder = "Cau
     navigate('/login', { replace: true });
   };
 
-  // Cierre de sesión voluntario
   const handleLogout = async () => {
     try {
       const dbSessionId = localStorage.getItem('db_session_id');
@@ -179,15 +167,6 @@ export function Header({ onSearchChange, onFilterClick, searchPlaceholder = "Cau
       case 'voluntario': default: return user?.id ? `/dashboard/voluntario/editar/${user.id}` : '/dashboard';
     }
   };
-
-  const marcarLeidas = async () => {
-    const ids = notificaciones.filter(n => !n.leido).map(n => n.id);
-    if (ids.length === 0) return;
-    setNotificaciones(prev => prev.map(n => ({ ...n, leido: true })));
-    await supabase.from('notificaciones').update({ leido: true }).in('id', ids);
-  };
-
-  const unreadCount = notificaciones.filter(n => !n.leido).length;
 
   return (
     <header className="home-header relative">
@@ -221,7 +200,7 @@ export function Header({ onSearchChange, onFilterClick, searchPlaceholder = "Cau
                 Hola, {profileData?.name || 'Usuario'}
               </span>
 
-              {/* NOTIFICACIONES */}
+              {/* NOTIFICACIONES MEDIANTE HOOK */}
               <div className="relative" ref={notifRef}>
                 <button onClick={() => setShowNotifs(!showNotifs)} className="relative p-2 bg-gray-100 hover:bg-gray-200 rounded-full transition cursor-pointer">
                   🔔
@@ -238,7 +217,7 @@ export function Header({ onSearchChange, onFilterClick, searchPlaceholder = "Cau
                     <div className="p-3 bg-[#f8fafc] border-b border-[#e2e8f0] flex justify-between items-center">
                       <span className="text-xs font-bold text-[#071d37]">Alertas de Plataforma</span>
                       {unreadCount > 0 && (
-                        <button onClick={marcarLeidas} className="text-[10px] text-[#005684] hover:underline cursor-pointer">
+                        <button onClick={() => marcarComoLeidas()} className="text-[10px] text-[#005684] hover:underline cursor-pointer">
                           Marcar leídas
                         </button>
                       )}
@@ -288,15 +267,12 @@ export function Header({ onSearchChange, onFilterClick, searchPlaceholder = "Cau
         </div>
       </div>
 
-      {/* MODAL VISUAL DE EXPULSIÓN DE SESIÓN */}
       {modalExpulsion && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-fade-in">
           <div className="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl border border-gray-100 flex flex-col items-center text-center gap-5 transform transition-all scale-100">
-
             <div className="h-16 w-16 rounded-2xl bg-amber-50 text-amber-500 border border-amber-200/60 flex items-center justify-center text-3xl shadow-sm">
               🛡️
             </div>
-
             <div className="flex flex-col gap-2">
               <h3 className="text-base font-extrabold text-[#071d37]">
                 Sesión Finalizada
@@ -305,7 +281,6 @@ export function Header({ onSearchChange, onFilterClick, searchPlaceholder = "Cau
                 Tu sesión ha sido cerrada desde otro dispositivo o panel de seguridad. Por protección, deberás ingresar de nuevo.
               </p>
             </div>
-
             <button
               onClick={handleAceptarExpulsion}
               className="w-full py-3 px-4 bg-[#005684] hover:bg-[#004266] text-white font-bold text-xs rounded-xl shadow-md hover:shadow-lg transition-all cursor-pointer active:scale-95"

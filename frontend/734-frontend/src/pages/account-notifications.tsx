@@ -1,17 +1,6 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '../lib/supabase'; // Ajusta la ruta según tu proyecto
-
-interface Notificacion {
-  id: string;
-  titulo: string;
-  descripcion: string;
-  icono: string;
-  bg_icono: string;
-  text_icono: string;
-  accion_texto: string | null;
-  leido: boolean;
-  created_at: string;
-}
+import { supabase } from '../lib/supabase';
+import { useNotifications } from '../hooks/useNotifications';
 
 export function AccountNotifications() {
   const [userId, setUserId] = useState<string | null>(null);
@@ -23,11 +12,9 @@ export function AccountNotifications() {
   const [savingPrefs, setSavingPrefs] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
-  // Notificaciones
-  const [notificaciones, setNotificaciones] = useState<Notificacion[]>([]);
-  const [loading, setLoading] = useState(true);
+  // Hook completo de notificaciones para este usuario (sin límite para la vista completa)
+  const { notificaciones, unreadCount, loading: loadingNotifs, marcarComoLeidas } = useNotifications(userId);
 
-  // Formateador de tiempo relativo
   const tiempoRelativo = (fecha: string) => {
     const segundos = Math.floor((new Date().getTime() - new Date(fecha).getTime()) / 1000);
     if (segundos < 60) return 'Hace un momento';
@@ -46,17 +33,11 @@ export function AccountNotifications() {
   };
 
   useEffect(() => {
-    cargarDatos();
-  }, []);
-
-  const cargarDatos = async () => {
-    setLoading(true);
-    try {
+    async function cargarPerfil() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
       setUserId(user.id);
 
-      // Cargar preferencias del perfil
       const { data: perfil } = await supabase
         .from('perfiles')
         .select('alertas_correo, alertas_push, alertas_emergencia')
@@ -68,77 +49,34 @@ export function AccountNotifications() {
         setAlertasPush(perfil.alertas_push ?? true);
         setAlertasEmergencia(perfil.alertas_emergencia ?? true);
       }
-
-      // Cargar notificaciones
-      const { data: notifs } = await supabase
-        .from('notificaciones')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
-
-      if (notifs) {
-        setNotificaciones(notifs);
-      }
-    } catch (error) {
-      console.error('Error al cargar datos:', error);
-    } finally {
-      setLoading(false);
     }
-  };
+    cargarPerfil();
+  }, []);
 
   const guardarPreferencias = async () => {
     if (!userId) return;
     setSavingPrefs(true);
     try {
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('perfiles')
         .update({
           alertas_correo: alertasCorreo,
           alertas_push: alertasPush,
           alertas_emergencia: alertasEmergencia
         })
-        .eq('id', userId)
-        .select(); // <-- Obliga a devolver el resultado de la actualización
+        .eq('id', userId);
 
       if (error) throw error;
-      
-      console.log("Filas actualizadas:", data); // Si devuelve [], el RLS sigue bloqueando
       mostrarToast('Preferencias guardadas exitosamente');
     } catch (error) {
-      console.error('Error detallado de Supabase:', error); // Aquí verás el error real
+      console.error('Error al guardar las preferencias:', error);
       mostrarToast('Error al guardar las preferencias');
     } finally {
       setSavingPrefs(false);
     }
   };
 
-  const marcarTodasComoLeidas = async () => {
-  if (!userId) return;
-  const idsNoLeidos = notificaciones.filter(n => !n.leido).map(n => n.id);
-  if (idsNoLeidos.length === 0) return;
-
-  // Actualización optimista en la UI
-  setNotificaciones(prev => prev.map(n => ({ ...n, leido: true })));
-
-  try {
-    const { data, error } = await supabase
-      .from('notificaciones')
-      .update({ leido: true })
-      .in('id', idsNoLeidos)
-      .select(); // <-- Agrega esto para depurar
-
-    console.log("Filas actualizadas en BD:", data); // Si es [], es problema de RLS o user_id
-
-    if (error) throw error;
-  } catch (error) {
-    console.error('Error al actualizar:', error);
-    cargarDatos(); // Revertir si falla
-  }
-};
-
-  const noLeidasCount = notificaciones.filter(n => !n.leido).length;
-
-  if (loading) {
+  if (loadingNotifs) {
     return (
       <div className="flex justify-center items-center h-64 text-[#005684] font-bold">
         Cargando centro de control...
@@ -148,8 +86,6 @@ export function AccountNotifications() {
 
   return (
     <div className="flex flex-col gap-6 w-full max-w-[1200px] mx-auto relative">
-      
-      {/* Toast Notification */}
       {toastMessage && (
         <div className="fixed top-6 right-6 z-50 bg-[#047857] text-white px-5 py-3 rounded-2xl shadow-xl flex items-center gap-3 border border-[#6ee7b7]">
           <span className="text-lg">✓</span>
@@ -157,7 +93,6 @@ export function AccountNotifications() {
         </div>
       )}
 
-      {/* CABECERA */}
       <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
         <div>
           <div className="flex items-center gap-2 mb-1">
@@ -173,13 +108,13 @@ export function AccountNotifications() {
             Bandeja de avisos recientes y preferencias de alerta de la plataforma.
           </p>
         </div>
-        
+
         <div className="shrink-0">
           <button 
-            onClick={marcarTodasComoLeidas}
-            disabled={noLeidasCount === 0}
+            onClick={() => marcarComoLeidas()}
+            disabled={unreadCount === 0}
             className={`px-5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 shadow-sm border ${
-              noLeidasCount > 0 
+              unreadCount > 0 
                 ? 'bg-[#f0f9ff] text-[#0284c7] hover:bg-[#e0f2fe] border-[#bae6fd] cursor-pointer' 
                 : 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
             }`}
@@ -189,19 +124,15 @@ export function AccountNotifications() {
         </div>
       </div>
 
-      {/* GRID DE 2 COLUMNAS (Avisos Izquierda / Preferencias Derecha) */}
       <div className="flex flex-col lg:flex-row gap-8 w-full mt-2">
-        
-        {/* COLUMNA IZQUIERDA: Avisos Recientes */}
         <div className="flex-1 flex flex-col gap-4 min-w-0">
-          
           <div className="flex items-center justify-between mb-2">
             <h2 className="text-lg font-bold text-[#071d37] flex items-center gap-2">
               <span className="text-[#0284c7]">🔔</span> Avisos Recientes
             </h2>
-            {noLeidasCount > 0 && (
+            {unreadCount > 0 && (
               <span className="bg-[#e0f2fe] text-[#0284c7] text-[11px] font-bold px-2.5 py-1 rounded-full">
-                {noLeidasCount} No leíd{noLeidasCount === 1 ? 'o' : 'os'}
+                {unreadCount} No leíd{unreadCount === 1 ? 'o' : 'os'}
               </span>
             )}
           </div>
@@ -214,16 +145,12 @@ export function AccountNotifications() {
             ) : (
               notificaciones.map((notif) => (
                 <div key={notif.id} className="bg-white rounded-3xl p-5 sm:p-6 border border-[#e2e8f0] shadow-sm flex items-start gap-4 transition hover:shadow-md">
-                  
-                  {/* Indicador de Nuevo (Punto Azul) */}
                   <div className={`mt-2 shrink-0 w-2.5 h-2.5 rounded-full ${!notif.leido ? 'bg-[#0284c7]' : 'bg-transparent'}`}></div>
                   
-                  {/* Icono de Categoría */}
-                  <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-xl shrink-0 ${notif.bg_icono} ${notif.text_icono}`}>
-                    {notif.icono}
+                  <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-xl shrink-0 ${notif.bg_icono || 'bg-[#f0f9ff]'} ${notif.text_icono || 'text-[#0284c7]'}`}>
+                    {notif.icono || '✉️'}
                   </div>
 
-                  {/* Contenido de Notificación */}
                   <div className="flex-1 min-w-0">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 sm:gap-4 mb-1">
                       <h3 className="text-[15px] font-extrabold text-[#071d37]">{notif.titulo}</h3>
@@ -241,30 +168,23 @@ export function AccountNotifications() {
                       </button>
                     )}
                   </div>
-
                 </div>
               ))
             )}
           </div>
-
         </div>
 
-        {/* COLUMNA DERECHA: Preferencias */}
         <div className="w-full lg:w-[380px] shrink-0">
-          
           <h2 className="text-lg font-bold text-[#071d37] flex items-center gap-2 mb-6">
             <span className="text-[#005684]">🎛️</span> Canales y Preferencias
           </h2>
 
           <div className="bg-white rounded-3xl p-6 sm:p-8 border border-[#e2e8f0] shadow-sm flex flex-col gap-6 sticky top-24">
-            
             <p className="text-[13px] text-[#64748b] leading-relaxed">
               Ajusta la forma en que el sistema 7:34 AM despacha recordatorios y avisos críticos.
             </p>
 
             <div className="flex flex-col gap-4">
-              
-              {/* Toggle 1 */}
               <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded-2xl p-4 flex gap-4">
                  <div className="text-xl shrink-0 mt-0.5">✉️</div>
                  <div className="flex-1 min-w-0">
@@ -283,7 +203,6 @@ export function AccountNotifications() {
                  </div>
               </div>
 
-              {/* Toggle 2 */}
               <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded-2xl p-4 flex gap-4">
                  <div className="text-xl shrink-0 mt-0.5">🔔</div>
                  <div className="flex-1 min-w-0">
@@ -302,7 +221,6 @@ export function AccountNotifications() {
                  </div>
               </div>
 
-              {/* Toggle 3 */}
               <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded-2xl p-4 flex gap-4">
                  <div className="text-xl shrink-0 mt-0.5">🚨</div>
                  <div className="flex-1 min-w-0">
@@ -320,7 +238,6 @@ export function AccountNotifications() {
                     </p>
                  </div>
               </div>
-
             </div>
 
             <button 
@@ -330,12 +247,9 @@ export function AccountNotifications() {
             >
               <span>{savingPrefs ? '⏳' : '💾'}</span> {savingPrefs ? 'Guardando...' : 'Guardar Preferencias'}
             </button>
-
           </div>
         </div>
-
       </div>
-
     </div>
   );
 }
