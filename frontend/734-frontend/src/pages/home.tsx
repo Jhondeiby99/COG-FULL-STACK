@@ -48,7 +48,7 @@ type Voluntario = {
 export function Home() {
   const navigate = useNavigate();
 
-  // Estados de datos
+  // Estados de datos reales
   const [necesidades, setNecesidades] = useState<Necesidad[]>([]);
   const [voluntarios, setVoluntarios] = useState<Voluntario[]>([]);
   const [stats, setStats] = useState({
@@ -91,7 +91,7 @@ export function Home() {
         setVoluntarios(volData as Voluntario[]);
       }
 
-      // 3. Traer Estadísticas Reales (Conteo + Métricas)
+      // 3. Traer Estadísticas Reales (Conteo exacto + Métricas globales)
       const { count: countFundaciones } = await supabase
         .from('fundaciones')
         .select('*', { count: 'exact', head: true })
@@ -123,21 +123,43 @@ export function Home() {
   // Lógica de filtrado dinámico para la sección de necesidades
   const necesidadesFiltradas = useMemo(() => {
     return necesidades.filter((need) => {
+      const fundacionObj = Array.isArray(need.fundacion) ? need.fundacion[0] : need.fundacion;
+
+      // Validación de Categoría o Alta Prioridad
       const matchCategoria =
         selectedCategory === 'Todas' ||
-        need.categoria?.toLowerCase() === selectedCategory.toLowerCase();
+        (selectedCategory === 'Alta Prioridad'
+          ? need.prioridad === 'alta'
+          : need.categoria?.toLowerCase() === selectedCategory.toLowerCase());
       
+      // Búsqueda en múltiples campos (Título, Descripción, Categoría, Nombre Fundación, Ubicación)
+      const q = searchQuery.toLowerCase().trim();
       const matchSearch =
-        !searchQuery ||
-        need.titulo.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        need.descripcion?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        need.categoria?.toLowerCase().includes(searchQuery.toLowerCase());
+        !q ||
+        need.titulo.toLowerCase().includes(q) ||
+        need.descripcion?.toLowerCase().includes(q) ||
+        need.categoria?.toLowerCase().includes(q) ||
+        fundacionObj?.nombre_legal?.toLowerCase().includes(q) ||
+        fundacionObj?.ubicacion?.toLowerCase().includes(q);
 
       return matchCategoria && matchSearch;
     });
   }, [necesidades, selectedCategory, searchQuery]);
 
-  // Manejo de búsqueda global
+  // Lógica de filtrado dinámico para la sección de voluntarios
+  const voluntariosFiltrados = useMemo(() => {
+    if (!searchQuery.trim()) return voluntarios;
+    const q = searchQuery.toLowerCase().trim();
+    return voluntarios.filter(
+      (v) =>
+        v.nombre_completo.toLowerCase().includes(q) ||
+        v.profesion?.toLowerCase().includes(q) ||
+        v.ubicacion?.toLowerCase().includes(q) ||
+        v.sobre_mi?.toLowerCase().includes(q)
+    );
+  }, [voluntarios, searchQuery]);
+
+  // Manejo de redirección del buscador principal a la vista de exploración
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
@@ -147,7 +169,7 @@ export function Home() {
 
   const getInitials = (name?: string) => {
     if (!name) return 'FN';
-    const words = name.replace(/Fundación|Corporación/gi, '').trim().split(' ');
+    const words = name.replace(/Fundación|Corporación|Asociación/gi, '').trim().split(' ');
     return ((words[0]?.[0] || '') + (words[1]?.[0] || '')).toUpperCase() || 'FN';
   };
 
@@ -159,6 +181,13 @@ export function Home() {
 
   const getAvatarUrl = (url?: string | null) => {
     return url && url.trim() !== '' ? url : 'https://i.pravatar.cc/150';
+  };
+
+  // Cálculo dinámico de cantidad por categoría en base a los datos cargados
+  const getCategoryCount = (category: string) => {
+    if (category === 'Todas') return necesidades.length;
+    if (category === 'Alta Prioridad') return necesidades.filter((n) => n.prioridad === 'alta').length;
+    return necesidades.filter((n) => n.categoria?.toLowerCase() === category.toLowerCase()).length;
   };
 
   return (
@@ -240,35 +269,47 @@ export function Home() {
               <button
                 type="button"
                 className="tag"
-                onClick={() => setSearchQuery('Alimentos Bogotá')}
+                onClick={() => {
+                  setSearchQuery('Alimentos Bogotá');
+                  setActiveTab('all');
+                }}
               >
                 🍲 Alimentos Bogotá
               </button>
               <button
                 type="button"
                 className="tag"
-                onClick={() => setSearchQuery('Médicos Medellín')}
+                onClick={() => {
+                  setSearchQuery('Médicos Medellín');
+                  setActiveTab('volunteers');
+                }}
               >
                 ⚕️ Médicos Medellín
               </button>
               <button
                 type="button"
                 className="tag"
-                onClick={() => setSearchQuery('Kits escolares Cali')}
+                onClick={() => {
+                  setSearchQuery('Kits escolares Cali');
+                  setActiveTab('needs');
+                }}
               >
                 🎒 Kits escolares Cali
               </button>
               <button
                 type="button"
-                className="tag urgent"
-                onClick={() => setSelectedCategory('Alta Prioridad')}
+                className={`tag urgent ${selectedCategory === 'Alta Prioridad' ? 'active' : ''}`}
+                onClick={() => {
+                  setSelectedCategory('Alta Prioridad');
+                  setActiveTab('needs');
+                }}
               >
                 🔴 Alta Prioridad
               </button>
             </div>
           </form>
 
-          {/* ESTADÍSTICAS GLOBALES */}
+          {/* ESTADÍSTICAS GLOBALES CONECTADAS A SUPABASE */}
           <section className="stats-section">
             <div className="stat-card">
               <div className="stat-icon blue">
@@ -336,19 +377,19 @@ export function Home() {
               <div className="section-filters">
                 <button
                   className="btn-outline small"
-                  onClick={() => navigate('/explorar')}
+                  onClick={() => navigate('/explorar?tab=needs')}
                 >
                   <img src={iconFiltrosUrl} alt="Filtro" /> Panel de Filtros
                 </button>
                 <div className="filter-pills">
-                  {['Todas', 'Alimentos', 'Medicamentos', 'Útiles'].map((cat) => (
+                  {['Todas', 'Alimentos', 'Medicamentos', 'Útiles', 'Alta Prioridad'].map((cat) => (
                     <span
                       key={cat}
                       className={`pill ${selectedCategory === cat ? 'active' : ''}`}
                       onClick={() => setSelectedCategory(cat)}
                       style={{ cursor: 'pointer' }}
                     >
-                      {cat} {cat === 'Todas' ? `(${necesidades.length})` : ''}
+                      {cat} ({getCategoryCount(cat)})
                     </span>
                   ))}
                 </div>
@@ -359,7 +400,9 @@ export function Home() {
               {loading ? (
                 <p className="text-gray-500 font-bold p-4">Cargando necesidades en tiempo real...</p>
               ) : necesidadesFiltradas.length === 0 ? (
-                <p className="text-gray-500 p-4">No se encontraron llamados urgentes con los criterios seleccionados.</p>
+                <p className="text-gray-500 p-4">
+                  No se encontraron llamados urgentes con los criterios seleccionados.
+                </p>
               ) : (
                 necesidadesFiltradas.map((need) => {
                   const style = getPriorityStyle(need.prioridad);
@@ -449,7 +492,7 @@ export function Home() {
                 <h2>Voluntarios Disponibles</h2>
                 <p>Profesionales y ciudadanos dispuestos a donar horas, conocimientos y experiencia.</p>
               </div>
-              <Link to="/registro-voluntario">
+              <Link to="/signup">
                 <button className="btn-success">
                   <img src={IconVoluntario} className="icon-svg" alt="Icono de Voluntariado" />
                   Ofrecer voluntariado
@@ -460,10 +503,10 @@ export function Home() {
             <div className="cards-grid">
               {loading ? (
                 <p className="text-gray-500 font-bold p-4">Cargando talento solidario...</p>
-              ) : voluntarios.length === 0 ? (
-                <p className="text-gray-500 p-4">Aún no hay voluntarios activos en este momento.</p>
+              ) : voluntariosFiltrados.length === 0 ? (
+                <p className="text-gray-500 p-4">No se encontraron voluntarios activos con los criterios seleccionados.</p>
               ) : (
-                voluntarios.map((voluntario) => (
+                voluntariosFiltrados.map((voluntario) => (
                   <div key={voluntario.id} className="volunteer-card">
                     <div className="card-top">
                       <img
