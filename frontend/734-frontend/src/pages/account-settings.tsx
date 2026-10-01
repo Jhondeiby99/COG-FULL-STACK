@@ -38,6 +38,7 @@ export function AccountSettings() {
       .from('sesiones_usuario')
       .select('*')
       .eq('user_id', user.id)
+      .eq('es_actual', true)
       .order('created_at', { ascending: false });
 
     if (!error && sesionesData) {
@@ -63,11 +64,11 @@ export function AccountSettings() {
     setLoading(false);
   };
 
+  // Para cerrar una sesión específica
   const handleCerrarSesion = async (id: string) => {
-    // Eliminación en base de datos
     const { error } = await supabase
       .from('sesiones_usuario')
-      .delete()
+      .update({ es_actual: false }) // <-- En lugar de .delete()
       .eq('id', id);
 
     if (!error) {
@@ -75,17 +76,19 @@ export function AccountSettings() {
     }
   };
 
+  // Para cerrar todas las demás sesiones
   const handleCerrarOtrasSesiones = async () => {
-    if (!userId) return;
-    // Elimina todas las que no sean la actual
+    const currentDbSessionId = localStorage.getItem('db_session_id');
+    if (!userId || !currentDbSessionId) return;
+
     const { error } = await supabase
       .from('sesiones_usuario')
-      .delete()
+      .update({ es_actual: false }) // <-- En lugar de .delete()
       .eq('user_id', userId)
-      .eq('es_actual', false);
+      .neq('id', currentDbSessionId);
 
     if (!error) {
-      setSesiones(prev => prev.filter(s => s.es_actual));
+      setSesiones(prev => prev.filter(s => s.id === currentDbSessionId));
     }
   };
 
