@@ -47,7 +47,9 @@ export function Header({ onSearchChange, onFilterClick, searchPlaceholder = "Cau
             const { data: vol } = await supabase.from('voluntarios').select('nombre_completo, avatar_url').eq('id', session.user.id).maybeSingle();
             setProfileData({ name: vol?.nombre_completo || 'Voluntario', avatar: vol?.avatar_url, rol: perfil.rol });
           } else if (perfil.rol === 'administrador') {
-            setProfileData({ name: 'Administrador', avatar: null, rol: perfil.rol });
+            // ⬇️ CONSULTA A LA NUEVA TABLA DE ADMINISTRADORES
+            const { data: admin } = await supabase.from('administradores').select('nombre_completo, avatar_url').eq('id', session.user.id).maybeSingle();
+            setProfileData({ name: admin?.nombre_completo || 'Administrador Global', avatar: admin?.avatar_url || null, rol: perfil.rol });
           }
         }
       }

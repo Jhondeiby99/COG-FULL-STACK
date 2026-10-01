@@ -59,7 +59,20 @@ export function DashboardLayout() {
                 .single();
               if (isMounted) setProfileData({ name: vol?.nombre_completo || 'Voluntario', avatar: vol?.avatar_url, id: vol?.id || session.user.id });
             } else if (perfil.rol === 'administrador' || perfil.rol === 'admin') {
-              if (isMounted) setProfileData({ name: 'Administrador', avatar: null, id: perfil.id });
+              // ⬇️ CONSULTA A LA NUEVA TABLA DE ADMINISTRADORES
+              const { data: admin } = await supabase
+                .from('administradores')
+                .select('nombre_completo, avatar_url, id')
+                .eq('id', session.user.id)
+                .maybeSingle();
+
+              if (isMounted) {
+                setProfileData({
+                  name: admin?.nombre_completo || 'Administrador',
+                  avatar: admin?.avatar_url || null,
+                  id: admin?.id || session.user.id
+                });
+              }
             }
           }
         } else {
