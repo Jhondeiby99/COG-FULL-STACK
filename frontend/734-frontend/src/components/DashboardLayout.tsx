@@ -2,6 +2,7 @@ import { useNavigate, Outlet, Link, useLocation } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import * as Icons from "../assets/icons/index.ts";
 import { useState, useEffect, useRef } from 'react';
+import { RealtimeChannel } from '@supabase/supabase-js';
 
 interface Notificacion {
   id: string;
@@ -11,25 +12,34 @@ interface Notificacion {
   created_at: string;
 }
 
+interface SesionUsuario {
+  id: string;
+  es_actual: boolean;
+}
+
 export function DashboardLayout() {
   const navigate = useNavigate();
   const location = useLocation();
+
+  // Estados principales
+  const [modalExpulsion, setModalExpulsion] = useState(false);
   const [rol, setRol] = useState<string | null>(null);
-  const [profileData, setProfileData] = useState<{ name: string; avatar: string | null; id: string} | null>(null);
+  const [profileData, setProfileData] = useState<{ name: string; avatar: string | null; id: string } | null>(null);
   const [loading, setLoading] = useState(true);
-  
-  // Estado para notificaciones
+
+  // Estados para notificaciones
   const [notificaciones, setNotificaciones] = useState<Notificacion[]>([]);
   const [showNotifs, setShowNotifs] = useState(false);
   const notifRef = useRef<HTMLDivElement>(null);
 
+  // 1. CARGA INICIAL DE SESIÓN Y ROL DEL USUARIO
   useEffect(() => {
-    let isMounted = true; // <-- Bandera de seguridad
+    let isMounted = true;
 
     async function getSessionAndRol() {
       try {
         const { data: { session } } = await supabase.auth.getSession();
-        
+
         if (session?.user) {
           const { data: notifs } = await supabase
             .from('notificaciones')
@@ -37,8 +47,8 @@ export function DashboardLayout() {
             .eq('user_id', session.user.id)
             .order('created_at', { ascending: false })
             .limit(5);
-            
-          if (!isMounted) return; // Aborta si la sesión se cerró mientras cargaba
+
+          if (!isMounted) return;
           if (notifs) setNotificaciones(notifs);
 
           const { data: perfil } = await supabase
@@ -47,15 +57,23 @@ export function DashboardLayout() {
             .eq('id', session.user.id)
             .maybeSingle();
 
-          if (!isMounted) return; // Aborta de nuevo por seguridad
+          if (!isMounted) return;
 
           if (perfil) {
             setRol(perfil.rol);
             if (perfil.rol === 'fundacion') {
-              const { data: fund } = await supabase.from('fundaciones').select('nombre_legal, logo_url, id').eq('id', session.user.id).single();
+              const { data: fund } = await supabase
+                .from('fundaciones')
+                .select('nombre_legal, logo_url, id')
+                .eq('id', session.user.id)
+                .single();
               if (isMounted) setProfileData({ name: fund?.nombre_legal || 'Fundación', avatar: fund?.logo_url, id: fund?.id });
             } else if (perfil.rol === 'voluntario') {
-              const { data: vol } = await supabase.from('voluntarios').select('nombre_completo, avatar_url, id').eq('id', session.user.id).single();
+              const { data: vol } = await supabase
+                .from('voluntarios')
+                .select('nombre_completo, avatar_url, id')
+                .eq('id', session.user.id)
+                .single();
               if (isMounted) setProfileData({ name: vol?.nombre_completo || 'Voluntario', avatar: vol?.avatar_url, id: vol?.id });
             } else if (perfil.rol === 'administrador' || perfil.rol === 'admin') {
               if (isMounted) setProfileData({ name: 'Administrador', avatar: null, id: perfil.id });
@@ -73,58 +91,86 @@ export function DashboardLayout() {
 
     getSessionAndRol();
 
-    return () => { isMounted = false; }; // Se ejecuta al ser expulsado
+    return () => { isMounted = false; };
   }, [navigate]);
 
-  // 2. LISTENER EN TIEMPO REAL (Con expulsión agresiva)
+  // 2. ESCUCHA Y VALIDACIÓN EN TIEMPO REAL DE LA SESIÓN ACTUAL
   useEffect(() => {
     const dbSessionId = localStorage.getItem('db_session_id');
-    if (!dbSessionId) return; 
+    if (!dbSessionId) return;
 
-    const channel = supabase
-      .channel('sesiones_listener')
-      .on(
+    // Solo activamos el modal. No llamamos a signOut() aquí para no activar el enrutador
+    const ejecutarExpulsion = () => {
+      localStorage.removeItem('db_session_id');
+      setModalExpulsion(true);
+    };
+
+    // Validación inicial al cargar el layout
+    const verificarSesionInicial = async () => {
+      const { data, error } = await supabase
+        .from('sesiones_usuario')
+        .select('id, es_actual')
+        .eq('id', dbSessionId)
+        .maybeSingle();
+
+      if (error || !data || data.es_actual === false) {
+        ejecutarExpulsion();
+      }
+    };
+
+    verificarSesionInicial();
+
+    // Suscripción filtrada en el servidor (Solo eventos de este ID de sesión)
+    const channel: RealtimeChannel = supabase
+      .channel(`sesion_${dbSessionId}`)
+      .on<SesionUsuario>(
         'postgres_changes',
-        { event: 'DELETE', schema: 'public', table: 'sesiones_usuario', filter: `id=eq.${dbSessionId}` },
-        async () => {
-          localStorage.removeItem('db_session_id');
-          await supabase.auth.signOut();
-          navigate('/login', { replace: true }); // Expulsión inmediata
-        }
-      )
-      .on(
-        'postgres_changes',
-        { event: 'UPDATE', schema: 'public', table: 'sesiones_usuario', filter: `id=eq.${dbSessionId}` },
+        {
+          event: '*',
+          schema: 'public',
+          table: 'sesiones_usuario',
+          filter: `id=eq.${dbSessionId}`
+        },
         async (payload) => {
-          if (payload.new && payload.new.es_actual === false) {
-            localStorage.removeItem('db_session_id');
-            await supabase.auth.signOut();
-            navigate('/login', { replace: true }); // Expulsión inmediata
+          const fueDesactivada = payload.new && 'es_actual' in payload.new && payload.new.es_actual === false;
+          const fueEliminada = payload.eventType === 'DELETE';
+
+          if (fueDesactivada || fueEliminada) {
+            ejecutarExpulsion();
           }
         }
       )
       .subscribe();
 
-    return () => { supabase.removeChannel(channel); };
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [navigate]);
 
+  // Manejador del botón del modal: limpia credenciales locales y redirige
+  const handleAceptarExpulsion = async () => {
+    await supabase.auth.signOut({ scope: 'local' });
+    setModalExpulsion(false);
+    navigate('/login', { replace: true });
+  };
+
+  // Cierre de sesión manual voluntario
   const handleLogout = async () => {
     try {
       const dbSessionId = localStorage.getItem('db_session_id');
       if (dbSessionId) {
-        await supabase.from('sesiones_usuario').update({ es_actual: false }).eq('id', dbSessionId); 
+        await supabase.from('sesiones_usuario').update({ es_actual: false }).eq('id', dbSessionId);
         localStorage.removeItem('db_session_id');
       }
     } catch (error) {
       console.error("Error al registrar el cierre de sesión en BD:", error);
     } finally {
-      await supabase.auth.signOut();
-      navigate('/login', { replace: true }); // Destruye el historial de navegación
+      await supabase.auth.signOut({ scope: 'local' });
+      navigate('/login', { replace: true });
     }
   };
 
-
-
+  // Marcar notificaciones como leídas
   const marcarLeidas = async () => {
     const ids = notificaciones.filter(n => !n.leido).map(n => n.id);
     if (ids.length === 0) return;
@@ -145,11 +191,11 @@ export function DashboardLayout() {
 
   return (
     <div className="flex min-h-svh w-full bg-[#EFF4FF] text-[#2d3748] font-sans">
-      
+
       {/* SIDEBAR IZQUIERDO FIJO */}
       <aside className="w-72 bg-[#EFF4FF] border-r border-[#e2e8f0] flex flex-col justify-between p-6 shrink-0 sticky top-0 h-screen overflow-y-auto">
         <div className="flex flex-col gap-6">
-          
+
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2.5">
               <div className="h-8 w-8 rounded-xl bg-[#0f2a3f] text-white flex items-center justify-center font-bold text-xs shadow-sm">7</div>
@@ -215,23 +261,24 @@ export function DashboardLayout() {
             <span>&gt;</span>
             <span className="text-[#071d37] font-bold capitalize">{rol || 'Administración'}</span>
           </div>
-          
+
           {(rol === 'administrador' || rol === 'admin') && (
             <div className="flex items-center bg-[#f8fafc] border border-[#e2e8f0] rounded-xl px-3 py-2 w-60 gap-2">
               <span className="text-gray-400 text-xs"><img src={Icons.SearchIcon} alt="Buscar" /></span>
               <input type="text" placeholder="Buscar voluntarios..." className="bg-transparent text-xs w-full focus:outline-none" />
             </div>
           )}
+
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-1 bg-gray-100 p-1 rounded-xl text-[11px] font-bold text-gray-600">
               <span className={`px-2.5 py-1 rounded-lg transition ${rol === 'administrador' || rol === 'admin' ? 'bg-[#006194] text-white shadow-xs' : 'bg-[#DAE2FD] text-[#3F4850]'}`}>Admin</span>
               <span className={`px-2.5 py-1 rounded-lg transition ${rol === 'fundacion' ? 'bg-[#006194] text-white shadow-xs' : 'bg-[#DAE2FD] text-[#3F4850]'}`}>Fundación</span>
               <span className={`px-2.5 py-1 rounded-lg transition ${rol === 'voluntario' ? 'bg-[#006194] text-white shadow-xs' : 'bg-[#DAE2FD] text-[#3F4850]'}`}>Voluntario</span>
             </div>
-            
-            {/* COMPONENTE NOTIFICACIONES */}
+
+            {/* DROPDOWN NOTIFICACIONES */}
             <div className="relative" ref={notifRef}>
-              <button 
+              <button
                 onClick={() => setShowNotifs(!showNotifs)}
                 className="relative p-2 hover:bg-gray-100 rounded-full transition cursor-pointer"
               >
@@ -244,7 +291,6 @@ export function DashboardLayout() {
                 )}
               </button>
 
-              {/* MODAL DROPDOWN */}
               {showNotifs && (
                 <div className="absolute right-0 mt-2 w-80 bg-white border border-[#e2e8f0] rounded-2xl shadow-xl z-50 overflow-hidden flex flex-col">
                   <div className="p-3 bg-[#f8fafc] border-b border-[#e2e8f0] flex justify-between items-center">
@@ -273,7 +319,7 @@ export function DashboardLayout() {
                 </div>
               )}
             </div>
-            
+
             <div className="flex items-center gap-2.5 border-l border-gray-200 pl-4">
               <div className="h-9 w-9 rounded-full bg-[#0f2a3f] text-white flex items-center justify-center font-bold text-xs uppercase overflow-hidden">
                 {profileData?.avatar ? <img src={profileData.avatar} alt="Perfil" className="w-full h-full object-cover" /> : profileData?.name ? profileData.name.substring(0, 2) : 'US'}
@@ -287,10 +333,39 @@ export function DashboardLayout() {
         </header>
 
         <div className="p-4 max-w-[1400px] w-full mx-auto flex flex-col gap-6">
-            <Outlet /> 
+          <Outlet />
         </div>
 
       </div>
+
+      {/* MODAL VISUAL DE EXPULSIÓN DE SESIÓN */}
+      {modalExpulsion && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-fade-in">
+          <div className="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl border border-gray-100 flex flex-col items-center text-center gap-5 transform transition-all scale-100">
+
+            <div className="h-16 w-16 rounded-2xl bg-amber-50 text-amber-500 border border-amber-200/60 flex items-center justify-center text-3xl shadow-sm">
+              🛡️
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <h3 className="text-base font-extrabold text-[#071d37]">
+                Sesión Finalizada
+              </h3>
+              <p className="text-xs text-gray-500 leading-relaxed font-medium">
+                Tu sesión ha sido cerrada desde otro dispositivo o panel de seguridad. Por protección, deberás ingresar de nuevo.
+              </p>
+            </div>
+
+            <button
+              onClick={handleAceptarExpulsion}
+              className="w-full py-3 px-4 bg-[#005684] hover:bg-[#004266] text-white font-bold text-xs rounded-xl shadow-md hover:shadow-lg transition-all cursor-pointer active:scale-95"
+            >
+              Entendido, ir al Login
+            </button>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
