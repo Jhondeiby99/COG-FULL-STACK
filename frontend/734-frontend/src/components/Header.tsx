@@ -2,11 +2,17 @@ import React, { useEffect, useState, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import * as Icons from "../assets/icons/index.ts";
+import { RealtimeChannel } from '@supabase/supabase-js';
 
 interface HeaderProps {
   onSearchChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onFilterClick?: () => void;
   searchPlaceholder?: string;
+}
+
+interface SesionUsuario {
+  id: string;
+  es_actual: boolean;
 }
 
 export function Header({ onSearchChange, onFilterClick, searchPlaceholder = "Causas, fundaciones..." }: HeaderProps) {
@@ -15,15 +21,19 @@ export function Header({ onSearchChange, onFilterClick, searchPlaceholder = "Cau
   const [profileData, setProfileData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
+  // Estado del Modal de Expulsión
+  const [modalExpulsion, setModalExpulsion] = useState(false);
+
   // Estado de Notificaciones
   const [notificaciones, setNotificaciones] = useState<any[]>([]);
   const [showNotifs, setShowNotifs] = useState(false);
   const notifRef = useRef<HTMLDivElement>(null);
 
+  // 1. CARGA DE USUARIO, NOTIFICACIONES Y PERFIL
   useEffect(() => {
     async function getAuthUser() {
       const { data: { session } } = await supabase.auth.getSession();
-      
+
       if (session?.user) {
         setUser(session.user);
 
@@ -76,23 +86,87 @@ export function Header({ onSearchChange, onFilterClick, searchPlaceholder = "Cau
     };
   }, []);
 
-const handleLogout = async () => {
+  // 2. VALIDACIÓN Y ESCUCHA EN TIEMPO REAL DE LA SESIÓN EN BD (PÁGINAS PÚBLICAS)
+  useEffect(() => {
+    if (!user) return; // Solo activa la verificación si el usuario está logueado
+
+    const dbSessionId = localStorage.getItem('db_session_id');
+    if (!dbSessionId) return;
+
+    const ejecutarExpulsion = () => {
+      localStorage.removeItem('db_session_id');
+      setModalExpulsion(true);
+    };
+
+    const verificarSesionInicial = async () => {
+      const { data, error } = await supabase
+        .from('sesiones_usuario')
+        .select('id, es_actual')
+        .eq('id', dbSessionId)
+        .maybeSingle();
+
+      if (error || !data || data.es_actual === false) {
+        ejecutarExpulsion();
+      }
+    };
+
+    verificarSesionInicial();
+
+    const channel: RealtimeChannel = supabase
+      .channel(`sesion_header_${dbSessionId}`)
+      .on<SesionUsuario>(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'sesiones_usuario',
+          filter: `id=eq.${dbSessionId}`
+        },
+        async (payload) => {
+          const fueDesactivada = payload.new && 'es_actual' in payload.new && payload.new.es_actual === false;
+          const fueEliminada = payload.eventType === 'DELETE';
+
+          if (fueDesactivada || fueEliminada) {
+            ejecutarExpulsion();
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user]);
+
+  // Manejador del botón del modal de expulsión
+  const handleAceptarExpulsion = async () => {
+    await supabase.auth.signOut({ scope: 'local' });
+    setModalExpulsion(false);
+    setUser(null);
+    setProfileData(null);
+    navigate('/login', { replace: true });
+  };
+
+  // Cierre de sesión voluntario
+  const handleLogout = async () => {
     try {
       const dbSessionId = localStorage.getItem('db_session_id');
-  
+
       if (dbSessionId) {
         await supabase
           .from('sesiones_usuario')
           .update({ es_actual: false })
-          .eq('id', dbSessionId); 
-          
+          .eq('id', dbSessionId);
+
         localStorage.removeItem('db_session_id');
       }
     } catch (error) {
       console.error("Error al registrar el cierre de sesión en BD:", error);
     } finally {
-      await supabase.auth.signOut();
-      navigate('/login', { replace: true }); // Obliga al navegador a olvidar la ruta anterior
+      await supabase.auth.signOut({ scope: 'local' });
+      setUser(null);
+      setProfileData(null);
+      navigate('/login', { replace: true });
     }
   };
 
@@ -116,7 +190,7 @@ const handleLogout = async () => {
   const unreadCount = notificaciones.filter(n => !n.leido).length;
 
   return (
-    <header className="home-header">
+    <header className="home-header relative">
       <div className="header-left">
         <button className="btn-filtros" onClick={onFilterClick} type="button">
           <img src={Icons.iconFiltrosUrl} className="icon-svg" alt="Filtros" />
@@ -127,7 +201,7 @@ const handleLogout = async () => {
           <input type="text" placeholder={searchPlaceholder} onChange={onSearchChange} />
         </div>
       </div>
-      
+
       <div className="header-center">
         <Link to="/" style={{ textDecoration: 'none', color: 'inherit' }}>
           <div className="brand-logo-center" style={{ cursor: 'pointer' }}>
@@ -184,11 +258,11 @@ const handleLogout = async () => {
                   </div>
                 )}
               </div>
-              
+
               <Link to={getDashboardPath()} className="rounded-lg bg-[#005684] px-3 py-1.5 text-xs font-bold text-white transition hover:bg-[#00456a]">
                 Mi Panel
               </Link>
-              
+
               <button onClick={handleLogout} type="button" className="rounded-lg bg-red-50 px-3 py-1.5 text-xs font-bold text-red-600 border border-red-200 transition hover:bg-red-100 cursor-pointer" title="Cerrar sesión">
                 Salir
               </button>
@@ -213,6 +287,34 @@ const handleLogout = async () => {
           )}
         </div>
       </div>
+
+      {/* MODAL VISUAL DE EXPULSIÓN DE SESIÓN */}
+      {modalExpulsion && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-fade-in">
+          <div className="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl border border-gray-100 flex flex-col items-center text-center gap-5 transform transition-all scale-100">
+
+            <div className="h-16 w-16 rounded-2xl bg-amber-50 text-amber-500 border border-amber-200/60 flex items-center justify-center text-3xl shadow-sm">
+              🛡️
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <h3 className="text-base font-extrabold text-[#071d37]">
+                Sesión Finalizada
+              </h3>
+              <p className="text-xs text-gray-500 leading-relaxed font-medium">
+                Tu sesión ha sido cerrada desde otro dispositivo o panel de seguridad. Por protección, deberás ingresar de nuevo.
+              </p>
+            </div>
+
+            <button
+              onClick={handleAceptarExpulsion}
+              className="w-full py-3 px-4 bg-[#005684] hover:bg-[#004266] text-white font-bold text-xs rounded-xl shadow-md hover:shadow-lg transition-all cursor-pointer active:scale-95"
+            >
+              Entendido, ir al Login
+            </button>
+          </div>
+        </div>
+      )}
     </header>
   );
 }

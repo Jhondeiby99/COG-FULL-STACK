@@ -91,7 +91,18 @@ export function DashboardLayout() {
 
     getSessionAndRol();
 
-    return () => { isMounted = false; };
+    // Listener para cerrar notificaciones al hacer clic fuera
+    const handleClickOutside = (event: MouseEvent) => {
+      if (notifRef.current && !notifRef.current.contains(event.target as Node)) {
+        setShowNotifs(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+
+    return () => { 
+      isMounted = false; 
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
   }, [navigate]);
 
   // 2. ESCUCHA Y VALIDACIÓN EN TIEMPO REAL DE LA SESIÓN ACTUAL
@@ -99,7 +110,6 @@ export function DashboardLayout() {
     const dbSessionId = localStorage.getItem('db_session_id');
     if (!dbSessionId) return;
 
-    // Solo activamos el modal. No llamamos a signOut() aquí para no activar el enrutador
     const ejecutarExpulsion = () => {
       localStorage.removeItem('db_session_id');
       setModalExpulsion(true);
@@ -120,9 +130,9 @@ export function DashboardLayout() {
 
     verificarSesionInicial();
 
-    // Suscripción filtrada en el servidor (Solo eventos de este ID de sesión)
+    // Suscripción filtrada en el servidor (solo este ID de sesión)
     const channel: RealtimeChannel = supabase
-      .channel(`sesion_${dbSessionId}`)
+      .channel(`sesion_layout_${dbSessionId}`)
       .on<SesionUsuario>(
         'postgres_changes',
         {
@@ -147,14 +157,14 @@ export function DashboardLayout() {
     };
   }, [navigate]);
 
-  // Manejador del botón del modal: limpia credenciales locales y redirige
+  // Manejador del botón del modal de expulsión
   const handleAceptarExpulsion = async () => {
     await supabase.auth.signOut({ scope: 'local' });
     setModalExpulsion(false);
     navigate('/login', { replace: true });
   };
 
-  // Cierre de sesión manual voluntario
+  // Cierre de sesión voluntario
   const handleLogout = async () => {
     try {
       const dbSessionId = localStorage.getItem('db_session_id');
