@@ -24,6 +24,7 @@ export function VolunteerProfile() {
   }, [id]);
 
   useEffect(() => {
+    
     async function fetchVolunteerData() {
       if (!id) {
         setLoading(false);
@@ -86,29 +87,83 @@ export function VolunteerProfile() {
     setShowContactModal(true);
   };
 
-  const handleContactSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!voluntario) return;
-    setContactStatus('loading');
+  
+useEffect(() => {
+  async function autofillUser() {
+    if (showContactModal) {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        // Intentar obtener datos de la fundación o perfil
+        const { data: fundacion } = await supabase
+          .from('fundaciones')
+          .select('nombre_legal, email_institucional')
+          .eq('id', user.id)
+          .maybeSingle();
 
+        if (fundacion) {
+          setContactForm((prev) => ({
+            ...prev,
+            nombre: prev.nombre || fundacion.nombre_legal || '',
+            email: prev.email || fundacion.email_institucional || user.email || ''
+          }));
+        } else if (user.email) {
+          setContactForm((prev) => ({
+            ...prev,
+            email: prev.email || user.email || ''
+          }));
+        }
+      }
+    }
+  }
+  autofillUser();
+}, [showContactModal]);
+
+// Envío del Formulario
+const handleContactSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  if (!voluntario) return;
+  setContactStatus('loading');
+
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    let senderFundacionId: string | null = null;
+
+    // Si hay usuario logueado, validar si es una Fundación activa
+    if (user) {
+      const { data: perfil } = await supabase
+        .from('perfiles')
+        .select('rol')
+        .eq('id', user.id)
+        .maybeSingle();
+
+      if (perfil?.rol === 'fundacion') {
+        senderFundacionId = user.id;
+      }
+    }
+
+    // Inserción flexible (funciona para anónimos y logueados)
     const { error } = await supabase.from('mensajes_contacto').insert([{
+      fundacion_id: senderFundacionId, // ID de la fundación si está logueada, o null si es visitante/otro
+      voluntario_id: voluntario.id,    // Siempre es el destinatario
       nombre_remitente: contactForm.nombre,
       email_remitente: contactForm.email,
-      tipo_consulta: modalMode === 'invitacion' ? 'Invitación a Proyecto' : 'Contacto a Voluntario',
-      mensaje: `[Para Voluntario: ${voluntario.nombre_completo} (ID: ${voluntario.id})]\n\n${contactForm.mensaje}`
+      tipo_consulta: modalMode === 'invitacion' ? 'Invitación a Proyecto' : 'Contacto Directo',
+      mensaje: contactForm.mensaje
     }]);
 
-    if (error) {
-      setContactStatus('error');
-    } else {
-      setContactStatus('success');
-      setTimeout(() => {
-        setShowContactModal(false);
-        setContactStatus('idle');
-        setContactForm({ nombre: '', email: '', mensaje: '' });
-      }, 2000);
-    }
-  };
+    if (error) throw error;
+
+    setContactStatus('success');
+    setTimeout(() => {
+      setShowContactModal(false);
+      setContactStatus('idle');
+      setContactForm({ nombre: '', email: '', mensaje: '' });
+    }, 2000);
+  } catch (err) {
+    console.error('Error al enviar mensaje:', err);
+    setContactStatus('error');
+  }
+};
 
   const getAvatarUrl = (url?: string | null) => {
     return url && url.trim() !== '' ? url : 'https://i.pravatar.cc/150';

@@ -3,14 +3,7 @@ import { supabase } from '../lib/supabase';
 import * as Icons from "../assets/icons/index.ts";
 import { useState, useEffect, useRef } from 'react';
 import { RealtimeChannel } from '@supabase/supabase-js';
-
-interface Notificacion {
-  id: string;
-  titulo: string;
-  descripcion: string;
-  leido: boolean;
-  created_at: string;
-}
+import { useNotifications } from '../hooks/useNotifications';
 
 interface SesionUsuario {
   id: string;
@@ -27,8 +20,8 @@ export function DashboardLayout() {
   const [profileData, setProfileData] = useState<{ name: string; avatar: string | null; id: string } | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Estados para notificaciones
-  const [notificaciones, setNotificaciones] = useState<Notificacion[]>([]);
+  // Hook de Notificaciones (Límite de 5 para el dropdown)
+  const { notificaciones, unreadCount, marcarComoLeidas } = useNotifications(profileData?.id, { limit: 5 });
   const [showNotifs, setShowNotifs] = useState(false);
   const notifRef = useRef<HTMLDivElement>(null);
 
@@ -41,16 +34,6 @@ export function DashboardLayout() {
         const { data: { session } } = await supabase.auth.getSession();
 
         if (session?.user) {
-          const { data: notifs } = await supabase
-            .from('notificaciones')
-            .select('*')
-            .eq('user_id', session.user.id)
-            .order('created_at', { ascending: false })
-            .limit(5);
-
-          if (!isMounted) return;
-          if (notifs) setNotificaciones(notifs);
-
           const { data: perfil } = await supabase
             .from('perfiles')
             .select('rol,id')
@@ -67,14 +50,14 @@ export function DashboardLayout() {
                 .select('nombre_legal, logo_url, id')
                 .eq('id', session.user.id)
                 .single();
-              if (isMounted) setProfileData({ name: fund?.nombre_legal || 'Fundación', avatar: fund?.logo_url, id: fund?.id });
+              if (isMounted) setProfileData({ name: fund?.nombre_legal || 'Fundación', avatar: fund?.logo_url, id: fund?.id || session.user.id });
             } else if (perfil.rol === 'voluntario') {
               const { data: vol } = await supabase
                 .from('voluntarios')
                 .select('nombre_completo, avatar_url, id')
                 .eq('id', session.user.id)
                 .single();
-              if (isMounted) setProfileData({ name: vol?.nombre_completo || 'Voluntario', avatar: vol?.avatar_url, id: vol?.id });
+              if (isMounted) setProfileData({ name: vol?.nombre_completo || 'Voluntario', avatar: vol?.avatar_url, id: vol?.id || session.user.id });
             } else if (perfil.rol === 'administrador' || perfil.rol === 'admin') {
               if (isMounted) setProfileData({ name: 'Administrador', avatar: null, id: perfil.id });
             }
@@ -91,7 +74,6 @@ export function DashboardLayout() {
 
     getSessionAndRol();
 
-    // Listener para cerrar notificaciones al hacer clic fuera
     const handleClickOutside = (event: MouseEvent) => {
       if (notifRef.current && !notifRef.current.contains(event.target as Node)) {
         setShowNotifs(false);
@@ -115,7 +97,6 @@ export function DashboardLayout() {
       setModalExpulsion(true);
     };
 
-    // Validación inicial al cargar el layout
     const verificarSesionInicial = async () => {
       const { data, error } = await supabase
         .from('sesiones_usuario')
@@ -130,7 +111,6 @@ export function DashboardLayout() {
 
     verificarSesionInicial();
 
-    // Suscripción filtrada en el servidor (solo este ID de sesión)
     const channel: RealtimeChannel = supabase
       .channel(`sesion_layout_${dbSessionId}`)
       .on<SesionUsuario>(
@@ -157,14 +137,12 @@ export function DashboardLayout() {
     };
   }, [navigate]);
 
-  // Manejador del botón del modal de expulsión
   const handleAceptarExpulsion = async () => {
     await supabase.auth.signOut({ scope: 'local' });
     setModalExpulsion(false);
     navigate('/login', { replace: true });
   };
 
-  // Cierre de sesión voluntario
   const handleLogout = async () => {
     try {
       const dbSessionId = localStorage.getItem('db_session_id');
@@ -180,16 +158,7 @@ export function DashboardLayout() {
     }
   };
 
-  // Marcar notificaciones como leídas
-  const marcarLeidas = async () => {
-    const ids = notificaciones.filter(n => !n.leido).map(n => n.id);
-    if (ids.length === 0) return;
-    setNotificaciones(prev => prev.map(n => ({ ...n, leido: true })));
-    await supabase.from('notificaciones').update({ leido: true }).in('id', ids);
-  };
-
   const isActive = (path: string) => location.pathname.includes(path);
-  const unreadCount = notificaciones.filter(n => !n.leido).length;
 
   if (loading) {
     return (
@@ -201,11 +170,8 @@ export function DashboardLayout() {
 
   return (
     <div className="flex min-h-svh w-full bg-[#EFF4FF] text-[#2d3748] font-sans">
-
-      {/* SIDEBAR IZQUIERDO FIJO */}
       <aside className="w-72 bg-[#EFF4FF] border-r border-[#e2e8f0] flex flex-col justify-between p-6 shrink-0 sticky top-0 h-screen overflow-y-auto">
         <div className="flex flex-col gap-6">
-
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2.5">
               <div className="h-8 w-8 rounded-xl bg-[#0f2a3f] text-white flex items-center justify-center font-bold text-xs shadow-sm">7</div>
@@ -250,7 +216,7 @@ export function DashboardLayout() {
           <div className="flex flex-col gap-2">
             <span className="text-[11px] font-extrabold text-[#94a3b8] uppercase tracking-wider">Sistema</span>
             <nav className="flex flex-col gap-1">
-              <Link to="/dashboard/ajustes" className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition ${isActive('/ajustes') ? 'bg-[#005684] text-white shadow-sm' : 'text-[#64748b] hover:bg-gray-50 font-semibold'}`}><span>⚙️</span> Seguridad</Link>
+              <Link to="/dashboard/ajustes" className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition ${isActive('/ajustes') ? 'bg-[#005684] text-white shadow-sm' : 'text-[#64748b] hover:bg-gray-50 font-semibold'}`}><span>⚙️️</span> Seguridad</Link>
               <Link to="/dashboard/admin-notificaciones" className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition ${isActive('/admin-notificaciones') ? 'bg-[#005684] text-white shadow-sm' : 'text-[#64748b] hover:bg-gray-50 font-semibold'}`}><span>🔔</span> Notificaciones</Link>
             </nav>
           </div>
@@ -263,7 +229,6 @@ export function DashboardLayout() {
         </div>
       </aside>
 
-      {/* CONTENEDOR DERECHO */}
       <div className="flex-1 flex flex-col min-h-screen relative">
         <header className="bg-[#EFF4FF] border-b border-[#e2e8f0] px-8 py-4 flex items-center justify-between sticky top-0 z-30">
           <div className="flex items-center gap-2 text-xs font-semibold text-[#64748b]">
@@ -286,7 +251,7 @@ export function DashboardLayout() {
               <span className={`px-2.5 py-1 rounded-lg transition ${rol === 'voluntario' ? 'bg-[#006194] text-white shadow-xs' : 'bg-[#DAE2FD] text-[#3F4850]'}`}>Voluntario</span>
             </div>
 
-            {/* DROPDOWN NOTIFICACIONES */}
+            {/* DROPDOWN NOTIFICACIONES MEDIANTE HOOK */}
             <div className="relative" ref={notifRef}>
               <button
                 onClick={() => setShowNotifs(!showNotifs)}
@@ -306,7 +271,7 @@ export function DashboardLayout() {
                   <div className="p-3 bg-[#f8fafc] border-b border-[#e2e8f0] flex justify-between items-center">
                     <span className="text-xs font-bold text-[#071d37]">Notificaciones</span>
                     {unreadCount > 0 && (
-                      <button onClick={marcarLeidas} className="text-[10px] text-[#005684] hover:underline cursor-pointer">
+                      <button onClick={() => marcarComoLeidas()} className="text-[10px] text-[#005684] hover:underline cursor-pointer">
                         Marcar todas leídas
                       </button>
                     )}
@@ -338,25 +303,20 @@ export function DashboardLayout() {
                 <span className="text-xs font-bold text-[#071d37]">{profileData?.name || 'Usuario'}</span>
               </div>
             </div>
-
           </div>
         </header>
 
         <div className="p-4 max-w-[1400px] w-full mx-auto flex flex-col gap-6">
           <Outlet />
         </div>
-
       </div>
 
-      {/* MODAL VISUAL DE EXPULSIÓN DE SESIÓN */}
       {modalExpulsion && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-fade-in">
           <div className="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl border border-gray-100 flex flex-col items-center text-center gap-5 transform transition-all scale-100">
-
             <div className="h-16 w-16 rounded-2xl bg-amber-50 text-amber-500 border border-amber-200/60 flex items-center justify-center text-3xl shadow-sm">
               🛡️
             </div>
-
             <div className="flex flex-col gap-2">
               <h3 className="text-base font-extrabold text-[#071d37]">
                 Sesión Finalizada
@@ -365,7 +325,6 @@ export function DashboardLayout() {
                 Tu sesión ha sido cerrada desde otro dispositivo o panel de seguridad. Por protección, deberás ingresar de nuevo.
               </p>
             </div>
-
             <button
               onClick={handleAceptarExpulsion}
               className="w-full py-3 px-4 bg-[#005684] hover:bg-[#004266] text-white font-bold text-xs rounded-xl shadow-md hover:shadow-lg transition-all cursor-pointer active:scale-95"
@@ -375,7 +334,6 @@ export function DashboardLayout() {
           </div>
         </div>
       )}
-
     </div>
   );
 }
