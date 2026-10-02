@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
-import * as Icons from "../assets/icons/index.ts";
 
 export function ForgotPassword() {
   const [email, setEmail] = useState('');
