@@ -48,6 +48,9 @@ type Voluntario = {
 export function Home() {
   const navigate = useNavigate();
 
+  // Estado para la autenticación
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+
   // Estados de datos reales
   const [necesidades, setNecesidades] = useState<Necesidad[]>([]);
   const [voluntarios, setVoluntarios] = useState<Voluntario[]>([]);
@@ -62,6 +65,21 @@ export function Home() {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState<'all' | 'needs' | 'volunteers'>('all');
   const [selectedCategory, setSelectedCategory] = useState<string>('Todas');
+
+  // Verificar la sesión al cargar el componente
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setIsAuthenticated(!!session);
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setIsAuthenticated(!!session);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   useEffect(() => {
     async function fetchData() {
@@ -353,9 +371,12 @@ export function Home() {
             </div>
           </div>
           <div className="cta-actions">
-            <Link to="/signup">
-              <button className="btn-primary">Registrarme ahora</button>
-            </Link>
+            {/* Validación aplicada aquí */}
+            {!isAuthenticated && (
+              <Link to="/signup">
+                <button className="btn-primary">Registrarme ahora</button>
+              </Link>
+            )}
             <Link to="/explorar">
               <button className="btn-outline">
                 <img src={FiltroDirectorio} alt="Filtrar directorio" />
@@ -492,12 +513,15 @@ export function Home() {
                 <h2>Voluntarios Disponibles</h2>
                 <p>Profesionales y ciudadanos dispuestos a donar horas, conocimientos y experiencia.</p>
               </div>
-              <Link to="/signup">
-                <button className="btn-success">
-                  <img src={IconVoluntario} className="icon-svg" alt="Icono de Voluntariado" />
-                  Ofrecer voluntariado
-                </button>
-              </Link>
+              {/* Validación aplicada aquí también */}
+              {!isAuthenticated && (
+                <Link to="/signup">
+                  <button className="btn-success">
+                    <img src={IconVoluntario} className="icon-svg" alt="Icono de Voluntariado" />
+                    Ofrecer voluntariado
+                  </button>
+                </Link>
+              )}
             </div>
 
             <div className="cards-grid">

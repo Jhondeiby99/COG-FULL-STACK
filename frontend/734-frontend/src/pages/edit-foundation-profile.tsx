@@ -434,491 +434,551 @@ export function EditFoundationProfile() {
           {/* RETÍCULA DE EDICIÓN: 2 COLUMNAS */}
           <div className="grid grid-cols-1 lg:grid-cols-[1fr_400px] gap-6 items-start">
             
-            {/* COLUMNA IZQUIERDA (Principal) */}
+            {/* =======================================
+                COLUMNA IZQUIERDA (Principal)
+            ======================================= */}
             <div className="flex flex-col gap-6">
               
-              {/* 01. IDENTIDAD GRÁFICA */}
-              <section className="bg-white rounded-3xl p-6 border border-[#e2e8f0] shadow-sm">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-[11px] font-bold text-[#005684] uppercase tracking-wider flex items-center gap-2">
-                    <span className="text-base">🖼️</span> Identidad Gráfica Institucional
-                  </h3>
-                  <span className="text-[10px] text-[#64748b] font-bold">Aspect ratio 16:9 y 1:1</span>
-                </div>
-                
-                {/* Portada */}
-                <div className="relative rounded-2xl overflow-hidden bg-gray-100 mb-6 h-48 border border-[#e2e8f0]">
-                  {portadaUrl ? (
-                    <img src={portadaUrl} className="w-full h-full object-cover" alt="Portada" />
-                  ) : (
-                    <div className="w-full h-full bg-slate-200 flex items-center justify-center text-xs text-slate-400 font-bold">
-                      Sin foto de portada cargada
+              {/* VISTA: INFORMACIÓN BÁSICA */}
+              {activeTab === 'basica' && (
+                <>
+                  {/* 01. IDENTIDAD GRÁFICA */}
+                  <section className="bg-white rounded-3xl p-6 border border-[#e2e8f0] shadow-sm">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-[11px] font-bold text-[#005684] uppercase tracking-wider flex items-center gap-2">
+                        <span className="text-base">🖼️</span> Identidad Gráfica Institucional
+                      </h3>
+                      <span className="text-[10px] text-[#64748b] font-bold">Aspect ratio 16:9 y 1:1</span>
                     </div>
-                  )}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end p-4">
-                     <div className="flex justify-between items-center w-full">
-                       <div>
-                         <p className="text-white text-xs font-bold">Foto de Portada Principal</p>
-                         <p className="text-white/80 text-[10px]">Resolución sugerida: 1920×1080px (Max 4MB)</p>
-                       </div>
-                       <button 
-                         onClick={() => {
-                           const newUrl = prompt('Ingresa la URL de la foto de portada:', portadaUrl);
-                           if (newUrl !== null) {
-                             setPortadaUrl(newUrl);
-                             markUnsaved();
-                           }
-                         }}
-                         className="bg-white/90 text-[#071d37] px-3 py-1.5 rounded-lg text-[10px] font-bold hover:bg-white transition cursor-pointer"
-                       >
-                         📷 Cambiar Portada
-                       </button>
-                     </div>
-                  </div>
-                </div>
-
-                {/* Logo */}
-                <div className="flex items-center gap-4 bg-[#f8fafc] p-4 rounded-2xl border border-[#e2e8f0]">
-                   <div className="w-20 h-20 bg-white border border-[#e2e8f0] rounded-xl flex flex-col items-center justify-center p-2 shadow-sm shrink-0 overflow-hidden">
-                      {logoUrl ? (
-                        <img src={logoUrl} alt="Logo" className="w-full h-full object-contain" />
+                    
+                    {/* Portada */}
+                    <div className="relative rounded-2xl overflow-hidden bg-gray-100 mb-6 h-48 border border-[#e2e8f0]">
+                      {portadaUrl ? (
+                        <img src={portadaUrl} className="w-full h-full object-cover" alt="Portada" />
                       ) : (
-                        <>
-                          <span className="text-2xl text-[#005684]">☀️</span>
-                          <span className="text-[6px] font-bold text-[#071d37] mt-1 text-center leading-tight uppercase">
-                            {sigla || razonSocial || 'SIN LOGO'}
-                          </span>
-                        </>
+                        <div className="w-full h-full bg-slate-200 flex items-center justify-center text-xs text-slate-400 font-bold">
+                          Sin foto de portada cargada
+                        </div>
                       )}
-                   </div>
-                   <div className="flex-1">
-                     <h4 className="text-xs font-bold text-[#071d37]">Logo Oficial / Emblema</h4>
-                     <p className="text-[10px] text-[#64748b] mt-0.5 mb-2">PNG o SVG con fondo transparente. Mínimo 400x400 px.</p>
-                     <div className="flex gap-3">
-                       <button 
-                         onClick={() => {
-                           const url = prompt('Ingresa la URL del logo oficial:', logoUrl || '');
-                           if (url !== null) {
-                             setLogoUrl(url);
-                             markUnsaved();
-                           }
-                         }}
-                         className="text-[11px] font-bold text-[#005684] hover:underline cursor-pointer"
-                       >
-                         Subir Nuevo Logo
-                       </button>
-                       {logoUrl && (
-                         <button 
-                           onClick={() => {
-                             setLogoUrl(null);
-                             markUnsaved();
-                           }}
-                           className="text-[11px] font-bold text-red-500 hover:underline cursor-pointer"
-                         >
-                           Quitar
-                         </button>
-                       )}
-                     </div>
-                   </div>
-                </div>
-              </section>
-
-              {/* 02. DATOS LEGALES */}
-              <section className="bg-white rounded-3xl p-6 border border-[#e2e8f0] shadow-sm">
-                <h3 className="text-[11px] font-bold text-[#005684] uppercase tracking-wider flex items-center gap-2 mb-5">
-                  <span className="text-base">⚖️</span> Datos Legales y Registro
-                </h3>
-                
-                <div className="flex flex-col gap-4">
-                  <div>
-                    <label className="text-[10px] font-extrabold text-[#94a3b8] uppercase block mb-1">Razón Social Completa</label>
-                    <input 
-                      type="text" 
-                      value={razonSocial} 
-                      onChange={(e) => { setRazonSocial(e.target.value); markUnsaved(); }} 
-                      placeholder="Ingrese la Razón Social"
-                      className="w-full bg-[#f8fafc] border border-[#e2e8f0] focus:border-[#005684] rounded-xl px-4 py-2.5 text-xs font-semibold text-[#071d37] outline-none transition" 
-                    />
-                  </div>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="text-[10px] font-extrabold text-[#94a3b8] uppercase block mb-1">Sigla o Nombre Corto</label>
-                      <input 
-                        type="text" 
-                        value={sigla} 
-                        onChange={(e) => { setSigla(e.target.value); markUnsaved(); }} 
-                        placeholder="Ej: Huellas de Esperanza"
-                        className="w-full bg-[#f8fafc] border border-[#e2e8f0] focus:border-[#005684] rounded-xl px-4 py-2.5 text-xs font-semibold text-[#071d37] outline-none transition" 
-                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end p-4">
+                        <div className="flex justify-between items-center w-full">
+                          <div>
+                            <p className="text-white text-xs font-bold">Foto de Portada Principal</p>
+                            <p className="text-white/80 text-[10px]">Resolución sugerida: 1920×1080px (Max 4MB)</p>
+                          </div>
+                          <button 
+                            onClick={() => {
+                              const newUrl = prompt('Ingresa la URL de la foto de portada:', portadaUrl);
+                              if (newUrl !== null) {
+                                setPortadaUrl(newUrl);
+                                markUnsaved();
+                              }
+                            }}
+                            className="bg-white/90 text-[#071d37] px-3 py-1.5 rounded-lg text-[10px] font-bold hover:bg-white transition cursor-pointer"
+                          >
+                            📷 Cambiar Portada
+                          </button>
+                        </div>
+                      </div>
                     </div>
-                    <div>
-                      <label className="text-[10px] font-extrabold text-[#94a3b8] uppercase block mb-1 flex items-center justify-between">
-                        NIT / Registro Tributario
-                        <span className="text-[#047857] flex items-center gap-1 normal-case"><span className="text-sm">✓</span> Validado DIAN</span>
-                      </label>
-                      <div className="relative">
+
+                    {/* Logo */}
+                    <div className="flex items-center gap-4 bg-[#f8fafc] p-4 rounded-2xl border border-[#e2e8f0]">
+                      <div className="w-20 h-20 bg-white border border-[#e2e8f0] rounded-xl flex flex-col items-center justify-center p-2 shadow-sm shrink-0 overflow-hidden">
+                          {logoUrl ? (
+                            <img src={logoUrl} alt="Logo" className="w-full h-full object-contain" />
+                          ) : (
+                            <>
+                              <span className="text-2xl text-[#005684]">☀️</span>
+                              <span className="text-[6px] font-bold text-[#071d37] mt-1 text-center leading-tight uppercase">
+                                {sigla || razonSocial || 'SIN LOGO'}
+                              </span>
+                            </>
+                          )}
+                      </div>
+                      <div className="flex-1">
+                        <h4 className="text-xs font-bold text-[#071d37]">Logo Oficial / Emblema</h4>
+                        <p className="text-[10px] text-[#64748b] mt-0.5 mb-2">PNG o SVG con fondo transparente. Mínimo 400x400 px.</p>
+                        <div className="flex gap-3">
+                          <button 
+                            onClick={() => {
+                              const url = prompt('Ingresa la URL del logo oficial:', logoUrl || '');
+                              if (url !== null) {
+                                setLogoUrl(url);
+                                markUnsaved();
+                              }
+                            }}
+                            className="text-[11px] font-bold text-[#005684] hover:underline cursor-pointer"
+                          >
+                            Subir Nuevo Logo
+                          </button>
+                          {logoUrl && (
+                            <button 
+                              onClick={() => {
+                                setLogoUrl(null);
+                                markUnsaved();
+                              }}
+                              className="text-[11px] font-bold text-red-500 hover:underline cursor-pointer"
+                            >
+                              Quitar
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </section>
+
+                  {/* 04. UBICACIÓN Y RECEPCIÓN DE AYUDAS */}
+                  <section className="bg-white rounded-3xl p-6 border border-[#e2e8f0] shadow-sm mb-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-[11px] font-bold text-[#005684] uppercase tracking-wider flex items-center gap-2">
+                        <span className="text-base">📍</span> Ubicación y Recepción de Ayudas
+                      </h3>
+                      <span className="text-[10px] text-[#005684] font-bold bg-[#eef6ff] px-2 py-0.5 rounded-full flex items-center gap-1">
+                        <span>⊕</span> GPS Actualizado
+                      </span>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                      <div>
+                        <label className="text-[10px] font-extrabold text-[#94a3b8] uppercase block mb-1">Departamento / Región</label>
                         <input 
                           type="text" 
-                          value={nit} 
-                          readOnly 
-                          placeholder="No especificado"
-                          className="w-full bg-[#f1f5f9] border border-[#e2e8f0] rounded-xl px-4 py-2.5 text-xs font-semibold text-[#64748b] outline-none" 
+                          value={departamento} 
+                          onChange={(e) => { setDepartamento(e.target.value); markUnsaved(); }} 
+                          placeholder="Ej: Cundinamarca"
+                          className="w-full bg-[#f8fafc] border border-[#e2e8f0] focus:border-[#005684] rounded-xl px-4 py-2 text-xs font-semibold text-[#071d37] outline-none transition" 
                         />
-                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">🔒</span>
+                      </div>
+                      <div>
+                        <label className="text-[10px] font-extrabold text-[#94a3b8] uppercase block mb-1">Ciudad / Municipio</label>
+                        <input 
+                          type="text" 
+                          value={ciudad} 
+                          onChange={(e) => { setCiudad(e.target.value); markUnsaved(); }} 
+                          placeholder="Ej: Bogotá D.C."
+                          className="w-full bg-[#f8fafc] border border-[#e2e8f0] focus:border-[#005684] rounded-xl px-4 py-2 text-xs font-semibold text-[#071d37] outline-none transition" 
+                        />
                       </div>
                     </div>
-                  </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="text-[10px] font-extrabold text-[#94a3b8] uppercase block mb-1">Personería Jurídica</label>
-                      <input 
-                        type="text" 
-                        value={personeria} 
-                        onChange={(e) => { setPersoneria(e.target.value); markUnsaved(); }} 
-                        placeholder="Ej: Resolución Alcaldía Mayor 3844"
-                        className="w-full bg-[#f8fafc] border border-[#e2e8f0] focus:border-[#005684] rounded-xl px-4 py-2.5 text-xs font-semibold text-[#071d37] outline-none transition" 
-                      />
-                    </div>
-                    <div>
-                      <label className="text-[10px] font-extrabold text-[#94a3b8] uppercase block mb-1">Año de Fundación</label>
-                      <input 
-                        type="text" 
-                        value={anoFundacion} 
-                        onChange={(e) => { setAnoFundacion(e.target.value); markUnsaved(); }} 
-                        placeholder="Ej: 2018"
-                        className="w-full bg-[#f8fafc] border border-[#e2e8f0] focus:border-[#005684] rounded-xl px-4 py-2.5 text-xs font-semibold text-[#071d37] outline-none transition" 
-                      />
-                    </div>
-                  </div>
-                </div>
-              </section>
-
-              {/* 03. MISIÓN, VISIÓN E IMPACTO SOCIAL */}
-              <section className="bg-white rounded-3xl p-6 border border-[#e2e8f0] shadow-sm">
-                <div className="flex items-center justify-between mb-5">
-                  <h3 className="text-[11px] font-bold text-[#005684] uppercase tracking-wider flex items-center gap-2">
-                    <span className="text-base">🎯</span> Misión, Visión e Impacto Social
-                  </h3>
-                  <span className="text-[10px] text-[#64748b] font-bold">Edición enriched</span>
-                </div>
-                
-                <div className="flex flex-col gap-5">
-                  {/* Misión */}
-                  <div>
-                    <label className="text-[10px] font-extrabold text-[#94a3b8] uppercase block mb-2">Misión Institucional</label>
-                    <div className="border border-[#e2e8f0] rounded-xl overflow-hidden focus-within:border-[#005684] transition">
-                      <div className="bg-[#f8fafc] border-b border-[#e2e8f0] px-3 py-1.5 flex items-center gap-3">
-                        <button type="button" className="text-xs font-bold text-[#475569] hover:text-[#071d37]">B</button>
-                        <button type="button" className="text-xs font-serif italic text-[#475569] hover:text-[#071d37]">I</button>
-                        <button type="button" className="text-xs text-[#475569] hover:text-[#071d37]">≡</button>
-                        <button type="button" className="text-xs text-[#475569] hover:text-[#071d37]">🔗</button>
-                        <span className="text-[10px] text-[#94a3b8] ml-auto">{mision.length} / 600 caracteres</span>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                      <div>
+                        <label className="text-[10px] font-extrabold text-[#94a3b8] uppercase block mb-1">Localidad / Sector</label>
+                        <input 
+                          type="text" 
+                          value={localidad} 
+                          onChange={(e) => { setLocalidad(e.target.value); markUnsaved(); }} 
+                          placeholder="Ej: Ciudad Bolívar - Barrio Paraíso"
+                          className="w-full bg-[#f8fafc] border border-[#e2e8f0] focus:border-[#005684] rounded-xl px-4 py-2 text-xs font-semibold text-[#071d37] outline-none transition" 
+                        />
                       </div>
-                      <textarea 
-                        value={mision} 
-                        onChange={(e) => { setMision(e.target.value); markUnsaved(); }} 
-                        rows={4} 
-                        placeholder="Escriba aquí la misión institucional..."
-                        className="w-full p-3 text-xs text-[#071d37] outline-none resize-none bg-white leading-relaxed"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Visión */}
-                  <div>
-                    <label className="text-[10px] font-extrabold text-[#94a3b8] uppercase block mb-2">Visión 2030</label>
-                    <div className="border border-[#e2e8f0] rounded-xl overflow-hidden focus-within:border-[#005684] transition">
-                      <div className="bg-[#f8fafc] border-b border-[#e2e8f0] px-3 py-1.5 flex items-center gap-3">
-                        <button type="button" className="text-xs font-bold text-[#475569] hover:text-[#071d37]">B</button>
-                        <button type="button" className="text-xs font-serif italic text-[#475569] hover:text-[#071d37]">I</button>
-                        <button type="button" className="text-xs text-[#475569] hover:text-[#071d37]">≡</button>
-                        <button type="button" className="text-xs text-[#475569] hover:text-[#071d37]">🔗</button>
-                        <span className="text-[10px] text-[#94a3b8] ml-auto">{vision.length} / 600 caracteres</span>
+                      <div>
+                        <label className="text-[10px] font-extrabold text-[#94a3b8] uppercase block mb-1">Dirección de Entrega</label>
+                        <input 
+                          type="text" 
+                          value={direccionEntrega} 
+                          onChange={(e) => { setDireccionEntrega(e.target.value); markUnsaved(); }} 
+                          placeholder="Ej: Carrera 27B Bis # 71H - 14 Sur"
+                          className="w-full bg-[#f8fafc] border border-[#e2e8f0] focus:border-[#005684] rounded-xl px-4 py-2 text-xs font-semibold text-[#071d37] outline-none transition" 
+                        />
                       </div>
-                      <textarea 
-                        value={vision} 
-                        onChange={(e) => { setVision(e.target.value); markUnsaved(); }} 
-                        rows={3} 
-                        placeholder="Escriba aquí la visión..."
-                        className="w-full p-3 text-xs text-[#071d37] outline-none resize-none bg-white leading-relaxed"
-                      />
                     </div>
-                  </div>
-                </div>
-              </section>
 
-              {/* 04. UBICACIÓN Y RECEPCIÓN DE AYUDAS */}
-              <section className="bg-white rounded-3xl p-6 border border-[#e2e8f0] shadow-sm mb-6">
-                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-[11px] font-bold text-[#005684] uppercase tracking-wider flex items-center gap-2">
-                    <span className="text-base">📍</span> Ubicación y Recepción de Ayudas
-                  </h3>
-                  <span className="text-[10px] text-[#005684] font-bold bg-[#eef6ff] px-2 py-0.5 rounded-full flex items-center gap-1">
-                    <span>⊕</span> GPS Actualizado
-                  </span>
-                </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                  <div>
-                    <label className="text-[10px] font-extrabold text-[#94a3b8] uppercase block mb-1">Departamento / Región</label>
-                    <input 
-                      type="text" 
-                      value={departamento} 
-                      onChange={(e) => { setDepartamento(e.target.value); markUnsaved(); }} 
-                      placeholder="Ej: Cundinamarca"
-                      className="w-full bg-[#f8fafc] border border-[#e2e8f0] focus:border-[#005684] rounded-xl px-4 py-2 text-xs font-semibold text-[#071d37] outline-none transition" 
-                    />
-                  </div>
-                  <div>
-                    <label className="text-[10px] font-extrabold text-[#94a3b8] uppercase block mb-1">Ciudad / Municipio</label>
-                    <input 
-                      type="text" 
-                      value={ciudad} 
-                      onChange={(e) => { setCiudad(e.target.value); markUnsaved(); }} 
-                      placeholder="Ej: Bogotá D.C."
-                      className="w-full bg-[#f8fafc] border border-[#e2e8f0] focus:border-[#005684] rounded-xl px-4 py-2 text-xs font-semibold text-[#071d37] outline-none transition" 
-                    />
-                  </div>
-                </div>
+                    <div className="relative rounded-2xl overflow-hidden bg-gray-100 h-48 border border-[#e2e8f0]">
+                      <img src="https://images.unsplash.com/photo-1524661135-423995f22d0b?auto=format&fit=crop&q=80&w=800" className="w-full h-full object-cover opacity-80" alt="Mapa Ubicación" />
+                      <div className="absolute inset-0 flex items-center justify-center">
+                          <div className="bg-[#0f2a3f]/90 text-white text-[11px] font-bold px-4 py-2 rounded-xl backdrop-blur-sm border border-white/20 shadow-lg flex flex-col items-center gap-1 text-center">
+                            <span>📍 Sede Operativa {localidad ? localidad : ciudad || 'Principal'}</span>
+                            <button 
+                              type="button"
+                              onClick={() => alert('Ajuste de coordenadas GPS disponible próximamente')}
+                              className="bg-[#005684] text-white px-3 py-1 rounded-lg text-[9px] mt-1 hover:bg-[#00456a] transition cursor-pointer"
+                            >
+                              Ajustar Pin
+                            </button>
+                          </div>
+                      </div>
+                    </div>
+                  </section>
+                </>
+              )}
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                  <div>
-                    <label className="text-[10px] font-extrabold text-[#94a3b8] uppercase block mb-1">Localidad / Sector</label>
-                    <input 
-                      type="text" 
-                      value={localidad} 
-                      onChange={(e) => { setLocalidad(e.target.value); markUnsaved(); }} 
-                      placeholder="Ej: Ciudad Bolívar - Barrio Paraíso"
-                      className="w-full bg-[#f8fafc] border border-[#e2e8f0] focus:border-[#005684] rounded-xl px-4 py-2 text-xs font-semibold text-[#071d37] outline-none transition" 
-                    />
-                  </div>
-                  <div>
-                    <label className="text-[10px] font-extrabold text-[#94a3b8] uppercase block mb-1">Dirección de Entrega</label>
-                    <input 
-                      type="text" 
-                      value={direccionEntrega} 
-                      onChange={(e) => { setDireccionEntrega(e.target.value); markUnsaved(); }} 
-                      placeholder="Ej: Carrera 27B Bis # 71H - 14 Sur"
-                      className="w-full bg-[#f8fafc] border border-[#e2e8f0] focus:border-[#005684] rounded-xl px-4 py-2 text-xs font-semibold text-[#071d37] outline-none transition" 
-                    />
-                  </div>
-                </div>
+              {/* VISTA: CAUSAS Y MISIÓN */}
+              {activeTab === 'causas' && (
+                <>
+                  {/* 03. MISIÓN, VISIÓN E IMPACTO SOCIAL */}
+                  <section className="bg-white rounded-3xl p-6 border border-[#e2e8f0] shadow-sm">
+                    <div className="flex items-center justify-between mb-5">
+                      <h3 className="text-[11px] font-bold text-[#005684] uppercase tracking-wider flex items-center gap-2">
+                        <span className="text-base">🎯</span> Misión, Visión e Impacto Social
+                      </h3>
+                      <span className="text-[10px] text-[#64748b] font-bold">Edición enriched</span>
+                    </div>
+                    
+                    <div className="flex flex-col gap-5">
+                      {/* Misión */}
+                      <div>
+                        <label className="text-[10px] font-extrabold text-[#94a3b8] uppercase block mb-2">Misión Institucional</label>
+                        <div className="border border-[#e2e8f0] rounded-xl overflow-hidden focus-within:border-[#005684] transition">
+                          <div className="bg-[#f8fafc] border-b border-[#e2e8f0] px-3 py-1.5 flex items-center gap-3">
+                            <button type="button" className="text-xs font-bold text-[#475569] hover:text-[#071d37]">B</button>
+                            <button type="button" className="text-xs font-serif italic text-[#475569] hover:text-[#071d37]">I</button>
+                            <button type="button" className="text-xs text-[#475569] hover:text-[#071d37]">≡</button>
+                            <button type="button" className="text-xs text-[#475569] hover:text-[#071d37]">🔗</button>
+                            <span className="text-[10px] text-[#94a3b8] ml-auto">{mision.length} / 600 caracteres</span>
+                          </div>
+                          <textarea 
+                            value={mision} 
+                            onChange={(e) => { setMision(e.target.value); markUnsaved(); }} 
+                            rows={4} 
+                            placeholder="Escriba aquí la misión institucional..."
+                            className="w-full p-3 text-xs text-[#071d37] outline-none resize-none bg-white leading-relaxed"
+                          />
+                        </div>
+                      </div>
 
-                <div className="relative rounded-2xl overflow-hidden bg-gray-100 h-48 border border-[#e2e8f0]">
-                   <img src="https://images.unsplash.com/photo-1524661135-423995f22d0b?auto=format&fit=crop&q=80&w=800" className="w-full h-full object-cover opacity-80" alt="Mapa Ubicación" />
-                   <div className="absolute inset-0 flex items-center justify-center">
-                      <div className="bg-[#0f2a3f]/90 text-white text-[11px] font-bold px-4 py-2 rounded-xl backdrop-blur-sm border border-white/20 shadow-lg flex flex-col items-center gap-1 text-center">
-                        <span>📍 Sede Operativa {localidad ? localidad : ciudad || 'Principal'}</span>
-                        <button 
-                          type="button"
-                          onClick={() => alert('Ajuste de coordenadas GPS disponible próximamente')}
-                          className="bg-[#005684] text-white px-3 py-1 rounded-lg text-[9px] mt-1 hover:bg-[#00456a] transition cursor-pointer"
-                        >
-                          Ajustar Pin
+                      {/* Visión */}
+                      <div>
+                        <label className="text-[10px] font-extrabold text-[#94a3b8] uppercase block mb-2">Visión 2030</label>
+                        <div className="border border-[#e2e8f0] rounded-xl overflow-hidden focus-within:border-[#005684] transition">
+                          <div className="bg-[#f8fafc] border-b border-[#e2e8f0] px-3 py-1.5 flex items-center gap-3">
+                            <button type="button" className="text-xs font-bold text-[#475569] hover:text-[#071d37]">B</button>
+                            <button type="button" className="text-xs font-serif italic text-[#475569] hover:text-[#071d37]">I</button>
+                            <button type="button" className="text-xs text-[#475569] hover:text-[#071d37]">≡</button>
+                            <button type="button" className="text-xs text-[#475569] hover:text-[#071d37]">🔗</button>
+                            <span className="text-[10px] text-[#94a3b8] ml-auto">{vision.length} / 600 caracteres</span>
+                          </div>
+                          <textarea 
+                            value={vision} 
+                            onChange={(e) => { setVision(e.target.value); markUnsaved(); }} 
+                            rows={3} 
+                            placeholder="Escriba aquí la visión..."
+                            className="w-full p-3 text-xs text-[#071d37] outline-none resize-none bg-white leading-relaxed"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </section>
+                </>
+              )}
+
+              {/* VISTA: CANALES DE RECAUDO */}
+              {activeTab === 'recaudo' && (
+                <>
+                  {/* 05. CANALES DE RECAUDO */}
+                  <section className="bg-white rounded-3xl p-6 border border-[#e2e8f0] shadow-sm">
+                    <div className="flex items-start justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xl text-[#005684]">💳</span>
+                        <h3 className="text-sm font-bold text-[#071d37] leading-tight">Canales de Recaudo Certificados</h3>
+                      </div>
+                      <span className="bg-[#eef6ff] text-[#005684] text-[10px] font-extrabold px-2 py-1 rounded-lg border border-[#dbeafe] flex flex-col text-center leading-tight">
+                        <span className="text-xs">{canalesRecaudo.length}</span> Canales
+                      </span>
+                    </div>
+                    <p className="text-[10px] text-[#64748b] mb-4">Estas cuentas son expuestas directamente a los donantes bajo validación para evitar suplantaciones.</p>
+
+                    <div className="flex flex-col gap-3">
+                      {canalesRecaudo.length === 0 ? (
+                        <p className="text-[11px] text-[#94a3b8] italic p-3 text-center bg-[#f8fafc] rounded-xl border border-dashed border-[#e2e8f0]">
+                          No hay cuentas o canales de recaudo vinculados.
+                        </p>
+                      ) : (
+                        canalesRecaudo.map((canal, idx) => (
+                          <div key={canal.id || idx} className="bg-[#f8fafc] border border-[#e2e8f0] p-4 rounded-xl">
+                            <div className="flex justify-between items-start mb-1">
+                              <div className="flex items-center gap-2">
+                                <span className="text-base">{canal.icono || '💳'}</span>
+                                <h4 className="text-[13px] font-bold text-[#071d37]">{canal.tipo}</h4>
+                              </div>
+                              <span className={`text-[10px] font-bold ${canal.estado_color || 'text-[#047857]'} flex items-center gap-0.5`}>
+                                {canal.estado_texto || '✓ Activa'}
+                              </span>
+                            </div>
+                            <p className="text-xs text-[#64748b] ml-8">{canal.detalles}</p>
+                            <div className="flex justify-between items-center mt-3 ml-8">
+                              <p className="text-[10px] font-semibold text-[#94a3b8]">{canal.titular_nota}</p>
+                              <button 
+                                onClick={() => handleEditCanal(idx)} 
+                                className="text-[11px] font-bold text-[#005684] hover:underline cursor-pointer bg-white px-3 py-1 rounded-lg border border-gray-200"
+                              >
+                                Editar Datos
+                              </button>
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+
+                    <button 
+                      type="button"
+                      onClick={handleAddCanal}
+                      className="w-full bg-[#eef6ff] text-[#005684] text-xs font-bold py-3 rounded-xl mt-5 hover:bg-[#d4e7fe] transition flex justify-center items-center gap-2 border border-[#dbeafe] cursor-pointer"
+                    >
+                      <span>⊕</span> Vincular Otra Cuenta Bancaria o Pasarela
+                    </button>
+                  </section>
+                </>
+              )}
+
+              {/* VISTA: DOCUMENTACIÓN Y SELLOS */}
+              {activeTab === 'documentos' && (
+                <>
+                  {/* 02. DATOS LEGALES */}
+                  <section className="bg-white rounded-3xl p-6 border border-[#e2e8f0] shadow-sm">
+                    <h3 className="text-[11px] font-bold text-[#005684] uppercase tracking-wider flex items-center gap-2 mb-5">
+                      <span className="text-base">⚖️</span> Datos Legales y Registro
+                    </h3>
+                    
+                    <div className="flex flex-col gap-4">
+                      <div>
+                        <label className="text-[10px] font-extrabold text-[#94a3b8] uppercase block mb-1">Razón Social Completa</label>
+                        <input 
+                          type="text" 
+                          value={razonSocial} 
+                          onChange={(e) => { setRazonSocial(e.target.value); markUnsaved(); }} 
+                          placeholder="Ingrese la Razón Social"
+                          className="w-full bg-[#f8fafc] border border-[#e2e8f0] focus:border-[#005684] rounded-xl px-4 py-2.5 text-xs font-semibold text-[#071d37] outline-none transition" 
+                        />
+                      </div>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="text-[10px] font-extrabold text-[#94a3b8] uppercase block mb-1">Sigla o Nombre Corto</label>
+                          <input 
+                            type="text" 
+                            value={sigla} 
+                            onChange={(e) => { setSigla(e.target.value); markUnsaved(); }} 
+                            placeholder="Ej: Huellas de Esperanza"
+                            className="w-full bg-[#f8fafc] border border-[#e2e8f0] focus:border-[#005684] rounded-xl px-4 py-2.5 text-xs font-semibold text-[#071d37] outline-none transition" 
+                          />
+                        </div>
+                        <div>
+                          <label className="text-[10px] font-extrabold text-[#94a3b8] uppercase block mb-1 flex items-center justify-between">
+                            NIT / Registro Tributario
+                            <span className="text-[#047857] flex items-center gap-1 normal-case"><span className="text-sm">✓</span> Validado DIAN</span>
+                          </label>
+                          <div className="relative">
+                            <input 
+                              type="text" 
+                              value={nit} 
+                              readOnly 
+                              placeholder="No especificado"
+                              className="w-full bg-[#f1f5f9] border border-[#e2e8f0] rounded-xl px-4 py-2.5 text-xs font-semibold text-[#64748b] outline-none" 
+                            />
+                            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">🔒</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="text-[10px] font-extrabold text-[#94a3b8] uppercase block mb-1">Personería Jurídica</label>
+                          <input 
+                            type="text" 
+                            value={personeria} 
+                            onChange={(e) => { setPersoneria(e.target.value); markUnsaved(); }} 
+                            placeholder="Ej: Resolución Alcaldía Mayor 3844"
+                            className="w-full bg-[#f8fafc] border border-[#e2e8f0] focus:border-[#005684] rounded-xl px-4 py-2.5 text-xs font-semibold text-[#071d37] outline-none transition" 
+                          />
+                        </div>
+                        <div>
+                          <label className="text-[10px] font-extrabold text-[#94a3b8] uppercase block mb-1">Año de Fundación</label>
+                          <input 
+                            type="text" 
+                            value={anoFundacion} 
+                            onChange={(e) => { setAnoFundacion(e.target.value); markUnsaved(); }} 
+                            placeholder="Ej: 2018"
+                            className="w-full bg-[#f8fafc] border border-[#e2e8f0] focus:border-[#005684] rounded-xl px-4 py-2.5 text-xs font-semibold text-[#071d37] outline-none transition" 
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </section>
+
+                  {/* UPLOAD DE DOCUMENTOS (Visual Complemento) */}
+                  <section className="bg-white rounded-3xl p-6 border border-[#e2e8f0] shadow-sm">
+                    <h3 className="text-[11px] font-bold text-[#005684] uppercase tracking-wider flex items-center gap-2 mb-4">
+                      <span className="text-base">📁</span> Archivos Adjuntos Oficiales
+                    </h3>
+                    <div className="border-2 border-dashed border-[#e2e8f0] rounded-2xl p-8 flex flex-col items-center justify-center text-center bg-[#f8fafc]">
+                        <span className="text-3xl mb-2 text-gray-400">📄</span>
+                        <p className="text-xs font-bold text-[#071d37]">Sube tu RUT Actualizado y Cámara de Comercio</p>
+                        <p className="text-[10px] text-[#64748b] mt-1 mb-4">Formatos PDF aceptados, máximo 5MB por archivo.</p>
+                        <button className="bg-white border border-[#e2e8f0] text-[#005684] px-4 py-2 rounded-xl text-xs font-bold hover:bg-gray-50 transition cursor-pointer shadow-sm">
+                          Examinar Archivos
                         </button>
-                      </div>
-                   </div>
-                </div>
-              </section>
+                    </div>
+                  </section>
+                </>
+              )}
 
             </div>
 
-            {/* COLUMNA DERECHA (Sidebar Interno) */}
+            {/* =======================================
+                COLUMNA DERECHA (Sidebar Interno)
+            ======================================= */}
             <div className="flex flex-col gap-6">
               
-              {/* 05. CANALES DE RECAUDO */}
-              <section className="bg-white rounded-3xl p-6 border border-[#e2e8f0] shadow-sm">
-                 <div className="flex items-start justify-between mb-2">
-                   <div className="flex items-center gap-2">
-                     <span className="text-xl text-[#005684]">💳</span>
-                     <h3 className="text-sm font-bold text-[#071d37] leading-tight">Canales de Recaudo Certificados</h3>
-                   </div>
-                   <span className="bg-[#eef6ff] text-[#005684] text-[10px] font-extrabold px-2 py-1 rounded-lg border border-[#dbeafe] flex flex-col text-center leading-tight">
-                     <span className="text-xs">{canalesRecaudo.length}</span> Canales
-                   </span>
-                 </div>
-                 <p className="text-[10px] text-[#64748b] mb-4">Estas cuentas son expuestas directamente a los donantes bajo validación para evitar suplantaciones.</p>
+              {/* SIDEBAR PARA 'BÁSICA' */}
+              {activeTab === 'basica' && (
+                <>
+                  {/* 06. CONTACTO & REDES OFICIALES */}
+                  <section className="bg-white rounded-3xl p-6 border border-[#e2e8f0] shadow-sm">
+                    <h3 className="text-[11px] font-bold text-[#005684] uppercase tracking-wider flex items-center gap-2 mb-4">
+                        <span className="text-base">💬</span> Contacto & Redes Oficiales
+                    </h3>
+                    
+                    <div className="flex flex-col gap-4">
+                      <div>
+                        <label className="text-[9px] font-extrabold text-[#94a3b8] uppercase block mb-1">WhatsApp de Enlace Solidario</label>
+                        <div className="relative">
+                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-emerald-500">💬</span>
+                            <input 
+                              type="text" 
+                              value={whatsapp} 
+                              onChange={(e) => { setWhatsapp(e.target.value); markUnsaved(); }} 
+                              placeholder="+57 300 000 0000"
+                              className="w-full bg-[#f8fafc] border border-[#e2e8f0] focus:border-[#005684] rounded-xl pl-9 pr-4 py-2 text-xs font-semibold text-[#071d37] outline-none transition" 
+                            />
+                        </div>
+                      </div>
+                      <div>
+                        <label className="text-[9px] font-extrabold text-[#94a3b8] uppercase block mb-1">Telefono Fijo</label>
+                        <div className="relative">
+                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-emerald-500">📞</span>
+                            <input 
+                              type="text" 
+                              value={telFijo} 
+                              onChange={(e) => { setTelFijo(e.target.value); markUnsaved(); }} 
+                              placeholder="+57 300 000 0000"
+                              className="w-full bg-[#f8fafc] border border-[#e2e8f0] focus:border-[#005684] rounded-xl pl-9 pr-4 py-2 text-xs font-semibold text-[#071d37] outline-none transition" 
+                            />
+                        </div>
+                      </div>
+                      <div>
+                        <label className="text-[9px] font-extrabold text-[#94a3b8] uppercase block mb-1">Correo Institucional Donaciones</label>
+                        <div className="relative">
+                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">✉️</span>
+                            <input 
+                              type="email" 
+                              value={email} 
+                              onChange={(e) => { setEmail(e.target.value); markUnsaved(); }} 
+                              placeholder="contacto@fundacion.org"
+                              className="w-full bg-[#f8fafc] border border-[#e2e8f0] focus:border-[#005684] rounded-xl pl-9 pr-4 py-2 text-xs font-semibold text-[#071d37] outline-none transition" 
+                            />
+                        </div>
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="text-[9px] font-extrabold text-[#94a3b8] uppercase block mb-1">Instagram</label>
+                          <input 
+                            type="text" 
+                            value={instagram} 
+                            onChange={(e) => { setInstagram(e.target.value); markUnsaved(); }} 
+                            placeholder="@usuario"
+                            className="w-full bg-[#f8fafc] border border-[#e2e8f0] focus:border-[#005684] rounded-xl px-3 py-2 text-[11px] font-semibold text-[#071d37] outline-none transition" 
+                          />
+                        </div>
+                        <div>
+                          <label className="text-[9px] font-extrabold text-[#94a3b8] uppercase block mb-1">Sitio Web</label>
+                          <input 
+                            type="text" 
+                            value={sitioWeb} 
+                            onChange={(e) => { setSitioWeb(e.target.value); markUnsaved(); }} 
+                            placeholder="https://..."
+                            className="w-full bg-[#f8fafc] border border-[#e2e8f0] focus:border-[#005684] rounded-xl px-3 py-2 text-[11px] font-semibold text-[#071d37] outline-none transition" 
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </section>
+                </>
+              )}
 
-                 <div className="flex flex-col gap-3">
-                   {canalesRecaudo.length === 0 ? (
-                     <p className="text-[11px] text-[#94a3b8] italic p-3 text-center bg-[#f8fafc] rounded-xl border border-dashed border-[#e2e8f0]">
-                       No hay cuentas o canales de recaudo vinculados.
-                     </p>
-                   ) : (
-                     canalesRecaudo.map((canal, idx) => (
-                       <div key={canal.id || idx} className="bg-[#f8fafc] border border-[#e2e8f0] p-3 rounded-xl">
-                         <div className="flex justify-between items-start mb-1">
-                           <div className="flex items-center gap-2">
-                             <span className="text-base">{canal.icono || '💳'}</span>
-                             <h4 className="text-[11px] font-bold text-[#071d37]">{canal.tipo}</h4>
-                           </div>
-                           <span className={`text-[10px] font-bold ${canal.estado_color || 'text-[#047857]'} flex items-center gap-0.5`}>
-                             {canal.estado_texto || '✓ Activa'}
-                           </span>
-                         </div>
-                         <p className="text-[10px] text-[#64748b] ml-6">{canal.detalles}</p>
-                         <div className="flex justify-between items-center mt-2 ml-6">
-                           <p className="text-[9px] font-semibold text-[#94a3b8]">{canal.titular_nota}</p>
-                           <button 
-                             onClick={() => handleEditCanal(idx)} 
-                             className="text-[10px] font-bold text-[#005684] hover:underline cursor-pointer"
-                           >
-                             Editar
-                           </button>
-                         </div>
-                       </div>
-                     ))
-                   )}
-                 </div>
+              {/* SIDEBAR PARA 'CAUSAS' */}
+              {activeTab === 'causas' && (
+                <>
+                  {/* 07. NECESIDADES PUBLICADAS */}
+                  <section className="bg-white rounded-3xl p-6 border border-[#e2e8f0] shadow-sm">
+                    <div className="flex items-center justify-between mb-2">
+                      <h3 className="text-[11px] font-bold text-[#005684] uppercase tracking-wider flex items-center gap-2">
+                          <span className="text-base">📋</span> Necesidades Publicadas
+                      </h3>
+                      <button 
+                        type="button"
+                        onClick={handleAddNecesidad}
+                        className="text-[10px] font-bold text-[#005684] hover:bg-[#eef6ff] px-2 py-1 rounded-lg transition flex items-center gap-1 cursor-pointer"
+                      >
+                        <span>+</span> Añadir Demanda
+                      </button>
+                    </div>
+                    <p className="text-[10px] text-[#64748b] mb-4 leading-tight">Prioridades en vivo vistas por voluntarios y donantes para la jornada.</p>
 
-                 <button 
-                   type="button"
-                   onClick={handleAddCanal}
-                   className="w-full bg-[#eef6ff] text-[#005684] text-xs font-bold py-2.5 rounded-xl mt-4 hover:bg-[#d4e7fe] transition flex justify-center items-center gap-2 border border-[#dbeafe] cursor-pointer"
-                 >
-                   <span>⊕</span> Vincular Otra Cuenta o Pasarela
-                 </button>
-              </section>
+                    <div className="flex flex-col gap-3">
+                      {necesidades.length === 0 ? (
+                        <p className="text-[11px] text-[#94a3b8] italic p-3 text-center bg-[#f8fafc] rounded-xl border border-dashed border-[#e2e8f0]">
+                          No hay necesidades registradas en la base de datos.
+                        </p>
+                      ) : (
+                        necesidades.map((nec) => {
+                          const pct = nec.porcentaje_recaudado ?? 0;
+                          const isCompleted = nec.completada;
+                          return (
+                            <div 
+                              key={nec.id} 
+                              className={`p-3 rounded-xl flex items-center justify-between gap-2 ${
+                                isCompleted ? 'bg-white border border-[#e2e8f0] opacity-60' : 'bg-[#f8fafc] border border-[#e2e8f0]'
+                              }`}
+                            >
+                              <div className="flex-1">
+                                <p className={`text-[11px] font-bold flex items-center gap-1 ${isCompleted ? 'text-[#64748b] line-through' : 'text-[#071d37]'}`}>
+                                  <span className={`w-1.5 h-1.5 rounded-full ${isCompleted ? 'bg-gray-400' : pct > 50 ? 'bg-red-500' : 'bg-[#0ea5e9]'}`}></span>
+                                  {nec.titulo}
+                                </p>
+                                <p className="text-[9px] text-[#64748b] mt-0.5">{nec.meta_texto || nec.descripcion || 'Sin especificación de meta'}</p>
+                                {!isCompleted && (
+                                  <div className="w-full bg-gray-200 h-1.5 rounded-full mt-1.5 overflow-hidden">
+                                    <div className="bg-[#0ea5e9] h-full rounded-full" style={{ width: `${Math.min(pct, 100)}%` }}></div>
+                                  </div>
+                                )}
+                              </div>
+                              {isCompleted ? (
+                                <span className="bg-[#dcfce7] text-[#166534] text-[9px] font-bold px-2 py-0.5 rounded-md border border-[#bbf7d0]">
+                                  Completada
+                                </span>
+                              ) : (
+                                <div className="flex flex-col gap-1 shrink-0">
+                                  <button 
+                                    onClick={() => handleDeleteNecesidad(nec.id)} 
+                                    className="text-[#94a3b8] hover:text-red-500 text-xs cursor-pointer"
+                                    title="Eliminar necesidad"
+                                  >
+                                    🗑️
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })
+                      )}
+                    </div>
+                  </section>
+                </>
+              )}
 
-              {/* 06. CONTACTO & REDES OFICIALES */}
-              <section className="bg-white rounded-3xl p-6 border border-[#e2e8f0] shadow-sm">
-                 <h3 className="text-[11px] font-bold text-[#005684] uppercase tracking-wider flex items-center gap-2 mb-4">
-                    <span className="text-base">💬</span> Contacto & Redes Oficiales
-                 </h3>
-                 
-                 <div className="flex flex-col gap-4">
-                   <div>
-                     <label className="text-[9px] font-extrabold text-[#94a3b8] uppercase block mb-1">WhatsApp de Enlace Solidario</label>
-                     <div className="relative">
-                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-emerald-500">💬</span>
-                        <input 
-                          type="text" 
-                          value={whatsapp} 
-                          onChange={(e) => { setWhatsapp(e.target.value); markUnsaved(); }} 
-                          placeholder="+57 300 000 0000"
-                          className="w-full bg-[#f8fafc] border border-[#e2e8f0] focus:border-[#005684] rounded-xl pl-9 pr-4 py-2 text-xs font-semibold text-[#071d37] outline-none transition" 
-                        />
-                     </div>
-                   </div>
-                   <div>
-                     <label className="text-[9px] font-extrabold text-[#94a3b8] uppercase block mb-1">Telefono Fijo</label>
-                     <div className="relative">
-                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-emerald-500">💬</span>
-                        <input 
-                          type="text" 
-                          value={telFijo} 
-                          onChange={(e) => { setTelFijo(e.target.value); markUnsaved(); }} 
-                          placeholder="+57 300 000 0000"
-                          className="w-full bg-[#f8fafc] border border-[#e2e8f0] focus:border-[#005684] rounded-xl pl-9 pr-4 py-2 text-xs font-semibold text-[#071d37] outline-none transition" 
-                        />
-                     </div>
-                   </div>
-                   <div>
-                     <label className="text-[9px] font-extrabold text-[#94a3b8] uppercase block mb-1">Correo Institucional Donaciones</label>
-                     <div className="relative">
-                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">✉️</span>
-                        <input 
-                          type="email" 
-                          value={email} 
-                          onChange={(e) => { setEmail(e.target.value); markUnsaved(); }} 
-                          placeholder="contacto@fundacion.org"
-                          className="w-full bg-[#f8fafc] border border-[#e2e8f0] focus:border-[#005684] rounded-xl pl-9 pr-4 py-2 text-xs font-semibold text-[#071d37] outline-none transition" 
-                        />
-                     </div>
-                   </div>
-                   
-                   <div className="grid grid-cols-2 gap-3">
-                     <div>
-                       <label className="text-[9px] font-extrabold text-[#94a3b8] uppercase block mb-1">Instagram</label>
-                       <input 
-                         type="text" 
-                         value={instagram} 
-                         onChange={(e) => { setInstagram(e.target.value); markUnsaved(); }} 
-                         placeholder="@usuario"
-                         className="w-full bg-[#f8fafc] border border-[#e2e8f0] focus:border-[#005684] rounded-xl px-3 py-2 text-[11px] font-semibold text-[#071d37] outline-none transition" 
-                       />
-                     </div>
-                     <div>
-                       <label className="text-[9px] font-extrabold text-[#94a3b8] uppercase block mb-1">Sitio Web</label>
-                       <input 
-                         type="text" 
-                         value={sitioWeb} 
-                         onChange={(e) => { setSitioWeb(e.target.value); markUnsaved(); }} 
-                         placeholder="https://..."
-                         className="w-full bg-[#f8fafc] border border-[#e2e8f0] focus:border-[#005684] rounded-xl px-3 py-2 text-[11px] font-semibold text-[#071d37] outline-none transition" 
-                       />
-                     </div>
-                   </div>
-                 </div>
-              </section>
-
-              {/* 07. NECESIDADES PUBLICADAS */}
-              <section className="bg-white rounded-3xl p-6 border border-[#e2e8f0] shadow-sm">
-                 <div className="flex items-center justify-between mb-2">
-                   <h3 className="text-[11px] font-bold text-[#005684] uppercase tracking-wider flex items-center gap-2">
-                      <span className="text-base">📋</span> Necesidades Publicadas
-                   </h3>
-                   <button 
-                     type="button"
-                     onClick={handleAddNecesidad}
-                     className="text-[10px] font-bold text-[#005684] hover:bg-[#eef6ff] px-2 py-1 rounded-lg transition flex items-center gap-1 cursor-pointer"
-                   >
-                     <span>+</span> Añadir Demanda
-                   </button>
-                 </div>
-                 <p className="text-[10px] text-[#64748b] mb-4 leading-tight">Prioridades en vivo vistas por voluntarios y donantes para la jornada.</p>
-
-                 <div className="flex flex-col gap-3">
-                   {necesidades.length === 0 ? (
-                     <p className="text-[11px] text-[#94a3b8] italic p-3 text-center bg-[#f8fafc] rounded-xl border border-dashed border-[#e2e8f0]">
-                       No hay necesidades registradas en la base de datos.
-                     </p>
-                   ) : (
-                     necesidades.map((nec) => {
-                       const pct = nec.porcentaje_recaudado ?? 0;
-                       const isCompleted = nec.completada;
-                       return (
-                         <div 
-                           key={nec.id} 
-                           className={`p-3 rounded-xl flex items-center justify-between gap-2 ${
-                             isCompleted ? 'bg-white border border-[#e2e8f0] opacity-60' : 'bg-[#f8fafc] border border-[#e2e8f0]'
-                           }`}
-                         >
-                           <div className="flex-1">
-                             <p className={`text-[11px] font-bold flex items-center gap-1 ${isCompleted ? 'text-[#64748b] line-through' : 'text-[#071d37]'}`}>
-                               <span className={`w-1.5 h-1.5 rounded-full ${isCompleted ? 'bg-gray-400' : pct > 50 ? 'bg-red-500' : 'bg-[#0ea5e9]'}`}></span>
-                               {nec.titulo}
-                             </p>
-                             <p className="text-[9px] text-[#64748b] mt-0.5">{nec.meta_texto || nec.descripcion || 'Sin especificación de meta'}</p>
-                             {!isCompleted && (
-                               <div className="w-full bg-gray-200 h-1.5 rounded-full mt-1.5 overflow-hidden">
-                                 <div className="bg-[#0ea5e9] h-full rounded-full" style={{ width: `${Math.min(pct, 100)}%` }}></div>
-                               </div>
-                             )}
-                           </div>
-                           {isCompleted ? (
-                             <span className="bg-[#dcfce7] text-[#166534] text-[9px] font-bold px-2 py-0.5 rounded-md border border-[#bbf7d0]">
-                               Completada
-                             </span>
-                           ) : (
-                             <div className="flex flex-col gap-1 shrink-0">
-                               <button 
-                                 onClick={() => handleDeleteNecesidad(nec.id)} 
-                                 className="text-[#94a3b8] hover:text-red-500 text-xs cursor-pointer"
-                                 title="Eliminar necesidad"
-                               >
-                                 🗑️
-                               </button>
-                             </div>
-                           )}
-                         </div>
-                       );
-                     })
-                   )}
-                 </div>
-              </section>
+              {/* SIDEBAR PARA 'RECAUDO' Y 'DOCUMENTOS' (Info Tips) */}
+              {(activeTab === 'recaudo' || activeTab === 'documentos') && (
+                <div className="bg-gradient-to-br from-[#f8fafc] to-[#eef6ff] p-6 rounded-3xl border border-[#dbeafe] text-center shadow-sm">
+                    <span className="text-3xl mb-2 block">💡</span>
+                    <h4 className="text-[13px] font-bold text-[#071d37] mt-2">Consejo de Transparencia</h4>
+                    <p className="text-[11px] text-[#64748b] mt-2 leading-relaxed">
+                      Mantener la documentación legal y los canales de recaudo actualizados aumenta el <strong>nivel de confianza</strong> en un 80% frente a los donantes y empresas corporativas.
+                    </p>
+                </div>
+              )}
 
             </div>
           </div>
