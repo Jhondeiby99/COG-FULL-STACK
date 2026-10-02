@@ -29,20 +29,17 @@ export function Login() {
 
     if (data.user) {
       const ua = navigator.userAgent;
-      
-      // 1. Detectar navegador
       let browserName = "Web";
       if (ua.includes("Firefox")) browserName = "Firefox";
       else if (ua.includes("Edg")) browserName = "Edge";
       else if (ua.includes("Chrome")) browserName = "Chrome";
       else if (ua.includes("Safari")) browserName = "Safari";
 
-      // 2. Armar string detallado
       const esMovil = /Mobile|Android|iP(ad|hone)/.test(ua);
       const dispositivoInfo = `${esMovil ? 'Móvil' : 'Escritorio'} - ${browserName} (${navigator.platform})`;
       const zonaHoraria = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
-      const { data: sessionData, error: sessionError } = await supabase
+      const { data: sessionData } = await supabase
         .from('sesiones_usuario')
         .insert([{
           user_id: data.user.id,
@@ -143,7 +140,8 @@ export function Login() {
               <label className="remember-me">
                 <input type="checkbox" /> Recordar sesión
               </label>
-              <a href="#" className="forgot-password">¿Olvidaste tu contraseña?</a>
+              {/* Enlace conectado a la ruta de recuperación */}
+              <Link to="/forgot-password" className="forgot-password">¿Olvidaste tu contraseña?</Link>
             </div>
 
             <button type="submit" className="btn-primary" disabled={loading}>
