@@ -19,11 +19,19 @@ export function DashboardLayout() {
   const [rol, setRol] = useState<string | null>(null);
   const [profileData, setProfileData] = useState<{ name: string; avatar: string | null; id: string } | null>(null);
   const [loading, setLoading] = useState(true);
+  
+  // Estado para el menú móvil
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // Hook de Notificaciones (Límite de 5 para el dropdown)
   const { notificaciones, unreadCount, marcarComoLeidas } = useNotifications(profileData?.id, { limit: 5 });
   const [showNotifs, setShowNotifs] = useState(false);
   const notifRef = useRef<HTMLDivElement>(null);
+
+  // Cierra el menú móvil al cambiar de ruta
+  useEffect(() => {
+    setIsMobileMenuOpen(false);
+  }, [location.pathname]);
 
   // 1. CARGA INICIAL DE SESIÓN Y ROL DEL USUARIO
   useEffect(() => {
@@ -59,7 +67,6 @@ export function DashboardLayout() {
                 .single();
               if (isMounted) setProfileData({ name: vol?.nombre_completo || 'Voluntario', avatar: vol?.avatar_url, id: vol?.id || session.user.id });
             } else if (perfil.rol === 'administrador' || perfil.rol === 'admin') {
-              // ⬇️ CONSULTA A LA NUEVA TABLA DE ADMINISTRADORES
               const { data: admin } = await supabase
                 .from('administradores')
                 .select('nombre_completo, avatar_url, id')
@@ -183,14 +190,29 @@ export function DashboardLayout() {
 
   return (
     <div className="flex min-h-svh w-full bg-[#EFF4FF] text-[#2d3748] font-sans">
-      <aside className="w-72 bg-[#EFF4FF] border-r border-[#e2e8f0] flex flex-col justify-between p-6 shrink-0 sticky top-0 h-screen overflow-y-auto">
+      
+      {/* OVERLAY PARA MÓVIL */}
+      {isMobileMenuOpen && (
+        <div 
+          className="fixed inset-0 bg-[#071d37]/40 backdrop-blur-sm z-40 lg:hidden transition-opacity"
+          onClick={() => setIsMobileMenuOpen(false)}
+        />
+      )}
+
+      {/* SIDEBAR RESPONSIVE */}
+      <aside className={`fixed inset-y-0 left-0 z-50 w-72 bg-[#EFF4FF] border-r border-[#e2e8f0] flex flex-col justify-between p-6 shrink-0 h-screen overflow-y-auto transform transition-transform duration-300 lg:sticky lg:top-0 lg:translate-x-0 ${isMobileMenuOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full'}`}>
         <div className="flex flex-col gap-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2.5">
               <div className="h-8 w-8 rounded-xl bg-[#0f2a3f] text-white flex items-center justify-center font-bold text-xs shadow-sm">7</div>
               <span className="font-extrabold text-[#071d37] text-lg tracking-tight">7:34 AM</span>
             </div>
-            <button className="text-gray-400 hover:text-gray-600 cursor-pointer">☰</button>
+            <button 
+              className="lg:hidden text-gray-400 hover:text-gray-600 cursor-pointer"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              ✕
+            </button>
           </div>
 
           <div className="inline-flex items-center gap-2 bg-[#f0fdf4] border border-[#bbf7d0] text-[#166534] px-3 py-1.5 rounded-full text-[11px] font-bold w-fit">
@@ -235,7 +257,7 @@ export function DashboardLayout() {
           </div>
         </div>
 
-        {/* CONTENEDOR DE ACCIONES INFERIORES: VOLVER A HOME Y CERRAR SESIÓN */}
+        {/* ACCIONES INFERIORES */}
         <div className="mt-auto pt-6 flex flex-col gap-2 border-t border-[#e2e8f0]">
           <Link 
             to="/" 
@@ -253,29 +275,37 @@ export function DashboardLayout() {
         </div>
       </aside>
 
-      <div className="flex-1 flex flex-col min-h-screen relative">
-        <header className="bg-[#EFF4FF] border-b border-[#e2e8f0] px-8 py-4 flex items-center justify-between sticky top-0 z-30">
-          <div className="flex items-center gap-2 text-xs font-semibold text-[#64748b]">
-            <span>Dashboard</span>
-            <span>&gt;</span>
-            <span className="text-[#071d37] font-bold capitalize">{rol || 'Administración'}</span>
+      <div className="flex-1 flex flex-col min-h-screen relative w-full lg:w-[calc(100%-18rem)]">
+        <header className="bg-[#EFF4FF] border-b border-[#e2e8f0] px-4 sm:px-8 py-4 flex flex-wrap items-center justify-between gap-3 sticky top-0 z-30">
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setIsMobileMenuOpen(true)}
+              className="lg:hidden p-1.5 -ml-1.5 text-[#071d37] hover:bg-blue-50 rounded-lg transition cursor-pointer"
+            >
+              ☰
+            </button>
+            <div className="flex items-center gap-2 text-xs font-semibold text-[#64748b]">
+              <span className="hidden sm:inline">Dashboard</span>
+              <span className="hidden sm:inline">&gt;</span>
+              <span className="text-[#071d37] font-bold capitalize">{rol || 'Administración'}</span>
+            </div>
           </div>
 
           {(rol === 'administrador' || rol === 'admin') && (
-            <div className="flex items-center bg-[#f8fafc] border border-[#e2e8f0] rounded-xl px-3 py-2 w-60 gap-2">
+            <div className="hidden md:flex items-center bg-[#f8fafc] border border-[#e2e8f0] rounded-xl px-3 py-2 w-60 gap-2">
               <span className="text-gray-400 text-xs"><img src={Icons.SearchIcon} alt="Buscar" /></span>
               <input type="text" placeholder="Buscar voluntarios..." className="bg-transparent text-xs w-full focus:outline-none" />
             </div>
           )}
 
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-1 bg-gray-100 p-1 rounded-xl text-[11px] font-bold text-gray-600">
+          <div className="flex items-center gap-2 sm:gap-4 ml-auto">
+            <div className="hidden sm:flex items-center gap-1 bg-gray-100 p-1 rounded-xl text-[11px] font-bold text-gray-600">
               <span className={`px-2.5 py-1 rounded-lg transition ${rol === 'administrador' || rol === 'admin' ? 'bg-[#006194] text-white shadow-xs' : 'bg-[#DAE2FD] text-[#3F4850]'}`}>Admin</span>
               <span className={`px-2.5 py-1 rounded-lg transition ${rol === 'fundacion' ? 'bg-[#006194] text-white shadow-xs' : 'bg-[#DAE2FD] text-[#3F4850]'}`}>Fundación</span>
               <span className={`px-2.5 py-1 rounded-lg transition ${rol === 'voluntario' ? 'bg-[#006194] text-white shadow-xs' : 'bg-[#DAE2FD] text-[#3F4850]'}`}>Voluntario</span>
             </div>
 
-            {/* DROPDOWN NOTIFICACIONES MEDIANTE HOOK */}
+            {/* DROPDOWN NOTIFICACIONES */}
             <div className="relative" ref={notifRef}>
               <button
                 onClick={() => setShowNotifs(!showNotifs)}
@@ -291,12 +321,12 @@ export function DashboardLayout() {
               </button>
 
               {showNotifs && (
-                <div className="absolute right-0 mt-2 w-80 bg-white border border-[#e2e8f0] rounded-2xl shadow-xl z-50 overflow-hidden flex flex-col">
+                <div className="absolute right-0 mt-2 w-72 sm:w-80 bg-white border border-[#e2e8f0] rounded-2xl shadow-xl z-50 overflow-hidden flex flex-col">
                   <div className="p-3 bg-[#f8fafc] border-b border-[#e2e8f0] flex justify-between items-center">
                     <span className="text-xs font-bold text-[#071d37]">Notificaciones</span>
                     {unreadCount > 0 && (
                       <button onClick={() => marcarComoLeidas()} className="text-[10px] text-[#005684] hover:underline cursor-pointer">
-                        Marcar todas leídas
+                        Marcar leídas
                       </button>
                     )}
                   </div>
@@ -319,18 +349,18 @@ export function DashboardLayout() {
               )}
             </div>
 
-            <div className="flex items-center gap-2.5 border-l border-gray-200 pl-4">
-              <div className="h-9 w-9 rounded-full bg-[#0f2a3f] text-white flex items-center justify-center font-bold text-xs uppercase overflow-hidden">
+            <div className="flex items-center gap-2 sm:gap-2.5 border-l border-gray-200 pl-2 sm:pl-4">
+              <div className="h-8 w-8 sm:h-9 sm:w-9 rounded-full bg-[#0f2a3f] text-white flex items-center justify-center font-bold text-xs uppercase overflow-hidden shrink-0">
                 {profileData?.avatar ? <img src={profileData.avatar} alt="Perfil" className="w-full h-full object-cover" /> : profileData?.name ? profileData.name.substring(0, 2) : 'US'}
               </div>
-              <div className="flex flex-col text-left">
+              <div className="hidden sm:flex flex-col text-left">
                 <span className="text-xs font-bold text-[#071d37]">{profileData?.name || 'Usuario'}</span>
               </div>
             </div>
           </div>
         </header>
 
-        <div className="p-4 max-w-[1400px] w-full mx-auto flex flex-col gap-6">
+        <div className="p-4 sm:p-6 max-w-[1400px] w-full mx-auto flex flex-col gap-6">
           <Outlet />
         </div>
       </div>
@@ -339,7 +369,7 @@ export function DashboardLayout() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-fade-in">
           <div className="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl border border-gray-100 flex flex-col items-center text-center gap-5 transform transition-all scale-100">
             <div className="h-16 w-16 rounded-2xl bg-amber-50 text-amber-500 border border-amber-200/60 flex items-center justify-center text-3xl shadow-sm">
-              🛡️️
+              🛡
             </div>
             <div className="flex flex-col gap-2">
               <h3 className="text-base font-extrabold text-[#071d37]">
