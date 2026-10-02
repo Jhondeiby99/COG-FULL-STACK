@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '../lib/supabase';
 import { useNavigate } from 'react-router-dom';
 import * as Icons from "../assets/icons/index.ts";
@@ -16,6 +16,7 @@ export function AccountSettings() {
   const navigate = useNavigate();
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [mensaje, setMensaje] = useState<{ tipo: 'success' | 'error'; texto: string } | null>(null);
 
@@ -47,10 +48,42 @@ export function AccountSettings() {
     setLoadingSesiones(false);
   };
 
+  // Cálculo en tiempo real de la fuerza de la contraseña
+  const passwordStrength = useMemo(() => {
+    if (!newPassword) return { score: 0, label: 'Vacía', color: 'bg-gray-200', text: 'text-gray-400', bars: 0 };
+    
+    let score = 0;
+    if (newPassword.length >= 8) score += 1;
+    if (newPassword.length >= 12) score += 1;
+    if (/[A-Z]/.test(newPassword) && /[a-z]/.test(newPassword)) score += 1;
+    if (/[0-9]/.test(newPassword)) score += 1;
+    if (/[^A-Za-z0-9]/.test(newPassword)) score += 1;
+
+    if (score <= 2) {
+      return { score: 1, label: 'Débil', color: 'bg-red-500', text: 'text-red-600', bars: 1 };
+    } else if (score <= 4) {
+      return { score: 2, label: 'Media', color: 'bg-amber-500', text: 'text-amber-600', bars: 2 };
+    } else {
+      return { score: 3, label: 'Fuerte (Entropía óptima)', color: 'bg-[#005684]', text: 'text-[#005684]', bars: 3 };
+    }
+  }, [newPassword]);
+
+  // Validación en tiempo real de coincidencia
+  const passwordsMatch = useMemo(() => {
+    if (!confirmPassword) return null;
+    return newPassword === confirmPassword;
+  }, [newPassword, confirmPassword]);
+
   const handleUpdatePassword = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
     setMensaje(null);
+
+    if (newPassword !== confirmPassword) {
+      setMensaje({ tipo: 'error', texto: 'Las contraseñas nuevas no coinciden. Por favor verifica.' });
+      return;
+    }
+
+    setLoading(true);
 
     const { error } = await supabase.auth.updateUser({ password: newPassword });
 
@@ -60,6 +93,7 @@ export function AccountSettings() {
       setMensaje({ tipo: 'success', texto: '¡Contraseña actualizada con éxito bajo normativa FIPS-140!' });
       setCurrentPassword('');
       setNewPassword('');
+      setConfirmPassword('');
     }
     setLoading(false);
   };
@@ -68,7 +102,7 @@ export function AccountSettings() {
   const handleCerrarSesion = async (id: string) => {
     const { error } = await supabase
       .from('sesiones_usuario')
-      .update({ es_actual: false }) // <-- En lugar de .delete()
+      .update({ es_actual: false })
       .eq('id', id);
 
     if (!error) {
@@ -83,7 +117,7 @@ export function AccountSettings() {
 
     const { error } = await supabase
       .from('sesiones_usuario')
-      .update({ es_actual: false }) // <-- En lugar de .delete()
+      .update({ es_actual: false })
       .eq('user_id', userId)
       .neq('id', currentDbSessionId);
 
@@ -155,21 +189,51 @@ export function AccountSettings() {
                   <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400">🔒</span>
                 </div>
               </div>
+
+              <div>
+                <label className="text-xs font-bold text-[#475569]">Confirmar nueva contraseña</label>
+                <div className="relative mt-1">
+                  <input 
+                    type="password" 
+                    value={confirmPassword} 
+                    onChange={e => setConfirmPassword(e.target.value)}
+                    placeholder="Repite la nueva contraseña" 
+                    className={`w-full bg-[#f8fafc] border rounded-xl px-4 py-3 text-sm focus:outline-none focus:bg-white ${
+                      passwordsMatch === null 
+                        ? 'border-[#e2e8f0] focus:border-[#005684]' 
+                        : passwordsMatch 
+                        ? 'border-emerald-400 focus:border-emerald-600 bg-emerald-50/20' 
+                        : 'border-red-300 focus:border-red-500 bg-red-50/20'
+                    }`}
+                    required 
+                  />
+                  <span className="absolute right-4 top-1/2 -translate-y-1/2">
+                    {passwordsMatch === null ? '🔒' : passwordsMatch ? '✅' : '❌'}
+                  </span>
+                </div>
+                {passwordsMatch === false && (
+                  <span className="text-[10px] text-red-600 font-bold mt-1 block">Las contraseñas no coinciden</span>
+                )}
+                {passwordsMatch === true && (
+                  <span className="text-[10px] text-emerald-600 font-bold mt-1 block">¡Las contraseñas coinciden correctamente!</span>
+                )}
+              </div>
             </div>
 
+            {/* SECCIÓN DINÁMICA DE FUERZA DE LA CLAVE */}
             <div className="mt-1 bg-[#EFF4FF] p-4 rounded-xl max-w-md border border-[#bae6fd]">
               <div className="flex justify-between items-center text-xs text-black mb-1.5">
                 <span className="font-bold">Fuerza de la clave</span>
-                <span className="text-[#005684] font-bold">Fuerte (Entropía óptima)</span>
+                <span className={`font-bold ${passwordStrength.text}`}>{passwordStrength.label}</span>
               </div>
               <div className="h-1.5 w-full bg-blue-100 rounded-full overflow-hidden flex gap-1">
-                <div className="h-full bg-[#005684] rounded-full w-1/3"></div>
-                <div className="h-full bg-[#005684] rounded-full w-1/3"></div>
-                <div className="h-full bg-[#005684] rounded-full w-1/3"></div>
+                <div className={`h-full rounded-full w-1/3 transition-all duration-300 ${passwordStrength.bars >= 1 ? passwordStrength.color : 'bg-transparent'}`}></div>
+                <div className={`h-full rounded-full w-1/3 transition-all duration-300 ${passwordStrength.bars >= 2 ? passwordStrength.color : 'bg-transparent'}`}></div>
+                <div className={`h-full rounded-full w-1/3 transition-all duration-300 ${passwordStrength.bars >= 3 ? passwordStrength.color : 'bg-transparent'}`}></div>
               </div>
               <p className="text-[11px] text-[#64748b] mt-2 flex items-center gap-1.5">
-                <span className="text-[#005684]"><img width="12" src={Icons.CheckCircleIcon} alt="Check"/></span> 
-                Cumple normativa de cifrado FIPS-140.
+                <span className="text-[#005684]">✓</span> 
+                Usa mayúsculas, minúsculas, números y símbolos para máxima seguridad FIPS-140.
               </p>
             </div>
 
@@ -182,8 +246,8 @@ export function AccountSettings() {
             <div className="flex items-center gap-3 pt-2">
               <button 
                 type="submit" 
-                disabled={loading || !newPassword}
-                className="bg-[#005684] text-white px-6 py-3 rounded-xl text-xs font-bold hover:bg-[#00456a] transition shadow-sm cursor-pointer disabled:opacity-50"
+                disabled={loading || !newPassword || !confirmPassword || !passwordsMatch}
+                className="bg-[#005684] text-white px-6 py-3 rounded-xl text-xs font-bold hover:bg-[#00456a] transition shadow-sm cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loading ? 'Actualizando...' : 'Actualizar Contraseña'}
               </button>
@@ -214,7 +278,6 @@ export function AccountSettings() {
               <div className="text-center py-4 text-xs font-bold text-[#64748b]">No hay registros de sesión disponibles.</div>
             ) : (
               sesiones.map((sesion) => {
-                // Validación estricta: Compara el ID de la BD con el ID guardado en este navegador
                 const esEsteDispositivo = sesion.id === localStorage.getItem('db_session_id');
 
                 return (
@@ -239,7 +302,6 @@ export function AccountSettings() {
                     <div className="flex items-center justify-between sm:justify-end gap-3 shrink-0">
                       <span className="text-[10px] font-bold text-[#0284c7] bg-[#f0f9ff] px-2.5 py-1.5 rounded-lg border border-[#bae6fd]">TLS 1.3 Cifrado</span>
                       
-                      {/* Oculta el botón cerrar si es el dispositivo actual, lo muestra para los demás */}
                       {!esEsteDispositivo && (
                         <button 
                           onClick={() => handleCerrarSesion(sesion.id)}

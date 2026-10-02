@@ -17,6 +17,8 @@ import { AdminApproval } from './pages/admin-approval';
 import { AdminFoundations } from './pages/admin-foundations';
 import { AdminVolunteers } from './pages/admin-volunteers';
 import { AccountNotifications } from './pages/account-notifications';
+import { ForgotPassword } from './pages/ForgotPassword';
+import { ResetPassword } from './pages/ResetPassword';
 
 // Componente opcional para proteger paneles exclusivos (Ej: Admin o Edición)
 // Reemplaza tu función ProtectedRoute en App.tsx por esta:
@@ -86,35 +88,30 @@ function App() {
     <BrowserRouter>
       <Routes>
         {/* ================================================================== */}
-        {/* RUTA PÚBLICAS (Cualquiera puede entrar sin estar logueado)         */}
+        {/* RUTAS PÚBLICAS                                                   */}
         {/* ================================================================== */}
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/signup" element={<SignUp />} />
         <Route path="/voluntario/:id" element={<VolunteerProfile />} />
         <Route path="/fundacion/:id" element={<FoundationProfile />} />
 
-        <Route 
-         path='/ajustes'
-         element={
-            <AccountSettings />
-         }
-        />
+        {/* ================================================================== */}
+        {/* RUTAS PRIVADAS / DASHBOARD                                         */}
+        {/* ================================================================== */}
         <Route path="/dashboard" element={<ProtectedRoute><DashboardLayout /></ProtectedRoute>}>
           <Route path="ajustes" element={<AccountSettings />} />
-          {/* Rutas modificadas con el parámetro :id */}
           <Route path="voluntario/editar/:id" element={<EditVolunteerProfile />} />
           <Route path="fundacion/editar/:id" element={<EditFoundationProfile />} />
-          
           <Route path="admin-dashboard" element={<AdminDashboard />} />
           <Route path="admin-aprobaciones" element={<AdminApproval />} />
           <Route path="admin-fundaciones" element={<AdminFoundations />} />
           <Route path="admin-voluntarios" element={<AdminVolunteers />} />
           <Route path="admin-notificaciones" element={<AccountNotifications />} />
-          {/* Otras rutas del dashboard */}
-       </Route>
+        </Route>
 
-        {/* Redirección por defecto ante cualquier ruta extraña */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
