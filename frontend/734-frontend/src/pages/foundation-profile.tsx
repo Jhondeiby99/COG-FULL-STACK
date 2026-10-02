@@ -180,6 +180,11 @@ export function FoundationProfile() {
 
   const emailContacto = fundacion.email_contacto || fundacion.email_institucional || 'No registrado';
 
+  // GENERAR MAPA DINÁMICO
+  const mapQuery = [fundacion.direccion_fisica, fundacion.localidad, fundacion.ciudad, fundacion.departamento, 'Colombia']
+    .filter(Boolean)
+    .join(', ');
+
   return (
     <div className="flex min-h-svh w-full flex-col bg-[#f8fafc] text-left text-[15px] leading-normal text-[#2d3748] font-sans">
       <Header />
@@ -560,7 +565,7 @@ export function FoundationProfile() {
                     <iframe
                       title="Mapa de ubicación"
                       className="absolute inset-0 h-full w-full border-0"
-                      src="https://www.openstreetmap.org/export/embed.html?bbox=-74.075%2C4.630%2C-74.045%2C4.655&layer=mapnik&marker=4.643%2C-74.063"
+                      src={`https://maps.google.com/maps?q=${encodeURIComponent(mapQuery)}&t=&z=14&ie=UTF8&iwloc=&output=embed`}
                       loading="lazy"
                     />
                   </div>

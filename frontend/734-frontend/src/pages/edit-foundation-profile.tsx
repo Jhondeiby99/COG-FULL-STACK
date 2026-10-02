@@ -89,6 +89,9 @@ export function EditFoundationProfile() {
   const [portadaUrl, setPortadaUrl] = useState('');
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
 
+  // ESTADO PARA RENDERIZAR MAPA DINÁMICO
+  const [mapQuery, setMapQuery] = useState('Colombia');
+
   // Listas dinámicas desde BD
   const [canalesRecaudo, setCanalesRecaudo] = useState<CanalRecaudo[]>([]);
   const [necesidades, setNecesidades] = useState<NecesidadData[]>([]);
@@ -131,10 +134,19 @@ export function EditFoundationProfile() {
         setAnoFundacion(fund.ano_fundacion ? String(fund.ano_fundacion) : '');
         setMision(fund.mision || '');
         setVision(fund.vision || '');
+        
+        // UBICACIÓN
         setDepartamento(fund.departamento || '');
         setCiudad(fund.ciudad || '');
         setLocalidad(fund.localidad || '');
         setDireccionEntrega(fund.direccion_fisica || '');
+        
+        // ACTUALIZAR MAPA INICIALMENTE
+        const queryUbicacion = [fund.direccion_fisica, fund.localidad, fund.ciudad, fund.departamento, 'Colombia']
+          .filter(Boolean)
+          .join(', ');
+        setMapQuery(queryUbicacion);
+
         setWhatsapp(fund.telefono_whatsapp || '');
         setTelFijo(fund.telefono || '');
         setEmail(fund.email_contacto || fund.email_institucional || '');
@@ -149,7 +161,7 @@ export function EditFoundationProfile() {
           setCanalesRecaudo([]);
         }
 
-        // Cargar necesidades desde la tabla 'necesidades'
+        // Cargar necesidades
         const { data: necData, error: necError } = await supabase
           .from('necesidades')
           .select('*')
@@ -169,6 +181,14 @@ export function EditFoundationProfile() {
     }
   };
 
+  // ACTUALIZADOR DE MAPA MANUAL (OnBlur)
+  const handleUpdateMap = () => {
+    const query = [direccionEntrega, localidad, ciudad, departamento, 'Colombia']
+      .filter(item => item && item.trim() !== '')
+      .join(', ');
+    setMapQuery(query);
+  };
+
   // Guardar Cambios en Supabase
   const handleSave = async () => {
     setSaving(true);
@@ -186,7 +206,7 @@ export function EditFoundationProfile() {
         localidad: localidad,
         direccion_fisica: direccionEntrega,
         telefono_whatsapp: whatsapp,
-        telefono:telFijo,
+        telefono: telFijo,
         email_contacto: email,
         email_institucional: email,
         instagram: instagram,
@@ -528,15 +548,18 @@ export function EditFoundationProfile() {
                     </div>
                   </section>
 
-                  {/* 04. UBICACIÓN Y RECEPCIÓN DE AYUDAS */}
+                  {/* 04. UBICACIÓN Y RECEPCIÓN DE AYUDAS CON MAPA FUNCIONAL */}
                   <section className="bg-white rounded-3xl p-6 border border-[#e2e8f0] shadow-sm mb-6">
                     <div className="flex items-center justify-between mb-4">
                       <h3 className="text-[11px] font-bold text-[#005684] uppercase tracking-wider flex items-center gap-2">
                         <span className="text-base">📍</span> Ubicación y Recepción de Ayudas
                       </h3>
-                      <span className="text-[10px] text-[#005684] font-bold bg-[#eef6ff] px-2 py-0.5 rounded-full flex items-center gap-1">
-                        <span>⊕</span> GPS Actualizado
-                      </span>
+                      <button 
+                        onClick={handleUpdateMap}
+                        className="text-[10px] text-[#005684] font-bold bg-[#eef6ff] px-2 py-1 rounded-full flex items-center gap-1 hover:bg-[#dbeafe] transition cursor-pointer"
+                      >
+                        <span>⊕</span> Refrescar Mapa
+                      </button>
                     </div>
                     
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
@@ -546,6 +569,7 @@ export function EditFoundationProfile() {
                           type="text" 
                           value={departamento} 
                           onChange={(e) => { setDepartamento(e.target.value); markUnsaved(); }} 
+                          onBlur={handleUpdateMap}
                           placeholder="Ej: Cundinamarca"
                           className="w-full bg-[#f8fafc] border border-[#e2e8f0] focus:border-[#005684] rounded-xl px-4 py-2 text-xs font-semibold text-[#071d37] outline-none transition" 
                         />
@@ -556,6 +580,7 @@ export function EditFoundationProfile() {
                           type="text" 
                           value={ciudad} 
                           onChange={(e) => { setCiudad(e.target.value); markUnsaved(); }} 
+                          onBlur={handleUpdateMap}
                           placeholder="Ej: Bogotá D.C."
                           className="w-full bg-[#f8fafc] border border-[#e2e8f0] focus:border-[#005684] rounded-xl px-4 py-2 text-xs font-semibold text-[#071d37] outline-none transition" 
                         />
@@ -569,7 +594,8 @@ export function EditFoundationProfile() {
                           type="text" 
                           value={localidad} 
                           onChange={(e) => { setLocalidad(e.target.value); markUnsaved(); }} 
-                          placeholder="Ej: Ciudad Bolívar - Barrio Paraíso"
+                          onBlur={handleUpdateMap}
+                          placeholder="Ej: Ciudad Bolívar"
                           className="w-full bg-[#f8fafc] border border-[#e2e8f0] focus:border-[#005684] rounded-xl px-4 py-2 text-xs font-semibold text-[#071d37] outline-none transition" 
                         />
                       </div>
@@ -578,28 +604,29 @@ export function EditFoundationProfile() {
                         <input 
                           type="text" 
                           value={direccionEntrega} 
-                          onChange={(e) => { setDireccionEntrega(e.target.value); markUnsaved(); }} 
+                          onChange={(e) => { setDireccionEntrega(e.target.value); markUnsaved(); }}
+                          onBlur={handleUpdateMap} 
                           placeholder="Ej: Carrera 27B Bis # 71H - 14 Sur"
                           className="w-full bg-[#f8fafc] border border-[#e2e8f0] focus:border-[#005684] rounded-xl px-4 py-2 text-xs font-semibold text-[#071d37] outline-none transition" 
                         />
                       </div>
                     </div>
 
-                    <div className="relative rounded-2xl overflow-hidden bg-gray-100 h-48 border border-[#e2e8f0]">
-                      <img src="https://images.unsplash.com/photo-1524661135-423995f22d0b?auto=format&fit=crop&q=80&w=800" className="w-full h-full object-cover opacity-80" alt="Mapa Ubicación" />
-                      <div className="absolute inset-0 flex items-center justify-center">
-                          <div className="bg-[#0f2a3f]/90 text-white text-[11px] font-bold px-4 py-2 rounded-xl backdrop-blur-sm border border-white/20 shadow-lg flex flex-col items-center gap-1 text-center">
-                            <span>📍 Sede Operativa {localidad ? localidad : ciudad || 'Principal'}</span>
-                            <button 
-                              type="button"
-                              onClick={() => alert('Ajuste de coordenadas GPS disponible próximamente')}
-                              className="bg-[#005684] text-white px-3 py-1 rounded-lg text-[9px] mt-1 hover:bg-[#00456a] transition cursor-pointer"
-                            >
-                              Ajustar Pin
-                            </button>
-                          </div>
-                      </div>
+                    {/* MAPA DINÁMICO EN EMBED */}
+                    <div className="relative rounded-2xl overflow-hidden bg-gray-100 h-64 border border-[#e2e8f0]">
+                      <iframe 
+                        title="Ubicación de la Fundación"
+                        width="100%" 
+                        height="100%" 
+                        style={{ border: 0 }} 
+                        loading="lazy" 
+                        allowFullScreen 
+                        src={`https://maps.google.com/maps?q=${encodeURIComponent(mapQuery)}&t=&z=14&ie=UTF8&iwloc=&output=embed`}
+                      ></iframe>
                     </div>
+                    <p className="text-[10px] text-gray-500 mt-2 text-center">
+                      El mapa se actualiza automáticamente basado en los datos ingresados.
+                    </p>
                   </section>
                 </>
               )}
