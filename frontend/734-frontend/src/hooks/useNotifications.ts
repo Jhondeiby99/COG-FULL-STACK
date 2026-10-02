@@ -2,17 +2,19 @@ import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 import { RealtimeChannel } from '@supabase/supabase-js';
 
+
 export interface Notificacion {
   id: string;
-  user_id: string;
+  user_id?: string;
   titulo: string;
-  descripcion: string;
+  descripcion?: string;
   icono?: string;
   bg_icono?: string;
   text_icono?: string;
-  accion_texto?: string | null;
+  accion_texto?: string;
   leido: boolean;
   created_at: string;
+  mensaje_contacto_id?: string; // <--- Agregar este campo
 }
 
 interface UseNotificationsOptions {
