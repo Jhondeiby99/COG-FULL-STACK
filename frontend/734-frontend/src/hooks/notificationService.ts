@@ -23,11 +23,11 @@ export async function dispararNotificacionSistema({
 }: CrearNotificacionParams) {
   try {
     // 1. Verificar si el usuario tiene activas las notificaciones o alertas en perfiles
-    const { data: perfil } = await supabase
-      .from('perfiles')
-      .select('alertas_correo, alertas_push, alertas_emergencia, alertas_correos, push, emergencias')
-      .eq('id', userId)
-      .maybeSingle();
+    // const { data: perfil } = await supabase
+    //   .from('perfiles')
+    //   .select('alertas_correo, alertas_push, alertas_emergencia, alertas_correos, push, emergencias')
+    //   .eq('id', userId)
+    //   .maybeSingle();
 
     // 2. Insertar en la tabla 'notificaciones' para la campana en tiempo real
     const { error } = await supabase

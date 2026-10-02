@@ -1,6 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '../lib/supabase';
-import { useNavigate } from 'react-router-dom';
 import * as Icons from "../assets/icons/index.ts";
 
 interface Sesion {
@@ -13,8 +12,8 @@ interface Sesion {
 }
 
 export function AccountSettings() {
-  const navigate = useNavigate();
-  const [currentPassword, setCurrentPassword] = useState('');
+  // const navigate = useNavigate();
+  const [_currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);

@@ -62,8 +62,8 @@ export function AdminDashboard() {
   const [fundacionesDestacadas, setFundacionesDestacadas] = useState<Fundacion[]>([]);
   const [flujoGrafico, setFlujoGrafico] = useState<FlujoMensual[]>([]);
   const [especialidades, setEspecialidades] = useState<{ [key: string]: number }>({});
-  const [pendientes, setPendientes] = useState<any[]>([]); // Ajusta el tipo de dato si usas TypeScript
-  const [aprobadas, setAprobadas] = useState<any[]>([]);
+  const [_pendientes, setPendientes] = useState<any[]>([]); // Ajusta el tipo de dato si usas TypeScript
+  const [_aprobadas, setAprobadas] = useState<any[]>([]);
 
   // Paginación
   const [paginaActual, setPaginaActual] = useState(1);
@@ -189,12 +189,12 @@ export function AdminDashboard() {
   };
 
   // Formateadores auxiliares
-  const formatCOP = (valor: number) => {
-    if (valor >= 1000000) {
-      return `$${(valor / 1000000).toFixed(1)}M`;
-    }
-    return `$${valor.toLocaleString('es-CO')}`;
-  };
+  // const formatCOP = (valor: number) => {
+  //   if (valor >= 1000000) {
+  //     return `$${(valor / 1000000).toFixed(1)}M`;
+  //   }
+  //   return `$${valor.toLocaleString('es-CO')}`;
+  // };
 
   const getRiesgoStyle = (riesgoStr: string | null) => {
     if (!riesgoStr || riesgoStr.includes('Bajo')) {
