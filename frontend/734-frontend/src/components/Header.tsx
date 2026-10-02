@@ -21,12 +21,16 @@ export function Header({ onSearchChange, onFilterClick, searchPlaceholder = "Cau
   const [user, setUser] = useState<any>(null);
   const [profileData, setProfileData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+
   const [modalExpulsion, setModalExpulsion] = useState(false);
 
   // Hook de Notificaciones
   const { notificaciones, unreadCount, marcarComoLeidas } = useNotifications(user?.id, { limit: 5 });
   const [showNotifs, setShowNotifs] = useState(false);
-  const notifRef = useRef<HTMLDivElement>(null);
+  
+  // Refs separados para escritorio y móvil para manejar clics fuera sin conflictos
+  const notifRefDesktop = useRef<HTMLDivElement>(null);
+  const notifRefMobile = useRef<HTMLDivElement>(null);
 
   // 1. CARGA DE USUARIO Y PERFIL
   useEffect(() => {
@@ -47,7 +51,7 @@ export function Header({ onSearchChange, onFilterClick, searchPlaceholder = "Cau
             setProfileData({ name: vol?.nombre_completo || 'Voluntario', avatar: vol?.avatar_url, rol: perfil.rol });
           } else if (perfil.rol === 'administrador') {
             const { data: admin } = await supabase.from('administradores').select('nombre_completo, avatar_url').eq('id', session.user.id).maybeSingle();
-            setProfileData({ name: admin?.nombre_completo || 'Administrador', avatar: admin?.avatar_url || null, rol: perfil.rol });
+            setProfileData({ name: admin?.nombre_completo || 'Administrador Global', avatar: admin?.avatar_url || null, rol: perfil.rol });
           }
         }
       }
@@ -66,7 +70,10 @@ export function Header({ onSearchChange, onFilterClick, searchPlaceholder = "Cau
     });
 
     const handleClickOutside = (event: MouseEvent) => {
-      if (notifRef.current && !notifRef.current.contains(event.target as Node)) {
+      const clickedOutsideDesktop = notifRefDesktop.current && !notifRefDesktop.current.contains(event.target as Node);
+      const clickedOutsideMobile = notifRefMobile.current && !notifRefMobile.current.contains(event.target as Node);
+      
+      if (clickedOutsideDesktop && clickedOutsideMobile) {
         setShowNotifs(false);
       }
     };
@@ -148,6 +155,7 @@ export function Header({ onSearchChange, onFilterClick, searchPlaceholder = "Cau
           .from('sesiones_usuario')
           .update({ es_actual: false })
           .eq('id', dbSessionId);
+
         localStorage.removeItem('db_session_id');
       }
     } catch (error) {
@@ -171,147 +179,245 @@ export function Header({ onSearchChange, onFilterClick, searchPlaceholder = "Cau
   };
 
   return (
-    <header className="home-header relative z-[9999] bg-white shadow-sm flex flex-col w-full">
-      {/* FILA PRINCIPAL: Visible siempre (Filtros, Logo, Usuario) */}
-      <div className="flex items-center justify-between px-4 py-3 md:px-6 w-full gap-2 lg:gap-4">
-        
-        {/* IZQUIERDA: Filtros y Buscador (Desktop) */}
-        <div className="flex items-center gap-3 flex-1">
-          {/* Botón Filtros (Texto oculto en móvil) */}
-          <button 
-            className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-lg px-2 py-1.5 md:px-3 lg:px-4 lg:py-2 hover:bg-gray-100 transition-colors flex-shrink-0" 
-            onClick={onFilterClick} 
-            type="button"
-          >
-            <img src={Icons.iconFiltrosUrl} className="w-4 h-4 md:w-5 md:h-5" alt="Filtros" />
-            <span className="hidden md:inline text-xs lg:text-sm font-semibold text-[#071d37]">Filtros</span>
-            <span className="bg-[#005684] text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">3</span>
-          </button>
-
-          {/* Buscador de Escritorio (Oculto en móvil) */}
-          <div className="hidden lg:flex items-center bg-gray-100 rounded-full px-4 py-2 flex-1 max-w-sm border border-transparent focus-within:border-[#005684] transition-all">
-            <img src={Icons.SearchIcon} className="w-4 h-4 opacity-50 mr-2" alt="Buscar" />
-            <input 
-              type="text" 
-              placeholder={searchPlaceholder} 
-              onChange={onSearchChange} 
-              className="bg-transparent border-none outline-none text-sm w-full text-gray-700"
-            />
+    <>
+      {/* ========================================================================= */}
+      {/* 1. VERSIÓN WEB / DESKTOP (INTACTA - SE OCULTA EN MÓVIL)                   */}
+      {/* ========================================================================= */}
+      <div className="hidden sm:block w-full">
+        <header className="home-header relative !overflow-visible z-[9999]">
+          <div className="header-left">
+            <button className="btn-filtros" onClick={onFilterClick} type="button">
+              <img src={Icons.iconFiltrosUrl} className="icon-svg" alt="Filtros" />
+              Filtros avanzados <span className="badge">3</span>
+            </button>
+            <div className="header-search">
+              <img src={Icons.SearchIcon} className="icon-search" alt="Buscar" />
+              <input type="text" placeholder={searchPlaceholder} onChange={onSearchChange} />
+            </div>
           </div>
-        </div>
 
-        {/* CENTRO: Logo y Textos */}
-        <div className="flex flex-col items-center justify-center flex-shrink-0 cursor-pointer" onClick={() => navigate('/')}>
-          <span className="text-sm md:text-base font-extrabold text-[#071d37] tracking-tight">7:34 AM</span>
-          <span className="hidden sm:block text-[10px] md:text-xs text-gray-500 font-medium text-center">Conectando voluntades</span>
-        </div>
-
-        {/* DERECHA: Perfil, Notificaciones y Login */}
-        <div className="flex items-center justify-end gap-2 md:gap-4 flex-1">
-          {loading ? (
-            <span className="text-xs text-gray-400">Cargando...</span>
-          ) : user ? (
-            <div className="flex items-center gap-2 md:gap-3 relative">
-              <span className="text-xs font-bold text-[#071d37] hidden lg:inline mr-2">
-                Hola, {profileData?.name?.split(' ')[0] || 'Usuario'}
-              </span>
-
-              {/* CONTENEDOR DE NOTIFICACIONES */}
-              <div className="relative flex items-center justify-center" ref={notifRef}>
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    setShowNotifs((prev) => !prev);
-                  }}
-                  className="relative p-1.5 md:p-2 hover:bg-gray-200 bg-gray-100 rounded-full transition cursor-pointer"
-                >
-                  <img src={Icons.CampanaIcon2} alt="Notificaciones" className="w-4 h-4 md:w-5 md:h-5" />
-                  {unreadCount > 0 && (
-                    <span className="absolute top-0 right-0 flex h-2 w-2 md:h-2.5 md:w-2.5">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                      <span className="relative inline-flex rounded-full h-2 w-2 md:h-2.5 md:w-2.5 bg-red-500"></span>
-                    </span>
-                  )}
-                </button>
-
-                {showNotifs && (
-                  <div className="absolute right-[-60px] sm:right-0 top-full mt-3 w-72 sm:w-80 bg-white border border-[#e2e8f0] rounded-2xl shadow-2xl z-[99999] overflow-hidden flex flex-col text-left">
-                    <div className="p-3 bg-[#f8fafc] border-b border-[#e2e8f0] flex justify-between items-center">
-                      <span className="text-xs font-bold text-[#071d37]">Alertas</span>
-                      {unreadCount > 0 && (
-                        <button onClick={() => marcarComoLeidas()} className="text-[10px] text-[#005684] hover:underline cursor-pointer">
-                          Marcar leídas
-                        </button>
-                      )}
-                    </div>
-                    <div className="max-h-64 overflow-y-auto flex flex-col">
-                      {notificaciones.length === 0 ? (
-                        <div className="p-4 text-center text-xs text-gray-500">Estás al día.</div>
-                      ) : (
-                        notificaciones.map((n) => (
-                          <div key={n.id} className={`p-3 border-b border-gray-100 flex flex-col gap-1 hover:bg-gray-50 transition ${!n.leido ? 'bg-[#f0f9ff]' : ''}`}>
-                            <span className="text-xs font-bold text-[#071d37]">{n.titulo}</span>
-                            <span className="text-[11px] text-gray-500 line-clamp-2">{n.descripcion}</span>
-                          </div>
-                        ))
-                      )}
-                    </div>
-                    <Link to="/dashboard/admin-notificaciones" className="p-2 text-center text-[11px] font-bold text-[#005684] bg-gray-50 hover:bg-gray-100 transition" onClick={() => setShowNotifs(false)}>
-                      Ver todas
-                    </Link>
-                  </div>
-                )}
+          <div className="header-center">
+            <Link to="/" style={{ textDecoration: 'none', color: 'inherit' }}>
+              <div className="brand-logo-center" style={{ cursor: 'pointer' }}>
+                <span className="time-text">7:34 AM</span>
+                <span className="brand-slogan">Conectando voluntades y causas</span>
               </div>
+            </Link>
+          </div>
 
-              {/* Botones de acción perfil (Mi Panel y Salir) */}
-              <Link to={getDashboardPath()} className="hidden sm:inline-block rounded-lg bg-[#005684] px-2 py-1.5 md:px-3 text-[10px] md:text-xs font-bold text-white transition hover:bg-[#00456a] whitespace-nowrap">
-                Mi Panel
-              </Link>
+          <div className="header-right !overflow-visible">
+            <div className="header-right-inicre flex items-center gap-4 !overflow-visible">
+              {loading ? (
+                <span className="text-xs text-gray-400">Cargando...</span>
+              ) : user ? (
+                <div className="flex items-center gap-3 !overflow-visible">
+                  <span className="text-xs font-bold text-[#071d37] hidden md:inline">
+                    Hola, {profileData?.name || 'Usuario'}
+                  </span>
 
-              <button onClick={handleLogout} type="button" className="hidden sm:inline-block rounded-lg bg-red-50 px-2 py-1.5 md:px-3 text-[10px] md:text-xs font-bold text-red-600 border border-red-200 transition hover:bg-red-100 cursor-pointer">
-                Salir
-              </button>
+                  {/* CONTENEDOR DE NOTIFICACIONES DESKTOP */}
+                  <div className="relative flex items-center justify-center !overflow-visible" ref={notifRefDesktop}>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setShowNotifs((prev) => !prev);
+                      }}
+                      className="relative p-2 hover:bg-gray-200 bg-gray-100 rounded-full transition cursor-pointer"
+                    >
+                      <img src={Icons.CampanaIcon2} alt="Notificaciones" />
+                      {unreadCount > 0 && (
+                        <span className="absolute top-0 right-0 flex h-2.5 w-2.5">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                          <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500"></span>
+                        </span>
+                      )}
+                    </button>
 
-              {/* Avatar Clickable en móvil para ir al panel */}
-              <Link to={getDashboardPath()} className="w-7 h-7 md:w-8 md:h-8 rounded-full overflow-hidden border border-gray-200 ml-1">
-                <img src={getAvatar()} className="w-full h-full object-cover" alt="Avatar" />
-              </Link>
+                    {showNotifs && (
+                      <div className="absolute right-0 top-full mt-3 w-80 bg-white border border-[#e2e8f0] rounded-2xl shadow-2xl z-[99999] overflow-hidden flex flex-col text-left">
+                        <div className="p-3 bg-[#f8fafc] border-b border-[#e2e8f0] flex justify-between items-center">
+                          <span className="text-xs font-bold text-[#071d37]">Alertas de Plataforma</span>
+                          {unreadCount > 0 && (
+                            <button onClick={() => marcarComoLeidas()} className="text-[10px] text-[#005684] hover:underline cursor-pointer">
+                              Marcar leídas
+                            </button>
+                          )}
+                        </div>
+                        <div className="max-h-64 overflow-y-auto flex flex-col">
+                          {notificaciones.length === 0 ? (
+                            <div className="p-4 text-center text-xs text-gray-500">Estás al día.</div>
+                          ) : (
+                            notificaciones.map((n) => (
+                              <div key={n.id} className={`p-3 border-b border-gray-100 flex flex-col gap-1 hover:bg-gray-50 transition ${!n.leido ? 'bg-[#f0f9ff]' : ''}`}>
+                                <span className="text-xs font-bold text-[#071d37]">{n.titulo}</span>
+                                <span className="text-[11px] text-gray-500 line-clamp-2">{n.descripcion}</span>
+                              </div>
+                            ))
+                          )}
+                        </div>
+                        <Link to="/dashboard/admin-notificaciones" className="p-2 text-center text-[11px] font-bold text-[#005684] bg-gray-50 hover:bg-gray-100 transition">
+                        Ver todas
+                      </Link>
+                      </div>
+                    )}
+                  </div>
+
+                  <Link to={getDashboardPath()} className="rounded-lg bg-[#005684] px-3 py-1.5 text-xs font-bold text-white transition hover:bg-[#00456a]">
+                    Mi Panel
+                  </Link>
+
+                  <button onClick={handleLogout} type="button" className="rounded-lg bg-red-50 px-3 py-1.5 text-xs font-bold text-red-600 border border-red-200 transition hover:bg-red-100 cursor-pointer" title="Cerrar sesión">
+                    Salir
+                  </button>
+
+                  <div className="avatar-circle small overflow-hidden border border-gray-200">
+                    <img src={getAvatar()} className="icon-person" alt="Avatar" />
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <Link to="/login" className="nav-link">Iniciar sesión</Link>
+                  <Link to="/signup">
+                    <button className="btn-primary small" type="button">
+                      Crear usuario 
+                      <img src={Icons.arrowDownIcon} className="icon-arrow" alt="Desplegar" />
+                    </button>
+                  </Link>
+                  <div className="avatar-circle small">
+                    <img src={Icons.PersonIcon} className="icon-person" alt="Usuario por defecto" />
+                  </div>
+                </>
+              )}
             </div>
-          ) : (
-            <div className="flex items-center gap-2 md:gap-3">
-              <a href="/login" className="hidden sm:inline text-xs md:text-sm text-gray-600 font-medium hover:text-[#005684]">Ingresar</a>
-              <Link to="/signup">
-                <button className="bg-[#005684] text-white rounded-lg px-2 py-1.5 md:px-4 md:py-2 text-[10px] md:text-xs font-bold flex items-center gap-1 hover:bg-[#004266] transition">
-                  <span className="hidden sm:inline">Crear usuario</span>
-                  <span className="sm:hidden">Registro</span>
-                  <img src={Icons.arrowDownIcon} className="w-2 h-2 md:w-3 md:h-3 invert" alt="Desplegar" />
-                </button>
-              </Link>
-            </div>
-          )}
-        </div>
+          </div>
+        </header>
       </div>
 
-      {/* FILA 2: Buscador para Móviles y Tablets (Solo visible en pantallas pequeñas lg:hidden) */}
-      <div className="flex lg:hidden px-4 pb-3 w-full">
-        <div className="flex items-center bg-gray-100 rounded-full px-4 py-2 w-full border border-gray-200 focus-within:border-[#005684] transition-all">
-          <img src={Icons.SearchIcon} className="w-4 h-4 opacity-50 mr-2" alt="Buscar" />
-          <input 
-            type="text" 
-            placeholder={searchPlaceholder} 
-            onChange={onSearchChange} 
-            className="bg-transparent border-none outline-none text-sm w-full text-gray-700"
-          />
-        </div>
+      {/* ========================================================================= */}
+      {/* 2. VERSIÓN MÓVIL OPTIMIZADA                                               */}
+      {/* ========================================================================= */}
+      <div className="block sm:hidden w-full relative z-[9999] bg-white border-b border-gray-100 shadow-sm !overflow-visible">
+        <header className="flex flex-col w-full px-4 py-3 gap-3 !overflow-visible">
+          
+          <div className="flex justify-between items-center w-full !overflow-visible">
+            
+            <Link to="/" style={{ textDecoration: 'none' }} className="flex flex-col flex-shrink-0 cursor-pointer">
+              <span className="text-[13px] font-extrabold text-[#071d37] tracking-tight">7:34 AM</span>
+              <span className="text-[9px] text-gray-500 font-medium">Conectando voluntades</span>
+            </Link>
+
+            <div className="flex items-center gap-2 flex-shrink-0 !overflow-visible">
+              {loading ? (
+                <span className="text-[10px] text-gray-400">Cargando...</span>
+              ) : user ? (
+                <div className="flex items-center gap-2 relative !overflow-visible">
+                  
+                  <div ref={notifRefMobile} className="!overflow-visible">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setShowNotifs((prev) => !prev);
+                      }}
+                      className="relative p-1.5 bg-gray-50 hover:bg-gray-100 rounded-full transition border border-gray-100 flex-shrink-0"
+                    >
+                      <img src={Icons.CampanaIcon2} alt="Notificaciones" className="w-4 h-4" />
+                      {unreadCount > 0 && (
+                        <span className="absolute -top-1 -right-1 flex h-2 w-2">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                          <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+                        </span>
+                      )}
+                    </button>
+
+                    {showNotifs && (
+                      <div className="absolute right-0 top-full mt-3 w-[calc(100vw-2rem)] max-w-[320px] bg-white border border-[#e2e8f0] rounded-xl shadow-2xl z-[99999] overflow-hidden flex flex-col text-left">
+                        <div className="p-3 bg-[#f8fafc] border-b border-[#e2e8f0] flex justify-between items-center">
+                          <span className="text-xs font-bold text-[#071d37]">Alertas</span>
+                          {unreadCount > 0 && (
+                            <button onClick={() => marcarComoLeidas()} className="text-[10px] text-[#005684] hover:underline cursor-pointer">
+                              Marcar leídas
+                            </button>
+                          )}
+                        </div>
+                        <div className="max-h-56 overflow-y-auto flex flex-col">
+                          {notificaciones.length === 0 ? (
+                            <div className="p-4 text-center text-[11px] text-gray-500">Estás al día.</div>
+                          ) : (
+                            notificaciones.map((n) => (
+                              <div key={n.id} className={`p-3 border-b border-gray-100 flex flex-col gap-1 hover:bg-gray-50 transition ${!n.leido ? 'bg-[#f0f9ff]' : ''}`}>
+                                <span className="text-[11px] font-bold text-[#071d37]">{n.titulo}</span>
+                                <span className="text-[10px] text-gray-500 line-clamp-2">{n.descripcion}</span>
+                              </div>
+                            ))
+                          )}
+                        </div>
+                        <Link to="/dashboard/admin-notificaciones" className="p-2 text-center text-[10px] font-bold text-[#005684] bg-gray-50 hover:bg-gray-100 transition">
+                          Ver todas
+                        </Link>
+                      </div>
+                    )}
+                  </div>
+
+                  <Link to={getDashboardPath()} className="rounded-md bg-[#005684] px-2 py-1.5 text-[10px] font-bold text-white transition hover:bg-[#00456a] shadow-sm flex-shrink-0">
+                    Panel
+                  </Link>
+
+                  <button onClick={handleLogout} type="button" className="rounded-md bg-red-50 px-2 py-1.5 text-[10px] font-bold text-red-600 border border-red-200 transition hover:bg-red-100 flex-shrink-0">
+                    Salir
+                  </button>
+
+                  <div className="w-7 h-7 rounded-full overflow-hidden border border-gray-200 bg-gray-50 flex-shrink-0">
+                    <img src={getAvatar()} className="w-full h-full object-cover" alt="Avatar" />
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <Link to="/login" className="flex items-center gap-1.5 px-2.5 py-1.5 bg-gray-50 border border-gray-200 rounded-lg shadow-sm active:bg-gray-100 transition-all text-gray-600">
+                    <div className="w-4 h-4 rounded-full overflow-hidden flex items-center justify-center flex-shrink-0">
+                      <img src={Icons.PersonIcon} className="w-full h-full opacity-70" alt="Login" />
+                    </div>
+                    <span className="text-[10px] font-extrabold tracking-tight">Ingresar</span>
+                  </Link>
+                  <Link to="/signup">
+                    <button className="bg-[#005684] text-white rounded-lg px-2.5 py-1.5 text-[10px] font-bold flex items-center shadow-sm hover:bg-[#004266] transition flex-shrink-0 whitespace-nowrap">
+                      Registro
+                    </button>
+                  </Link>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="flex items-center w-full gap-2 !overflow-visible">
+            <button className="flex items-center justify-center gap-1.5 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 hover:bg-gray-100 transition-colors flex-shrink-0" onClick={onFilterClick} type="button">
+              <img src={Icons.iconFiltrosUrl} className="w-4 h-4" alt="Filtros" />
+              <span className="bg-[#005684] text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full">3</span>
+            </button>
+
+            <div className="flex items-center bg-gray-50 rounded-lg px-3 py-2 flex-1 min-w-0 border border-gray-200 focus-within:border-[#005684] transition-all">
+              <img src={Icons.SearchIcon} className="w-3.5 h-3.5 opacity-50 mr-2 flex-shrink-0" alt="Buscar" />
+              <input
+                type="text"
+                placeholder={searchPlaceholder}
+                onChange={onSearchChange}
+                className="bg-transparent border-none outline-none text-xs w-full text-gray-700 placeholder-gray-400"
+              />
+            </div>
+          </div>
+        </header>
       </div>
 
-      {/* MODAL EXPULSIÓN */}
+      {/* ========================================================================= */}
+      {/* 3. MODAL DE EXPULSIÓN GLOBAL (SE MUESTRA EN AMBAS VERSIONES)              */}
+      {/* ========================================================================= */}
       {modalExpulsion && (
-        <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in">
+        <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-fade-in">
           <div className="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl border border-gray-100 flex flex-col items-center text-center gap-5 transform transition-all scale-100">
-            <div className="h-16 w-16 rounded-2xl bg-amber-50 text-amber-500 border border-amber-200 flex items-center justify-center text-3xl shadow-sm">
+            <div className="h-16 w-16 rounded-2xl bg-amber-50 text-amber-500 border border-amber-200/60 flex items-center justify-center text-3xl shadow-sm">
               🛡️
             </div>
             <div className="flex flex-col gap-2">
@@ -324,13 +430,13 @@ export function Header({ onSearchChange, onFilterClick, searchPlaceholder = "Cau
             </div>
             <button
               onClick={handleAceptarExpulsion}
-              className="w-full py-3 px-4 bg-[#005684] hover:bg-[#004266] text-white font-bold text-xs rounded-xl shadow-md transition-all cursor-pointer"
+              className="w-full py-3 px-4 bg-[#005684] hover:bg-[#004266] text-white font-bold text-xs rounded-xl shadow-md hover:shadow-lg transition-all cursor-pointer active:scale-95"
             >
               Entendido, ir al Login
             </button>
           </div>
         </div>
       )}
-    </header>
+    </>
   );
 }
