@@ -16,7 +16,20 @@ type PriorityFilter = 'todas' | 'alta' | 'media' | 'baja';
 export function FoundationProfile() {
   const { id } = useParams<{ id: string }>();
   const [priorityFilter, setPriorityFilter] = useState<PriorityFilter>('todas');
-  
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setIsAuthenticated(!!session);
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setIsAuthenticated(!!session);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
   // Estados de datos Supabase
   const [fundacion, setFundacion] = useState<any>(null);
   const [necesidades, setNecesidades] = useState<any[]>([]);
@@ -582,7 +595,10 @@ export function FoundationProfile() {
             <p className="mt-2 mb-0 text-[15px] text-[#cbd5e1]">Suma tu organización a la red nacional y visibiliza necesidades verificadas de forma transparente.</p>
           </div>
           <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
-            <Link to="/SignUp" className="rounded-lg bg-[#FFFFFF] px-6 py-3 text-center text-[15px] font-bold !text-black no-underline shadow-md whitespace-nowrap">Registrarme ahora</Link>
+          {!isAuthenticated && (
+              <Link to="/SignUp" className="rounded-lg bg-[#FFFFFF] px-6 py-3 text-center text-[15px] font-bold !text-black no-underline shadow-md whitespace-nowrap">Registrarme ahora</Link>
+            )}
+            
             <Link to="/" className="rounded-lg bg-[#007BB9] border border-white/20 px-6 py-3 text-center text-[15px] font-bold !text-white no-underline whitespace-nowrap">Volver al inicio</Link>
           </div>
         </div>

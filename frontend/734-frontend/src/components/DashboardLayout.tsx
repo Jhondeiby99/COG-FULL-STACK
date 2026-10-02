@@ -229,15 +229,26 @@ export function DashboardLayout() {
           <div className="flex flex-col gap-2">
             <span className="text-[11px] font-extrabold text-[#94a3b8] uppercase tracking-wider">Sistema</span>
             <nav className="flex flex-col gap-1">
-              <Link to="/dashboard/ajustes" className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition ${isActive('/ajustes') ? 'bg-[#005684] text-white shadow-sm' : 'text-[#64748b] hover:bg-gray-50 font-semibold'}`}><span>⚙️️</span> Seguridad</Link>
+              <Link to="/dashboard/ajustes" className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition ${isActive('/ajustes') ? 'bg-[#005684] text-white shadow-sm' : 'text-[#64748b] hover:bg-gray-50 font-semibold'}`}><span>⚙</span> Seguridad</Link>
               <Link to="/dashboard/admin-notificaciones" className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition ${isActive('/admin-notificaciones') ? 'bg-[#005684] text-white shadow-sm' : 'text-[#64748b] hover:bg-gray-50 font-semibold'}`}><span>🔔</span> Notificaciones</Link>
             </nav>
           </div>
         </div>
 
-        <div className="pt-4 border-t border-gray-100">
-          <button onClick={handleLogout} className="flex items-center gap-2 text-red-600 hover:text-red-700 text-xs font-bold transition w-full px-3 py-2 rounded-xl hover:bg-red-50 cursor-pointer">
-            <span><img src={Icons.LogoutIcon} alt="Cerrar sesión" /></span> Cerrar Sesión
+        {/* CONTENEDOR DE ACCIONES INFERIORES: VOLVER A HOME Y CERRAR SESIÓN */}
+        <div className="mt-auto pt-6 flex flex-col gap-2 border-t border-[#e2e8f0]">
+          <Link 
+            to="/" 
+            className="flex items-center justify-center gap-2 text-[#005684] bg-white border border-[#dbeafe] hover:bg-[#eef6ff] hover:border-[#bae6fd] shadow-sm text-xs font-bold transition w-full px-3 py-2.5 rounded-xl cursor-pointer"
+          >
+            <span>🌍</span> Ir al Sitio Público
+          </Link>
+          
+          <button 
+            onClick={handleLogout} 
+            className="flex items-center justify-center gap-2 text-red-600 bg-transparent hover:bg-red-50 text-xs font-bold transition w-full px-3 py-2.5 rounded-xl cursor-pointer"
+          >
+            <span><img src={Icons.LogoutIcon} alt="Cerrar sesión" className="w-4 h-4" /></span> Cerrar Sesión
           </button>
         </div>
       </aside>
@@ -328,7 +339,7 @@ export function DashboardLayout() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-fade-in">
           <div className="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl border border-gray-100 flex flex-col items-center text-center gap-5 transform transition-all scale-100">
             <div className="h-16 w-16 rounded-2xl bg-amber-50 text-amber-500 border border-amber-200/60 flex items-center justify-center text-3xl shadow-sm">
-              🛡️
+              🛡️️
             </div>
             <div className="flex flex-col gap-2">
               <h3 className="text-base font-extrabold text-[#071d37]">

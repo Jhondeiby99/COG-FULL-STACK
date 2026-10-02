@@ -47,7 +47,6 @@ export function Header({ onSearchChange, onFilterClick, searchPlaceholder = "Cau
             const { data: vol } = await supabase.from('voluntarios').select('nombre_completo, avatar_url').eq('id', session.user.id).maybeSingle();
             setProfileData({ name: vol?.nombre_completo || 'Voluntario', avatar: vol?.avatar_url, rol: perfil.rol });
           } else if (perfil.rol === 'administrador') {
-            // ⬇️ CONSULTA A LA NUEVA TABLA DE ADMINISTRADORES
             const { data: admin } = await supabase.from('administradores').select('nombre_completo, avatar_url').eq('id', session.user.id).maybeSingle();
             setProfileData({ name: admin?.nombre_completo || 'Administrador Global', avatar: admin?.avatar_url || null, rol: perfil.rol });
           }
@@ -68,8 +67,11 @@ export function Header({ onSearchChange, onFilterClick, searchPlaceholder = "Cau
     });
 
     const handleClickOutside = (event: MouseEvent) => {
-      if (notifRef.current && !notifRef.current.contains(event.target as Node)) setShowNotifs(false);
+      if (notifRef.current && !notifRef.current.contains(event.target as Node)) {
+        setShowNotifs(false);
+      }
     };
+    
     document.addEventListener("mousedown", handleClickOutside);
 
     return () => {
@@ -171,7 +173,8 @@ export function Header({ onSearchChange, onFilterClick, searchPlaceholder = "Cau
   };
 
   return (
-    <header className="home-header relative">
+    // Aseguramos que todo el header permita visibilidad de elementos absolutos y tenga un índice Z supremo
+    <header className="home-header relative !overflow-visible z-[9999]">
       <div className="header-left">
         <button className="btn-filtros" onClick={onFilterClick} type="button">
           <img src={Icons.iconFiltrosUrl} className="icon-svg" alt="Filtros" />
@@ -192,20 +195,28 @@ export function Header({ onSearchChange, onFilterClick, searchPlaceholder = "Cau
         </Link>
       </div>
 
-      <div className="header-right">
-        <div className="header-right-inicre flex items-center gap-4">
+      <div className="header-right !overflow-visible">
+        <div className="header-right-inicre flex items-center gap-4 !overflow-visible">
           {loading ? (
             <span className="text-xs text-gray-400">Cargando...</span>
           ) : user ? (
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 !overflow-visible">
               <span className="text-xs font-bold text-[#071d37] hidden md:inline">
                 Hola, {profileData?.name || 'Usuario'}
               </span>
 
-              {/* NOTIFICACIONES MEDIANTE HOOK */}
-              <div className="relative" ref={notifRef}>
-                <button onClick={() => setShowNotifs(!showNotifs)} className="relative p-2 bg-gray-100 hover:bg-gray-200 rounded-full transition cursor-pointer">
-                  🔔
+              {/* CONTENEDOR DE NOTIFICACIONES */}
+              <div className="relative flex items-center justify-center !overflow-visible" ref={notifRef}>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation(); // Evita conflictos con eventos del body
+                    setShowNotifs((prev) => !prev);
+                  }}
+                  className="relative p-2 hover:bg-gray-200 bg-gray-100 rounded-full transition cursor-pointer"
+                >
+                  <img src={Icons.CampanaIcon2} alt="Notificaciones" />
                   {unreadCount > 0 && (
                     <span className="absolute top-0 right-0 flex h-2.5 w-2.5">
                       <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
@@ -215,7 +226,8 @@ export function Header({ onSearchChange, onFilterClick, searchPlaceholder = "Cau
                 </button>
 
                 {showNotifs && (
-                  <div className="absolute right-0 mt-3 w-80 bg-white border border-[#e2e8f0] rounded-2xl shadow-xl z-50 overflow-hidden flex flex-col">
+                  // Usamos top-full mt-3 para anclarlo justo debajo del header
+                  <div className="absolute right-0 top-full mt-3 w-80 bg-white border border-[#e2e8f0] rounded-2xl shadow-2xl z-[99999] overflow-hidden flex flex-col text-left">
                     <div className="p-3 bg-[#f8fafc] border-b border-[#e2e8f0] flex justify-between items-center">
                       <span className="text-xs font-bold text-[#071d37]">Alertas de Plataforma</span>
                       {unreadCount > 0 && (
@@ -236,6 +248,9 @@ export function Header({ onSearchChange, onFilterClick, searchPlaceholder = "Cau
                         ))
                       )}
                     </div>
+                    <Link to="/dashboard/admin-notificaciones" className="p-2 text-center text-[11px] font-bold text-[#005684] bg-gray-50 hover:bg-gray-100 transition">
+                      Ver todas
+                    </Link>
                   </div>
                 )}
               </div>
@@ -270,7 +285,7 @@ export function Header({ onSearchChange, onFilterClick, searchPlaceholder = "Cau
       </div>
 
       {modalExpulsion && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-fade-in">
+        <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-fade-in">
           <div className="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl border border-gray-100 flex flex-col items-center text-center gap-5 transform transition-all scale-100">
             <div className="h-16 w-16 rounded-2xl bg-amber-50 text-amber-500 border border-amber-200/60 flex items-center justify-center text-3xl shadow-sm">
               🛡️
