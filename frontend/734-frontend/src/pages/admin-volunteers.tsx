@@ -262,12 +262,12 @@ export function AdminVolunteers() {
           >
             <span>📥</span> Exportar
           </button>
-          <button 
+          {/* <button 
             onClick={() => setModalOpen(true)}
             className="bg-[#0077b6] text-white px-5 py-2.5 rounded-xl text-sm font-bold hover:bg-[#005b8c] transition flex items-center gap-2 shadow-sm cursor-pointer"
           >
             <span>👤+</span> Invitar / Registrar Voluntario
-          </button>
+          </button> */}
         </div>
       </div>
 
@@ -442,7 +442,7 @@ export function AdminVolunteers() {
       </div>
 
       {/* MODAL INVITAR / REGISTRAR VOLUNTARIO */}
-      {modalOpen && (
+      {/* {modalOpen && (
         <div className="fixed inset-0 bg-[#071d37]/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl p-6 border border-[#e2e8f0] shadow-xl max-w-md w-full flex flex-col gap-4">
             <div className="flex justify-between items-center border-b border-[#e2e8f0] pb-3">
@@ -508,7 +508,7 @@ export function AdminVolunteers() {
             </form>
           </div>
         </div>
-      )}
+      )} */}
 
     </div>
   );

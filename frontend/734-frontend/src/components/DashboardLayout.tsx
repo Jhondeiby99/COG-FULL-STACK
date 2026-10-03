@@ -291,12 +291,12 @@ export function DashboardLayout() {
             </div>
           </div>
 
-          {(rol === 'administrador' || rol === 'admin') && (
+          {/* {(rol === 'administrador' || rol === 'admin') && (
             <div className="hidden md:flex items-center bg-[#f8fafc] border border-[#e2e8f0] rounded-xl px-3 py-2 w-60 gap-2">
               <span className="text-gray-400 text-xs"><img src={Icons.SearchIcon} alt="Buscar" /></span>
               <input type="text" placeholder="Buscar voluntarios..." className="bg-transparent text-xs w-full focus:outline-none" />
             </div>
-          )}
+          )} */}
 
           <div className="flex items-center gap-2 sm:gap-4 ml-auto">
             <div className="hidden sm:flex items-center gap-1 bg-gray-100 p-1 rounded-xl text-[11px] font-bold text-gray-600">

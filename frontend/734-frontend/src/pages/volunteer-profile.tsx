@@ -257,7 +257,7 @@ const handleContactSubmit = async (e: React.FormEvent) => {
                 <div>
                   <div className="flex items-center gap-3 mb-1">
                     <h1 className="text-2xl font-extrabold text-[#0f2a3f] tracking-tight">{voluntario.nombre_completo}</h1>
-                    {voluntario.is_verified ? (
+                    {/* {voluntario.is_verified ? (
                       <span className="inline-flex items-center gap-1.5 rounded-full bg-[#dcfce7] px-2.5 py-0.5 text-xs font-bold text-[#047857]">
                         <img src={Icons.IconVerify} alt="Verificada" className="h-3.5 w-3.5" /> Verificada Oficial
                       </span>
@@ -265,7 +265,7 @@ const handleContactSubmit = async (e: React.FormEvent) => {
                       <span className="inline-flex items-center gap-1.5 rounded-full bg-[#fef3c7] px-2.5 py-0.5 text-xs font-bold text-[#b45309]">
                         En Revisión
                       </span>
-                    )}
+                    )} */}
                   </div>
                   <p className="text-sm font-bold text-[#005684]">{voluntario.profesion || 'Voluntario Activo'}</p>
                   <div className="flex items-center gap-4 mt-2 text-xs font-medium text-[#64748b]">
@@ -493,9 +493,9 @@ const handleContactSubmit = async (e: React.FormEvent) => {
                 </h3>
                 <ul className="flex flex-col gap-3 text-[13px] text-[#4a5568] font-medium">
                   <li className="flex items-start gap-2">
-                    <img src={Icons.CheckVerifyIcon} className="h-4 w-4 mt-0.5" alt="Check" /> Identidad verificada con documento oficial
+                    <img src={Icons.CheckVerifyIcon} className="h-4 w-4 mt-0.5" alt="Check" /> Datos del voluntario Completos
                   </li>
-                  <li className="flex items-start gap-2">
+                  {/* <li className="flex items-start gap-2">
                     <img src={Icons.CheckVerifyIcon} className="h-4 w-4 mt-0.5" alt="Check" /> Registro profesional confirmado
                   </li>
                   <li className="flex items-start gap-2">
@@ -503,15 +503,15 @@ const handleContactSubmit = async (e: React.FormEvent) => {
                   </li>
                   <li className="flex items-start gap-2">
                     <img src={Icons.CheckVerifyIcon} className="h-4 w-4 mt-0.5" alt="Check" /> Protocolo de Protección a Menores firmado
-                  </li>
+                  </li> */}
                 </ul>
-                <div className="mt-5 bg-[#eef8ff] border border-[#bae6fd] rounded-xl p-4 flex items-center gap-3">
+                {/* <div className="mt-5 bg-[#eef8ff] border border-[#bae6fd] rounded-xl p-4 flex items-center gap-3">
                   <div className="h-10 w-10 bg-white rounded-full flex items-center justify-center text-[#0284c7] shadow-sm shrink-0">🛡️</div>
                   <div>
                     <p className="text-xs font-bold text-[#0369a1]">100% Voluntaria Segura</p>
                     <p className="text-[10px] text-[#0284c7]">Acreditada recientemente</p>
                   </div>
-                </div>
+                </div> */}
               </section>
 
               {/* Bloques Libres Dinámicos */}

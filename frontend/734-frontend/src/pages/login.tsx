@@ -16,46 +16,81 @@ export function Login() {
     setLoading(true);
     setError(null);
 
-    const { data, error } = await supabase.auth.signInWithPassword({
+    // 1. Autenticación básica con Supabase Auth
+    const { data, error: authError } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
 
-    if (error) {
+    if (authError || !data.user) {
       setError('Correo o contraseña incorrectos.');
       setLoading(false);
       return;
     }
 
-    if (data.user) {
-      const ua = navigator.userAgent;
-      let browserName = "Web";
-      if (ua.includes("Firefox")) browserName = "Firefox";
-      else if (ua.includes("Edg")) browserName = "Edge";
-      else if (ua.includes("Chrome")) browserName = "Chrome";
-      else if (ua.includes("Safari")) browserName = "Safari";
+    // 2. VALIDACIÓN ESTRICTA DE ROL (Verificar en la tabla perfiles)
+    const { data: perfilData, error: perfilError } = await supabase
+      .from('perfiles')
+      .select('rol')
+      .eq('id', data.user.id)
+      .maybeSingle();
 
-      const esMovil = /Mobile|Android|iP(ad|hone)/.test(ua);
-      const dispositivoInfo = `${esMovil ? 'Móvil' : 'Escritorio'} - ${browserName} (${navigator.platform})`;
-      const zonaHoraria = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    if (perfilError || !perfilData) {
+      await supabase.auth.signOut();
+      setError('No se encontró un perfil cívico asociado a este correo.');
+      setLoading(false);
+      return;
+    }
 
-      const { data: sessionData } = await supabase
-        .from('sesiones_usuario')
-        .insert([{
-          user_id: data.user.id,
-          dispositivo: dispositivoInfo,
-          ubicacion: zonaHoraria,
-          ip_o_sistema: 'Red Protegida',
-          es_actual: true
-        }])
-        .select('id')
-        .single();
+    const rolUsuario = perfilData.rol?.toLowerCase(); // 'voluntario', 'fundacion', o 'administrador'
 
-      if (sessionData) {
-        localStorage.setItem('db_session_id', sessionData.id);
+    // 3. Comprobación cruzada según la pestaña seleccionada
+    // Nota: Permitimos que el administrador ingrese sin restricciones por si necesita soporte.
+    if (rolUsuario !== 'administrador') {
+      if (activeUserType === 'voluntario' && rolUsuario !== 'voluntario') {
+        await supabase.auth.signOut();
+        setError('Esta cuenta pertenece a una Fundación. Por favor selecciona la pestaña "Fundación / ONG".');
+        setLoading(false);
+        return;
+      }
+
+      if (activeUserType === 'fundacion' && rolUsuario !== 'fundacion') {
+        await supabase.auth.signOut();
+        setError('Esta cuenta pertenece a un Voluntario. Por favor selecciona la pestaña "Voluntario / Donante".');
+        setLoading(false);
+        return;
       }
     }
 
+    // 4. Registro de Sesión Activa (Seguridad multipantalla)
+    const ua = navigator.userAgent;
+    let browserName = "Web";
+    if (ua.includes("Firefox")) browserName = "Firefox";
+    else if (ua.includes("Edg")) browserName = "Edge";
+    else if (ua.includes("Chrome")) browserName = "Chrome";
+    else if (ua.includes("Safari")) browserName = "Safari";
+
+    const esMovil = /Mobile|Android|iP(ad|hone)/.test(ua);
+    const dispositivoInfo = `${esMovil ? 'Móvil' : 'Escritorio'} - ${browserName} (${navigator.platform})`;
+    const zonaHoraria = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+    const { data: sessionData } = await supabase
+      .from('sesiones_usuario')
+      .insert([{
+        user_id: data.user.id,
+        dispositivo: dispositivoInfo,
+        ubicacion: zonaHoraria,
+        ip_o_sistema: 'Red Protegida',
+        es_actual: true
+      }])
+      .select('id')
+      .single();
+
+    if (sessionData) {
+      localStorage.setItem('db_session_id', sessionData.id);
+    }
+
+    setLoading(false);
     navigate('/');
   };
 
@@ -140,21 +175,20 @@ export function Login() {
               <label className="remember-me">
                 <input type="checkbox" /> Recordar sesión
               </label>
-              {/* Enlace conectado a la ruta de recuperación */}
               <Link to="/forgot-password" className="forgot-password">¿Olvidaste tu contraseña?</Link>
             </div>
 
             <button type="submit" className="btn-primary" disabled={loading}>
-              {loading ? 'Ingresando...' : 'Iniciar Sesión en 7:34 AM'} <span>→</span>
+              {loading ? 'Verificando perfil...' : 'Iniciar Sesión en 7:34 AM'} <span>→</span>
             </button>
           </form>
           
-          <div className="divider"><span>O CONTINÚA CON</span></div>
+          {/* <div className="divider"><span>O CONTINÚA CON</span></div>
 
           <div className="alt-login-buttons">
             <button className="btn-outline"><span className="icon">G</span> Google</button>
             <button className="btn-outline"><span className="icon">📄</span> Firma / RUT</button>
-          </div>
+          </div> */}
 
           <div className="security-banner">
             <div className="shield-icon">🛡️</div>
