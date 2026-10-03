@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 
 export interface Voluntario {
@@ -11,12 +12,13 @@ export interface Voluntario {
   hours: string;
   activity: string;
   status: string;
+  disponibilidad_activa: boolean;
+  franjas_horarias: any;
   statusBg?: string;
   statusText?: string;
   dotColor?: string;
 }
 
-// Datos de respaldo idénticos a la maqueta para garantizar fidelidad si la BD está en siembra o vacía
 const MOCK_VOLUNTARIOS: Voluntario[] = [
   {
     id: '1',
@@ -27,7 +29,9 @@ const MOCK_VOLUNTARIOS: Voluntario[] = [
     location: 'Medellín, Antioquia',
     hours: '142 h donadas en campo',
     activity: 'Última guardia: Ayer',
-    status: 'Disponible',
+    status: 'Disponible (Con Franjas)',
+    disponibilidad_activa: true,
+    franjas_horarias: { manana: { lun: true, mar: true } },
     statusBg: 'bg-[#dcfce7]',
     statusText: 'text-[#166534]',
     dotColor: 'bg-[#16a34a]'
@@ -41,7 +45,9 @@ const MOCK_VOLUNTARIOS: Voluntario[] = [
     location: 'Bogotá D.C.',
     hours: '88 h donadas en campo',
     activity: 'Módulo Hábitat',
-    status: 'Fines de Semana',
+    status: 'Disponible (Con Franjas)',
+    disponibilidad_activa: true,
+    franjas_horarias: { tarde: { sab: true, dom: true } },
     statusBg: 'bg-[#e0e7ff]',
     statusText: 'text-[#3730a3]',
     dotColor: 'bg-[#4f46e5]'
@@ -55,42 +61,17 @@ const MOCK_VOLUNTARIOS: Voluntario[] = [
     location: 'Cali, Valle',
     hours: '210 h donadas en campo',
     activity: 'Asignado a: Misión Cordillera',
-    status: 'En Brigada Activa',
-    statusBg: 'bg-[#dbeafe]',
-    statusText: 'text-[#1e40af]',
-    dotColor: 'bg-[#2563eb]'
-  },
-  {
-    id: '4',
-    name: 'Lic. Marcela Zuluaga',
-    avatar: 'https://i.pravatar.cc/150?img=44',
-    specialty: 'Psicóloga Comunitaria',
-    certification: 'Tarjeta Colpsic',
-    location: 'Manizales, Caldas',
-    hours: '64 h donadas en campo',
-    activity: 'Atención a Víctimas',
-    status: 'Disponible',
-    statusBg: 'bg-[#dcfce7]',
-    statusText: 'text-[#166534]',
-    dotColor: 'bg-[#16a34a]'
-  },
-  {
-    id: '5',
-    name: 'Carlos Mario Silva',
-    avatar: 'https://i.pravatar.cc/150?img=33',
-    specialty: 'Rescatista',
-    certification: 'Cruz Roja Certificado',
-    location: 'Barranquilla, Atlántico',
-    hours: '120 h donadas en campo',
-    activity: 'Misión Costa Norte',
-    status: 'Disponible',
-    statusBg: 'bg-[#dcfce7]',
-    statusText: 'text-[#166534]',
-    dotColor: 'bg-[#16a34a]'
+    status: 'Inactivo',
+    disponibilidad_activa: false,
+    franjas_horarias: null,
+    statusBg: 'bg-[#f1f5f9]',
+    statusText: 'text-[#64748b]',
+    dotColor: 'bg-[#94a3b8]'
   }
 ];
 
 export function AdminVolunteers() {
+  const navigate = useNavigate();
   const [voluntarios, setVoluntarios] = useState<Voluntario[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   
@@ -103,27 +84,36 @@ export function AdminVolunteers() {
   const [paginaActual, setPaginaActual] = useState<number>(1);
   const itemsPorPagina = 5;
 
-  // Modal para Invitar / Registrar
-  const [modalOpen, setModalOpen] = useState<boolean>(false);
-  const [nuevoNombre, setNuevoNombre] = useState<string>('');
-  const [nuevaEspecialidad, setNuevaEspecialidad] = useState<string>('');
-  const [nuevaCiudad, setNuevaCiudad] = useState<string>('');
+  // Control del Menú Desplegable (Opciones de cada fila)
+  const [menuAbierto, setMenuAbierto] = useState<string | null>(null);
+
+  useEffect(() => {
+    const handleClickOutside = () => setMenuAbierto(null);
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, []);
 
   useEffect(() => {
     cargarVoluntarios();
   }, []);
 
-  const getStatusStyles = (status?: string | null) => {
-    switch (status) {
-      case 'Disponible':
-        return { statusBg: 'bg-[#dcfce7]', statusText: 'text-[#166534]', dotColor: 'bg-[#16a34a]' };
-      case 'Fines de Semana':
-        return { statusBg: 'bg-[#e0e7ff]', statusText: 'text-[#3730a3]', dotColor: 'bg-[#4f46e5]' };
-      case 'En Brigada Activa':
-        return { statusBg: 'bg-[#dbeafe]', statusText: 'text-[#1e40af]', dotColor: 'bg-[#2563eb]' };
-      default:
-        return { statusBg: 'bg-[#dcfce7]', statusText: 'text-[#166534]', dotColor: 'bg-[#16a34a]' };
+  const getStatusStyles = (activa: boolean, franjas: any) => {
+    if (!activa) {
+      return { status: 'Inactivo', statusBg: 'bg-[#f1f5f9]', statusText: 'text-[#64748b]', dotColor: 'bg-[#94a3b8]' };
     }
+
+    // Verificar si tiene franjas horarias configuradas
+    const tieneFranjas = franjas && typeof franjas === 'object' && (
+      Object.values(franjas.manana || {}).some(Boolean) ||
+      Object.values(franjas.tarde || {}).some(Boolean) ||
+      Object.values(franjas.noche || {}).some(Boolean)
+    );
+
+    if (tieneFranjas) {
+      return { status: 'Con Franjas Horarias', statusBg: 'bg-[#dcfce7]', statusText: 'text-[#166534]', dotColor: 'bg-[#16a34a]' };
+    }
+
+    return { status: 'Disponible (Sin Franjas)', statusBg: 'bg-[#e0e7ff]', statusText: 'text-[#3730a3]', dotColor: 'bg-[#4f46e5]' };
   };
 
   const cargarVoluntarios = async () => {
@@ -134,26 +124,24 @@ export function AdminVolunteers() {
         .select('*');
 
       if (error || !data || data.length === 0) {
-        // En caso de error o tabla sin registros, se usan los datos de respaldo de la maqueta
         setVoluntarios(MOCK_VOLUNTARIOS);
       } else {
-        // Mapeo dinámico de campos de Supabase a la estructura de la interfaz visual
         const mapeados: Voluntario[] = data.map((vol: any, idx: number) => {
-          const status = vol.disponibilidad_estado || vol.estado || (vol.disponibilidad_activa ? 'Disponible' : 'Fines de Semana');
-          const styles = getStatusStyles(status);
+          const activa = vol.disponibilidad_activa ?? true;
+          const franjas = vol.franjas_horarias;
+          const styles = getStatusStyles(activa, franjas);
 
           return {
             id: vol.id || String(idx + 1),
-            name: vol.nombre_completo || vol.nombre || `Voluntario ${idx + 1}`,
-            avatar: vol.foto_url || vol.avatar || `https://i.pravatar.cc/150?img=${(idx % 50) + 1}`,
-            specialty: vol.profesion || vol.especialidad || 'Atención Social',
-            certification: vol.certificacion || vol.acreditacion || 'Verificado Plataforma',
-            location: vol.ciudad_residencia || vol.ciudad || vol.ubicacion || 'Colombia',
-            hours: typeof vol.horas_donadas === 'number' 
-              ? `${vol.horas_donadas} h donadas en campo` 
-              : (vol.horas_donadas || '40 h donadas en campo'),
-            activity: vol.ultima_actividad || 'Disponible para misión',
-            status: status,
+            name: vol.nombre_completo || `Voluntario ${idx + 1}`,
+            avatar: vol.avatar_url || `https://i.pravatar.cc/150?img=${(idx % 50) + 1}`,
+            specialty: vol.profesion || 'Atención Social',
+            certification: 'Verificado Plataforma',
+            location: vol.ciudad_base || vol.ubicacion || 'Colombia',
+            hours: `${vol.horas_totales_donadas || 0} h donadas`,
+            activity: activa ? 'Disponible para misión' : 'Perfil Inactivo',
+            disponibilidad_activa: activa,
+            franjas_horarias: franjas,
             ...styles
           };
         });
@@ -167,7 +155,7 @@ export function AdminVolunteers() {
     }
   };
 
-  // Filtrado dinámico
+  // Filtrado avanzado cruzado con franjas horarias y disponibilidad activa
   const voluntariosFiltrados = voluntarios.filter((vol) => {
     const coincideBusqueda = 
       vol.name.toLowerCase().includes(busqueda.toLowerCase()) ||
@@ -177,52 +165,80 @@ export function AdminVolunteers() {
     const coincideEspecialidad = 
       filtroEspecialidad === 'todas' || vol.specialty === filtroEspecialidad;
 
-    const coincideDisponibilidad = 
-      filtroDisponibilidad === 'cualquiera' || vol.status === filtroDisponibilidad;
+    let coincideDisponibilidad = true;
+    if (filtroDisponibilidad === 'inactivo') {
+      coincideDisponibilidad = !vol.disponibilidad_activa;
+    } else if (filtroDisponibilidad === 'con_franjas') {
+      const tiene = vol.franjas_horarias && (
+        Object.values(vol.franjas_horarias.manana || {}).some(Boolean) ||
+        Object.values(vol.franjas_horarias.tarde || {}).some(Boolean) ||
+        Object.values(vol.franjas_horarias.noche || {}).some(Boolean)
+      );
+      coincideDisponibilidad = vol.disponibilidad_activa && tiene;
+    } else if (filtroDisponibilidad === 'activo_general') {
+      coincideDisponibilidad = vol.disponibilidad_activa;
+    }
 
     return coincideBusqueda && coincideEspecialidad && coincideDisponibilidad;
   });
 
-  // Cálculo de paginación
   const totalItems = voluntariosFiltrados.length;
   const totalPaginas = Math.ceil(totalItems / itemsPorPagina) || 1;
   const indiceInicio = (paginaActual - 1) * itemsPorPagina;
   const voluntariosPaginados = voluntariosFiltrados.slice(indiceInicio, indiceInicio + itemsPorPagina);
 
-  // Lista de especialidades únicas para el selector de filtro
   const listaEspecialidades = Array.from(new Set(voluntarios.map(v => v.specialty)));
 
-  // Manejador para invitar/crear voluntario en Supabase
-  const handleCrearVoluntario = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!nuevoNombre.trim()) return;
+  const handleExportar = () => {
+    const cabeceras = ['ID', 'Nombre', 'Especialidad', 'Ubicación', 'Horas', 'Estado'];
+    const filas = voluntariosFiltrados.map(v => 
+      `"${v.id}","${v.name}","${v.specialty}","${v.location}","${v.hours}","${v.status}"`
+    );
+    const csvContent = [cabeceras.join(','), ...filas].join('\n');
+    
+    const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `Directorio_Voluntarios_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
+  // ACCIÓN DE INACTIVAR / ACTIVAR EN BASE DE DATOS Y FRONTEND
+  const handleToggleEstado = async (voluntario: Voluntario) => {
+    const nuevoEstadoActivo = !voluntario.disponibilidad_activa;
+
+    // Actualización optimista local
+    setVoluntarios(prev => prev.map(v => {
+      if (v.id === voluntario.id) {
+        const updatedStyles = getStatusStyles(nuevoEstadoActivo, v.franjas_horarias);
+        return {
+          ...v,
+          disponibilidad_activa: nuevoEstadoActivo,
+          activity: nuevoEstadoActivo ? 'Disponible para misión' : 'Perfil Inactivo',
+          ...updatedStyles
+        };
+      }
+      return v;
+    }));
+
+    // Persistencia real en Supabase
     try {
-      const nuevoObj = {
-        nombre_completo: nuevoNombre,
-        profesion: nuevaEspecialidad || 'General',
-        ciudad_residencia: nuevaCiudad || 'Bogotá D.C.',
-        certificacion: 'Verificación Inicial',
-        horas_donadas: 0,
-        disponibilidad_estado: 'Disponible',
-        disponibilidad_activa: true
-      };
-
       const { error } = await supabase
         .from('voluntarios')
-        .insert([nuevoObj]);
+        .update({ disponibilidad_activa: nuevoEstadoActivo })
+        .eq('id', voluntario.id);
 
       if (error) {
-        alert('Error al guardar en Supabase: ' + error.message);
-      } else {
-        await cargarVoluntarios();
-        setModalOpen(false);
-        setNuevoNombre('');
-        setNuevaEspecialidad('');
-        setNuevaCiudad('');
+        console.error("Error al actualizar la disponibilidad en Supabase:", error.message);
+        alert("No se pudo actualizar el estado en la base de datos.");
+        // Revertir si hay error
+        cargarVoluntarios();
       }
-    } catch (err) {
-      console.error('Error al registrar:', err);
+    } catch (e) {
+      console.error("Error de red al actualizar:", e);
     }
   };
 
@@ -257,17 +273,11 @@ export function AdminVolunteers() {
         
         <div className="flex items-center gap-3 shrink-0">
           <button 
-            onClick={() => window.print()}
+            onClick={handleExportar}
             className="bg-white border border-[#e2e8f0] text-[#475569] px-4 py-2.5 rounded-xl text-xs font-bold hover:bg-gray-50 transition flex items-center gap-2 shadow-sm cursor-pointer"
           >
-            <span>📥</span> Exportar
+            <span>📥</span> Exportar Datos CSV
           </button>
-          {/* <button 
-            onClick={() => setModalOpen(true)}
-            className="bg-[#0077b6] text-white px-5 py-2.5 rounded-xl text-sm font-bold hover:bg-[#005b8c] transition flex items-center gap-2 shadow-sm cursor-pointer"
-          >
-            <span>👤+</span> Invitar / Registrar Voluntario
-          </button> */}
         </div>
       </div>
 
@@ -310,16 +320,16 @@ export function AdminVolunteers() {
             }}
             className="bg-white border border-[#e2e8f0] rounded-xl px-3 py-2.5 text-xs font-semibold text-[#475569] focus:outline-none cursor-pointer w-full sm:w-auto"
           >
-            <option value="cualquiera">📅 Cualquier disponibilidad</option>
-            <option value="Disponible">Disponible</option>
-            <option value="Fines de Semana">Fines de Semana</option>
-            <option value="En Brigada Activa">En Brigada Activa</option>
+            <option value="cualquiera">📅 Cualquier estado</option>
+            <option value="activo_general">Activos (Disponibles)</option>
+            <option value="con_franjas">Con Franjas Horarias Definidas</option>
+            <option value="inactivo">Inactivos</option>
           </select>
         </div>
 
         <div className="hidden lg:flex items-center gap-2 border-l border-[#e2e8f0] pl-4 shrink-0">
           <span className="w-1.5 h-1.5 bg-[#10b981] rounded-full"></span>
-          <span className="text-xs text-[#64748b]">Total: <span className="font-bold text-[#071d37]">{voluntarios.length.toLocaleString('es-CO')}</span> voluntarios verificados</span>
+          <span className="text-xs text-[#64748b]">Total: <span className="font-bold text-[#071d37]">{voluntarios.length.toLocaleString('es-CO')}</span> verificados</span>
         </div>
       </div>
 
@@ -331,20 +341,22 @@ export function AdminVolunteers() {
           </div>
         ) : (
           voluntariosPaginados.map((vol, index) => (
-            <div key={vol.id || index} className="bg-white rounded-3xl p-4 sm:p-5 border border-[#e2e8f0] shadow-sm flex flex-col lg:flex-row lg:items-center justify-between gap-5 w-full">
+            <div key={vol.id || index} className={`bg-white rounded-3xl p-4 sm:p-5 border border-[#e2e8f0] shadow-sm flex flex-col lg:flex-row lg:items-center justify-between gap-5 w-full transition ${!vol.disponibilidad_activa ? 'opacity-70 bg-gray-50/50' : ''}`}>
               
               {/* Info Principal */}
               <div className="flex items-start gap-4 flex-1 min-w-0">
                 <div className="relative shrink-0 mt-1">
                   <img src={vol.avatar} alt={vol.name} className="w-12 h-12 sm:w-14 sm:h-14 rounded-full object-cover border border-[#e2e8f0]" />
-                  <div className="absolute -bottom-1 -right-1 bg-white rounded-full p-0.5">
-                    <span className="bg-[#10b981] text-white text-[8px] w-4 h-4 flex items-center justify-center rounded-full font-bold">✓</span>
-                  </div>
+                  {vol.disponibilidad_activa && (
+                    <div className="absolute -bottom-1 -right-1 bg-white rounded-full p-0.5">
+                      <span className="bg-[#10b981] text-white text-[8px] w-4 h-4 flex items-center justify-center rounded-full font-bold">✓</span>
+                    </div>
+                  )}
                 </div>
                 
                 <div className="flex flex-col min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-1.5">
-                    <h3 className="text-[14px] sm:text-[16px] font-extrabold text-[#071d37] truncate">{vol.name}</h3>
+                    <h3 className={`text-[14px] sm:text-[16px] font-extrabold truncate ${!vol.disponibilidad_activa ? 'text-[#64748b] line-through decoration-gray-300' : 'text-[#071d37]'}`}>{vol.name}</h3>
                     <span className="bg-[#eef2ff] text-[#4f46e5] text-[10px] font-bold px-2 py-0.5 rounded-md whitespace-nowrap">
                       {vol.specialty}
                     </span>
@@ -352,7 +364,7 @@ export function AdminVolunteers() {
                   
                   <div className="flex flex-wrap items-center gap-2 text-[11px] text-[#0284c7] font-semibold mb-1.5">
                     <span className="bg-[#f0f9ff] border border-[#bae6fd] px-2 py-0.5 rounded-md flex items-center gap-1">
-                      🛡️️ {vol.certification}
+                      🛡 {vol.certification}
                     </span>
                   </div>
 
@@ -366,28 +378,64 @@ export function AdminVolunteers() {
                 </div>
               </div>
 
-              {/* Estado y Acciones (Responsivo) */}
+              {/* Estado y Acciones */}
               <div className="flex flex-wrap sm:flex-nowrap items-center justify-between sm:justify-end gap-4 lg:gap-6 shrink-0 border-t lg:border-t-0 lg:border-l border-[#e2e8f0] pt-4 lg:pt-0 lg:pl-6 w-full lg:w-auto">
                 
-                <span className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold whitespace-nowrap ${vol.statusBg || 'bg-[#dcfce7]'} ${vol.statusText || 'text-[#166534]'}`}>
-                  <span className={`w-1.5 h-1.5 rounded-full ${vol.dotColor || 'bg-[#16a34a]'}`}></span>
+                <span className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold whitespace-nowrap ${vol.statusBg} ${vol.statusText}`}>
+                  <span className={`w-1.5 h-1.5 rounded-full ${vol.dotColor}`}></span>
                   {vol.status}
                 </span>
 
-                <div className="flex items-center justify-end gap-2 w-full sm:w-auto mt-2 sm:mt-0 ml-auto">
-                  <button className="bg-[#eef6ff] text-[#005684] px-3 sm:px-4 py-2 rounded-xl text-xs font-bold hover:bg-[#d4e7fe] transition flex items-center gap-1.5 border border-[#dbeafe] whitespace-nowrap cursor-pointer">
-                      Vista Pública <span>↗</span>
+                <div className="flex items-center justify-end gap-2 w-full sm:w-auto mt-2 sm:mt-0 ml-auto relative">
+                  <button 
+                    onClick={() => navigate(`/voluntario/${vol.id}`)}
+                    className="bg-[#eef6ff] text-[#005684] px-3 sm:px-4 py-2 rounded-xl text-xs font-bold hover:bg-[#d4e7fe] transition flex items-center gap-1.5 border border-[#dbeafe] whitespace-nowrap cursor-pointer"
+                  >
+                      Vista <span>↗</span>
                   </button>
-                  <button className="bg-white border border-[#e2e8f0] text-[#475569] px-3 sm:px-4 py-2 rounded-xl text-xs font-bold hover:bg-gray-50 transition flex items-center gap-1.5 cursor-pointer">
+                  <button 
+                    onClick={() => navigate(`/dashboard/voluntario/editar/${vol.id}`)}
+                    className="bg-white border border-[#e2e8f0] text-[#475569] px-3 sm:px-4 py-2 rounded-xl text-xs font-bold hover:bg-gray-50 transition flex items-center gap-1.5 cursor-pointer"
+                  >
                       ✏️ Editar
                   </button>
-                  <button className="text-[#94a3b8] hover:text-[#475569] px-1 font-bold text-lg cursor-pointer">
-                      ⋮
-                  </button>
+
+                  {/* Menú de Opciones (⋮) */}
+                  <div className="relative">
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setMenuAbierto(menuAbierto === vol.id ? null : vol.id);
+                      }}
+                      className="text-[#94a3b8] hover:text-[#475569] px-2 font-bold text-lg cursor-pointer flex items-center justify-center h-full"
+                    >
+                        ⋮
+                    </button>
+                    
+                    {menuAbierto === vol.id && (
+                      <div className="absolute right-0 top-full mt-2 w-48 bg-white border border-[#e2e8f0] rounded-xl shadow-xl z-50 overflow-hidden">
+                        <div className="px-4 py-2 text-[10px] font-bold text-[#94a3b8] uppercase tracking-wider bg-[#f8fafc] border-b border-[#e2e8f0]">
+                          Opciones de Perfil
+                        </div>
+                        <button 
+                          onClick={(e) => { 
+                            e.stopPropagation(); 
+                            handleToggleEstado(vol); 
+                            setMenuAbierto(null); 
+                          }}
+                          className="w-full text-left px-4 py-3 text-xs font-bold transition hover:bg-gray-50 flex items-center gap-2 text-[#475569]"
+                        >
+                          {!vol.disponibilidad_activa ? (
+                            <><span className="text-[#10b981] text-lg leading-none">●</span> Activar en BD</>
+                          ) : (
+                            <><span className="text-[#ef4444] text-lg leading-none">●</span> Inactivar en BD</>
+                          )}
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
-
               </div>
-
             </div>
           ))
         )}
@@ -440,75 +488,6 @@ export function AdminVolunteers() {
           Página {paginaActual} de {totalPaginas}
         </span>
       </div>
-
-      {/* MODAL INVITAR / REGISTRAR VOLUNTARIO */}
-      {/* {modalOpen && (
-        <div className="fixed inset-0 bg-[#071d37]/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl p-6 border border-[#e2e8f0] shadow-xl max-w-md w-full flex flex-col gap-4">
-            <div className="flex justify-between items-center border-b border-[#e2e8f0] pb-3">
-              <h3 className="text-base font-extrabold text-[#071d37]">Registrar Nuevo Voluntario</h3>
-              <button 
-                onClick={() => setModalOpen(false)}
-                className="text-gray-400 hover:text-gray-600 font-bold text-lg"
-              >
-                ✕
-              </button>
-            </div>
-
-            <form onSubmit={handleCrearVoluntario} className="flex flex-col gap-3">
-              <div>
-                <label className="text-[11px] font-bold text-[#475569] mb-1 block">Nombre Completo</label>
-                <input 
-                  type="text" 
-                  required
-                  placeholder="Ej. Dra. Sofía Ramírez"
-                  value={nuevoNombre}
-                  onChange={(e) => setNuevoNombre(e.target.value)}
-                  className="w-full bg-[#f8fafc] border border-[#e2e8f0] rounded-xl px-3 py-2 text-xs text-[#071d37] focus:outline-none"
-                />
-              </div>
-
-              <div>
-                <label className="text-[11px] font-bold text-[#475569] mb-1 block">Especialidad / Profesión</label>
-                <input 
-                  type="text" 
-                  placeholder="Ej. Encomiendas & Acopio"
-                  value={nuevaEspecialidad}
-                  onChange={(e) => setNuevaEspecialidad(e.target.value)}
-                  className="w-full bg-[#f8fafc] border border-[#e2e8f0] rounded-xl px-3 py-2 text-xs text-[#071d37] focus:outline-none"
-                />
-              </div>
-
-              <div>
-                <label className="text-[11px] font-bold text-[#475569] mb-1 block">Ciudad</label>
-                <input 
-                  type="text" 
-                  placeholder="Ej. Cali, Valle"
-                  value={nuevaCiudad}
-                  onChange={(e) => setNuevaCiudad(e.target.value)}
-                  className="w-full bg-[#f8fafc] border border-[#e2e8f0] rounded-xl px-3 py-2 text-xs text-[#071d37] focus:outline-none"
-                />
-              </div>
-
-              <div className="flex justify-end gap-2 mt-4 pt-3 border-t border-[#e2e8f0]">
-                <button 
-                  type="button"
-                  onClick={() => setModalOpen(false)}
-                  className="bg-[#f1f5f9] text-[#475569] px-4 py-2 rounded-xl text-xs font-bold hover:bg-[#e2e8f0] transition cursor-pointer"
-                >
-                  Cancelar
-                </button>
-                <button 
-                  type="submit"
-                  className="bg-[#0077b6] text-white px-5 py-2 rounded-xl text-xs font-bold hover:bg-[#005b8c] transition cursor-pointer"
-                >
-                  Guardar en Base de Datos
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )} */}
 
     </div>
   );
