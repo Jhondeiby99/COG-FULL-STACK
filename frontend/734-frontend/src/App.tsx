@@ -6,6 +6,7 @@ import { Login } from './pages/login';
 import { FoundationProfile } from './pages/foundation-profile';
 import { SignUp } from './pages/sign-up';
 import { VolunteerProfile } from './pages/volunteer-profile';
+import { Explore } from './pages/explore'; // <-- IMPORTACIÓN NUEVA
 import './styles/global.css';
 import './index.css';
 import { AccountSettings } from './pages/account-settings';
@@ -20,8 +21,6 @@ import { AccountNotifications } from './pages/account-notifications';
 import { ForgotPassword } from './pages/ForgotPassword';
 import { ResetPassword } from './pages/ResetPassword';
 
-// Componente opcional para proteger paneles exclusivos (Ej: Admin o Edición)
-// Reemplaza tu función ProtectedRoute en App.tsx por esta:
 function ProtectedRoute({ children, requiredRole }: { children: React.ReactNode; requiredRole?: string }) {
   const [authStatus, setAuthStatus] = useState<{ loading: boolean; session: boolean; role?: string }>({
     loading: true,
@@ -45,10 +44,8 @@ function ProtectedRoute({ children, requiredRole }: { children: React.ReactNode;
       }
     }
 
-    // 1. Revisión inicial al cargar la página
     supabase.auth.getSession().then(({ data: { session } }) => resolveSession(session));
 
-    // 2. VIGILANTE EN TIEMPO REAL: Si la sesión muere, expulsa al usuario al instante
     const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'SIGNED_OUT' || !session) {
         if (isMounted) setAuthStatus({ loading: false, session: false });
@@ -71,7 +68,6 @@ function ProtectedRoute({ children, requiredRole }: { children: React.ReactNode;
     );
   }
 
-  // Si se detecta que no hay sesión, expulsa inmediatamente a /login
   if (!authStatus.session) {
     return <Navigate to="/login" replace />;
   }
@@ -87,10 +83,9 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* ================================================================== */}
-        {/* RUTAS PÚBLICAS                                                   */}
-        {/* ================================================================== */}
+        {/* RUTAS PÚBLICAS */}
         <Route path="/" element={<Home />} />
+        <Route path="/explorar" element={<Explore />} /> {/* <-- RUTA NUEVA */}
         <Route path="/login" element={<Login />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
@@ -98,9 +93,7 @@ function App() {
         <Route path="/voluntario/:id" element={<VolunteerProfile />} />
         <Route path="/fundacion/:id" element={<FoundationProfile />} />
 
-        {/* ================================================================== */}
-        {/* RUTAS PRIVADAS / DASHBOARD                                         */}
-        {/* ================================================================== */}
+        {/* RUTAS PRIVADAS / DASHBOARD */}
         <Route path="/dashboard" element={<ProtectedRoute><DashboardLayout /></ProtectedRoute>}>
           <Route path="ajustes" element={<AccountSettings />} />
           <Route path="voluntario/editar/:id" element={<EditVolunteerProfile />} />

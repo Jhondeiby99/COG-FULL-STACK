@@ -342,6 +342,12 @@ export function EditVolunteerProfile() {
       </div>
     );
   }
+  // Descartar cambios y restaurar valores desde la BD
+  const handleDiscard = () => {
+    cargarDatosVoluntario();
+    setHasUnsavedChanges(false);
+    mostrarToast('Cambios descartados. Se restauraron los datos originales.');
+  };
 
   return (
     <div className="flex min-h-svh w-full bg-[#f8fafc] text-[#2d3748] font-sans pb-24 relative">    
@@ -865,23 +871,32 @@ export function EditVolunteerProfile() {
           </div>
         </div>
 
+        {/* SNACKBAR FLOTANTE (CAMBIOS SIN GUARDAR) */}
         {hasUnsavedChanges && (
-          <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 px-4 w-full max-w-2xl">
-            <div className="bg-[#0f2a3f] text-white rounded-2xl p-4 pr-5 shadow-2xl flex items-center justify-between border border-[#1e3a8a] w-full">
-              <p className="text-xs font-bold text-white">Cambios sin guardar detectados</p>
-              <div className="flex items-center gap-3">
+          <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 animate-fade-in-up px-4 w-full max-w-2xl">
+            <div className="bg-[#0f2a3f] text-white rounded-2xl p-4 pr-5 shadow-2xl flex flex-col sm:flex-row items-center gap-4 sm:gap-6 border border-[#1e3a8a] w-full">
+              <div className="flex items-center gap-3 w-full sm:w-auto">
+                <div className="h-10 w-10 rounded-full bg-[#0284c7]/20 flex items-center justify-center text-[#38bdf8] shrink-0">
+                  <span className="text-lg">📝</span>
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-white">Tienes cambios pendientes de publicación</p>
+                  <p className="text-[11px] text-[#94a3b8]">Las actualizaciones impactarán inmediatamente tu ficha de voluntario pública.</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3 ml-auto shrink-0 w-full sm:w-auto justify-end">
                 <button 
-                  onClick={() => setHasUnsavedChanges(false)}
-                  className="text-xs font-bold text-[#cbd5e1] hover:text-white px-3 py-2 cursor-pointer"
+                  onClick={handleDiscard}
+                  className="text-xs font-bold text-[#cbd5e1] hover:text-white px-3 py-2 transition cursor-pointer"
                 >
                   Descartar
                 </button>
                 <button 
                   onClick={handleSave}
                   disabled={saving}
-                  className="bg-[#0ea5e9] hover:bg-[#0284c7] text-white text-xs font-bold px-4 py-2 rounded-xl transition cursor-pointer"
+                  className="bg-[#005684] hover:bg-[#00456a] text-white text-xs font-bold px-5 py-2.5 rounded-xl shadow-md transition flex items-center gap-2 border border-[#0284c7] cursor-pointer disabled:opacity-50"
                 >
-                  {saving ? 'Guardando...' : '💾 Guardar Ficha'}
+                  {saving ? 'Guardando...' : 'Guardar y Publicar'}
                 </button>
               </div>
             </div>

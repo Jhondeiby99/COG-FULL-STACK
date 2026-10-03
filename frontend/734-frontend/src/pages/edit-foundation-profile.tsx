@@ -32,6 +32,7 @@ interface FundacionData {
   nit?: string | null;
   personeria_juridica?: string | null;
   ano_fundacion?: string | null;
+  descripcion?: string | null;
   mision?: string | null;
   vision?: string | null;
   departamento?: string | null;
@@ -72,6 +73,7 @@ export function EditFoundationProfile() {
   const [personeria, setPersoneria] = useState('');
   const [anoFundacion, setAnoFundacion] = useState('');
   
+  const [descripcion, setDescripcion] = useState('');
   const [mision, setMision] = useState('');
   const [vision, setVision] = useState('');
 
@@ -132,6 +134,7 @@ export function EditFoundationProfile() {
         setNit(fund.nit || '');
         setPersoneria(fund.personeria_juridica || '');
         setAnoFundacion(fund.ano_fundacion ? String(fund.ano_fundacion) : '');
+        setDescripcion(fund.descripcion || '');
         setMision(fund.mision || '');
         setVision(fund.vision || '');
         
@@ -199,6 +202,7 @@ export function EditFoundationProfile() {
         nit: nit,
         personeria_juridica: personeria,
         ano_fundacion: anoFundacion,
+        descripcion: descripcion,
         mision: mision,
         vision: vision,
         departamento: departamento,
@@ -351,6 +355,12 @@ export function EditFoundationProfile() {
       </div>
     );
   }
+  // Descartar cambios y restaurar valores desde la BD
+  const handleDiscard = () => {
+    cargarDatosFundacion();
+    setHasUnsavedChanges(false);
+    mostrarToast('Cambios descartados. Se restauraron los datos originales.');
+  };
 
   return (
     <div className="flex min-h-svh w-full bg-[#f8fafc] text-[#2d3748] font-sans pb-24 relative">    
@@ -546,6 +556,25 @@ export function EditFoundationProfile() {
                         </div>
                       </div>
                     </div>
+                    <div>
+                        <label className="text-[10px] font-extrabold text-[#94a3b8] uppercase block mb-2">Descripcion Fundacion</label>
+                        <div className="border border-[#e2e8f0] rounded-xl overflow-hidden focus-within:border-[#005684] transition">
+                        <div className="bg-[#f8fafc] border-b border-[#e2e8f0] px-3 py-1.5 flex items-center gap-3">
+                            <button type="button" className="text-xs font-bold text-[#475569] hover:text-[#071d37]">B</button>
+                            <button type="button" className="text-xs font-serif italic text-[#475569] hover:text-[#071d37]">I</button>
+                            <button type="button" className="text-xs text-[#475569] hover:text-[#071d37]">≡</button>
+                            <button type="button" className="text-xs text-[#475569] hover:text-[#071d37]">🔗</button>
+                            <span className="text-[10px] text-[#94a3b8] ml-auto">{descripcion.length} / 600 caracteres</span>
+                          </div>
+                          <textarea 
+                            value={descripcion} 
+                            onChange={(e) => { setDescripcion(e.target.value); markUnsaved(); }} 
+                            rows={4} 
+                            placeholder="Escriba aquí la misión institucional..."
+                            className="w-full p-3 text-xs text-[#071d37] outline-none resize-none bg-white leading-relaxed"
+                          />
+                        </div>
+                      </div>
                   </section>
 
                   {/* 04. UBICACIÓN Y RECEPCIÓN DE AYUDAS CON MAPA FUNCIONAL */}
@@ -1025,12 +1054,12 @@ export function EditFoundationProfile() {
                 </div>
               </div>
               <div className="flex items-center gap-3 ml-auto shrink-0 w-full sm:w-auto justify-end">
-                <button 
-                  onClick={() => setHasUnsavedChanges(false)}
-                  className="text-xs font-bold text-[#cbd5e1] hover:text-white px-3 py-2 transition cursor-pointer"
-                >
-                  Descartar
-                </button>
+              <button 
+                onClick={handleDiscard}
+                className="text-xs font-bold text-[#cbd5e1] hover:text-white px-3 py-2 transition cursor-pointer"
+              >
+                Descartar
+              </button>
                 <button 
                   onClick={handleSave}
                   disabled={saving}
