@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import * as Icons from "../assets/icons/index.ts";
@@ -9,6 +9,7 @@ interface Certificacion {
   entidad_folio: string;
   verificado: boolean;
   icono?: string;
+  archivo_url?: string;
 }
 
 interface HistorialMision {
@@ -60,17 +61,17 @@ export function EditVolunteerProfile() {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
 
-  // Estados de Carga y Feedback
+  const avatarInputRef = useRef<HTMLInputElement>(null);
+  const certInputRef = useRef<HTMLInputElement>(null);
+
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [showFirstVerificationModal, setShowFirstVerificationModal] = useState(false);
 
-  // ID del Voluntario
   const [volunteerId, setVolunteerId] = useState<string | null>(id || null);
 
-  // Campos del Formulario (Sincronización Total BD)
   const [disponibilidadActiva, setDisponibilidadActiva] = useState(true);
   const [nombreCompleto, setNombreCompleto] = useState('');
   const [titulo, setTitulo] = useState('');
@@ -79,17 +80,15 @@ export function EditVolunteerProfile() {
   const [ciudadBase, setCiudadBase] = useState('');
   const [radio, setRadio] = useState(35);
   const [viajar, setViajar] = useState(true);
-  const [tiempoDisponible, setTiempoDisponible] = useState('10 hrs/semana');
+  const [tiempoDisponible, setTiempoDisponible] = useState('0 hrs/semana');
   const [modalidadApoyo, setModalidadApoyo] = useState('Presencial');
   const [horasObjetivoMensual, setHorasObjetivoMensual] = useState(16);
   const [horasTotalesDonadas, setHorasTotalesDonadas] = useState(0);
   const [isVerified, setIsVerified] = useState(false);
 
-  // Unificación: Habilidades (Array de Strings)
   const [habilidades, setHabilidades] = useState<string[]>([]);
   const [nuevaHabilidadInput, setNuevaHabilidadInput] = useState('');
 
-  // Estructuras secundarias
   const [horarios, setHorarios] = useState<HorariosFranjas>(defaultHorarios);
   const [certificaciones, setCertificaciones] = useState<Certificacion[]>([]);
   const [historial, setHistorial] = useState<HistorialMision[]>([]);
@@ -102,7 +101,6 @@ export function EditVolunteerProfile() {
     setTimeout(() => setToastMessage(null), 3500);
   };
 
-  // AUDITORÍA GENERAL: Evaluar completitud estricta de las secciones obligatorias
   const evaluarSeccionesCompletas = () => {
     const sec01 = nombreCompleto.trim() !== '' && titulo.trim() !== '' && presentacion.trim() !== '';
     const sec02 = habilidades.length > 0;
@@ -125,6 +123,24 @@ export function EditVolunteerProfile() {
   useEffect(() => {
     cargarDatosVoluntario();
   }, [id]);
+
+  // NUEVO: Efecto que calcula automáticamente las horas semanales basándose en las franjas
+  useEffect(() => {
+    let totalHoras = 0;
+    const dias = ['lun', 'mar', 'mie', 'jue', 'vie', 'sab', 'dom'];
+    
+    dias.forEach(dia => {
+      if (horarios.manana?.[dia]) totalHoras += 5;   // 07:00 a 12:00 = 5h
+      if (horarios.tarde?.[dia]) totalHoras += 5;    // 13:00 a 18:00 = 5h
+      if (horarios.noche?.[dia]) totalHoras += 3.5;  // 18:30 a 22:00 = 3.5h
+    });
+
+    if (totalHoras > 0) {
+      setTiempoDisponible(`${totalHoras} hrs/semana`);
+    } else {
+      setTiempoDisponible('0 hrs/semana');
+    }
+  }, [horarios]);
 
   const cargarDatosVoluntario = async () => {
     setLoading(true);
@@ -162,13 +178,11 @@ export function EditVolunteerProfile() {
         setCiudadBase(vol.ciudad_base || vol.ubicacion || '');
         setRadio(vol.radio_desplazamiento ?? 35);
         setViajar(vol.disponibilidad_viajar ?? true);
-        setTiempoDisponible(vol.tiempo_disponible || '10 hrs/semana');
         setModalidadApoyo(vol.modalidad_apoyo || 'Presencial');
         setHorasObjetivoMensual(vol.horas_objetivo_mensual ?? 16);
         setHorasTotalesDonadas(vol.horas_totales_donadas ?? 0);
         setIsVerified(vol.is_verified ?? false);
 
-        // Carga unificada de habilidades con fallback preventivo
         if (vol.habilidades && Array.isArray(vol.habilidades)) {
           setHabilidades(vol.habilidades);
         } else if (vol.competencias && Array.isArray(vol.competencias)) {
@@ -187,20 +201,23 @@ export function EditVolunteerProfile() {
           setHorarios(defaultHorarios);
         }
 
+        // Si ya traía un tiempo disponible configurado manualmente que no se pudo sobreescribir, se mantiene temporalmente hasta el cálculo
+        if (vol.tiempo_disponible) {
+           setTiempoDisponible(vol.tiempo_disponible);
+        }
+
         if (vol.servicios_ofrecidos && Array.isArray(vol.servicios_ofrecidos)) {
           setCertificaciones(vol.servicios_ofrecidos);
         } else {
           setCertificaciones([]);
         }
 
-        // Historial
         const { data: histData } = await supabase
           .from('historial_voluntariado')
           .select('*')
           .eq('voluntario_id', currentId);
         if (histData) setHistorial(histData);
 
-        // Reseñas
         const { data: resData } = await supabase
           .from('resenas')
           .select('*')
@@ -239,10 +256,11 @@ export function EditVolunteerProfile() {
         radio_desplazamiento: radio,
         disponibilidad_viajar: viajar,
         disponibilidad_viaje: viajar ? 'Dispuesta a viajar (Nivel Nacional)' : 'Disponibilidad Local',
-        tiempo_disponible: tiempoDisponible,
+        tiempo_disponible: tiempoDisponible, // Se guarda el string calculado automáticamente
         modalidad_apoyo: modalidadApoyo,
         horas_objetivo_mensual: horasObjetivoMensual,
-        habilidades: habilidades, // _text array
+        horas_totales_donadas: horasTotalesDonadas, 
+        habilidades: habilidades, 
         franjas_horarias: horarios,
         servicios_ofrecidos: certificaciones,
         is_verified: verificadoCalculado
@@ -315,21 +333,62 @@ export function EditVolunteerProfile() {
     markUnsaved();
   };
 
-  const handleAddCertificacion = () => {
-    const tituloCert = prompt('Título del documento o certificación:');
-    if (!tituloCert) return;
-    const entidad_folio = prompt('Entidad emisora / Folio o registro:') || 'Documento adjunto';
+  const handleAvatarUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
 
-    const nueva: Certificacion = {
-      id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
-      titulo: tituloCert,
-      entidad_folio,
-      verificado: true,
-      icono: '📜'
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setAvatarUrl(reader.result as string);
+      markUnsaved();
     };
+    reader.readAsDataURL(file);
+  };
 
-    setCertificaciones(prev => [...prev, nueva]);
-    markUnsaved();
+  const handleCertUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 2 * 1024 * 1024) {
+      alert("El archivo es demasiado grande. Máximo 2MB permitido.");
+      return;
+    }
+
+    const tituloCert = prompt('Ingresa el título de esta certificación (Ej. Curso APH):') || file.name;
+    const entidadCert = prompt('Entidad emisora / Folio (Opcional):') || 'Documento adjunto';
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const nueva: Certificacion = {
+        id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
+        titulo: tituloCert,
+        entidad_folio: entidadCert,
+        verificado: true, 
+        icono: '📄',
+        archivo_url: reader.result as string
+      };
+
+      setCertificaciones(prev => [...prev, nueva]);
+      markUnsaved();
+      mostrarToast('Documento adjuntado correctamente.');
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleViewDocument = (url: string) => {
+    if (!url) return;
+    if (url.startsWith('data:')) {
+      fetch(url)
+        .then(res => res.blob())
+        .then(blob => {
+          const blobUrl = URL.createObjectURL(blob);
+          window.open(blobUrl, '_blank');
+          setTimeout(() => URL.revokeObjectURL(blobUrl), 60000);
+        })
+        .catch(err => console.error("Error visualizando documento:", err));
+    } else {
+      window.open(url, '_blank');
+    }
   };
 
   const estadoSecciones = evaluarSeccionesCompletas();
@@ -342,7 +401,7 @@ export function EditVolunteerProfile() {
       </div>
     );
   }
-  // Descartar cambios y restaurar valores desde la BD
+  
   const handleDiscard = () => {
     cargarDatosVoluntario();
     setHasUnsavedChanges(false);
@@ -489,14 +548,16 @@ export function EditVolunteerProfile() {
                         <span className="text-3xl text-slate-400">👤</span>
                       )}
                     </div>
+                    {/* INPUT OCULTO DE FOTO */}
+                    <input 
+                      type="file" 
+                      accept="image/*" 
+                      ref={avatarInputRef} 
+                      className="hidden" 
+                      onChange={handleAvatarUpload} 
+                    />
                     <button 
-                      onClick={() => {
-                        const url = prompt('Ingresa la URL de tu foto de perfil:', avatarUrl);
-                        if (url !== null) {
-                          setAvatarUrl(url);
-                          markUnsaved();
-                        }
-                      }}
+                      onClick={() => avatarInputRef.current?.click()}
                       className="text-[10px] font-bold text-[#005684] hover:underline cursor-pointer"
                     >
                       Cambiar Foto
@@ -543,11 +604,11 @@ export function EditVolunteerProfile() {
                 </div>
               </section>
 
-              {/* 02. HABILIDADES Y ESPECIALIDADES (UNIFICADO) */}
+              {/* 02. HABILIDADES Y ESPECIALIDADES */}
               <section className="bg-white rounded-3xl p-6 border border-[#e2e8f0] shadow-sm">
                 <div className="flex items-center justify-between mb-1">
                   <h3 className="text-[11px] font-bold text-[#005684] uppercase tracking-wider flex items-center gap-2">
-                    <span className="text-base">🛠️</span> 02 / HABILIDADES Y ESPECIALIDADES
+                    <span className="text-base">🛠️️</span> 02 / HABILIDADES Y ESPECIALIDADES
                   </h3>
                   <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
                     estadoSecciones.sec02 ? 'text-[#10b981] bg-[#ecfdf5]' : 'text-[#f59e0b] bg-[#fffbe2]'
@@ -572,7 +633,7 @@ export function EditVolunteerProfile() {
                   <button
                     type="button"
                     onClick={() => handleAddHabilidad()}
-                    className="bg-[#005684] hover:bg-[#00456a] text-white px-4 py-2 rounded-xl text-xs font-bold transition"
+                    className="bg-[#005684] hover:bg-[#00456a] text-white px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer"
                   >
                     + Agregar
                   </button>
@@ -611,7 +672,7 @@ export function EditVolunteerProfile() {
                         type="button"
                         onClick={() => handleAddHabilidad(sug)}
                         disabled={habilidades.includes(sug)}
-                        className={`text-[10px] font-bold px-2.5 py-1 rounded-lg border transition ${
+                        className={`text-[10px] font-bold px-2.5 py-1 rounded-lg border transition cursor-pointer ${
                           habilidades.includes(sug)
                             ? 'bg-[#f1f5f9] text-[#cbd5e1] border-[#e2e8f0] cursor-not-allowed'
                             : 'bg-white text-[#475569] border-[#e2e8f0] hover:bg-[#eef6ff] hover:text-[#005684]'
@@ -644,14 +705,16 @@ export function EditVolunteerProfile() {
 
                 {/* Modales y tiempos */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                  {/* INPUT LECTURA (CÁLCULO AUTOMÁTICO) */}
                   <div>
-                    <label className="text-[11px] font-bold text-[#475569] block mb-1">Tiempo Disponible Semanal</label>
+                    <label className="text-[11px] font-bold text-[#475569] block mb-1">
+                      Tiempo Disponible Semanal <span className="font-normal text-[#0284c7] italic">(Calculado)</span>
+                    </label>
                     <input
                       type="text"
                       value={tiempoDisponible}
-                      onChange={(e) => { setTiempoDisponible(e.target.value); markUnsaved(); }}
-                      placeholder="Ej: 10-15 hrs/semana"
-                      className="w-full bg-[#f8fafc] border border-[#e2e8f0] focus:border-[#005684] rounded-xl px-3 py-2 text-xs font-semibold text-[#071d37] outline-none"
+                      readOnly
+                      className="w-full bg-[#f0f9ff] border border-[#bae6fd] rounded-xl px-3 py-2 text-xs font-bold text-[#0369a1] outline-none cursor-default"
                     />
                   </div>
                   <div>
@@ -681,7 +744,7 @@ export function EditVolunteerProfile() {
                     <tbody>
                       {[
                         { id: 'manana', label: '☀️ Mañana (07:00 - 12:00)' },
-                        { id: 'tarde', label: '🌤️ Tarde (13:00 - 18:00)' },
+                        { id: 'tarde', label: '🌤 Tarde (13:00 - 18:00)' },
                         { id: 'noche', label: '🌙 Noche (18:30 - 22:00)' }
                       ].map((franja) => (
                         <tr key={franja.id} className="border-t border-[#f1f5f9] bg-white">
@@ -819,50 +882,78 @@ export function EditVolunteerProfile() {
               <section className="bg-white rounded-3xl p-6 border border-[#e2e8f0] shadow-sm">
                  <div className="flex items-center justify-between mb-4">
                    <h3 className="text-[11px] font-bold text-[#005684] uppercase tracking-wider flex items-center gap-2">
-                      <span className="text-base">🛡️️</span> 06 / CERTIFICACIONES
+                      <span className="text-base">🛡</span> 06 / CERTIFICACIONES
                    </h3>
                  </div>
 
                  <div className="flex flex-col gap-2 mb-4">
                    {certificaciones.length === 0 ? (
                      <p className="text-[10px] text-[#94a3b8] italic p-3 text-center bg-[#f8fafc] rounded-xl border border-dashed border-[#e2e8f0]">
-                       No se han subido certificaciones.
+                       No se han subido documentos.
                      </p>
                    ) : (
                      certificaciones.map((cert, idx) => (
-                       <div key={cert.id || idx} className="bg-[#EFF4FF] border border-[#EFF4FF] p-3 rounded-xl flex items-center justify-between">
-                         <div className="flex items-center gap-2.5">
-                           <span className="text-[#047857]">{cert.icono || '📜'}</span>
-                           <div>
-                             <p className="text-[11px] font-bold text-[#071d37]">{cert.titulo}</p>
-                             <p className="text-[9px] text-[#64748b]">{cert.entidad_folio}</p>
+                       <div key={cert.id || idx} className="bg-[#EFF4FF] border border-[#dbeafe] p-3 rounded-xl flex items-center justify-between">
+                         <div className="flex items-center gap-2.5 overflow-hidden">
+                           <span className="text-[#047857] text-lg">{cert.icono || '📄'}</span>
+                           <div className="truncate">
+                             <p className="text-[11px] font-bold text-[#071d37] truncate">{cert.titulo}</p>
+                             {cert.archivo_url && (
+                               <button 
+                                 type="button"
+                                 onClick={() => handleViewDocument(cert.archivo_url!)} 
+                                 className="text-[9px] text-[#0284c7] hover:underline font-bold cursor-pointer"
+                               >
+                                 Ver adjunto ↗
+                               </button>
+                             )}
                            </div>
                          </div>
+                         <button 
+                           onClick={() => { setCertificaciones(prev => prev.filter((_, i) => i !== idx)); markUnsaved(); }}
+                           className="text-red-400 hover:text-red-600 font-bold ml-2 cursor-pointer"
+                         >
+                           ✕
+                         </button>
                        </div>
                      ))
                    )}
                  </div>
 
+                 {/* INPUT OCULTO PARA CERTIFICADOS */}
+                 <input 
+                   type="file" 
+                   accept=".pdf,image/*" 
+                   ref={certInputRef} 
+                   className="hidden" 
+                   onChange={handleCertUpload} 
+                 />
                  <button 
                    type="button"
-                   onClick={handleAddCertificacion}
+                   onClick={() => certInputRef.current?.click()}
                    className="w-full bg-[#DCE9FF66] border border-dashed border-[#cbd5e1] rounded-xl py-2.5 text-center text-[#005684] hover:bg-[#f0f6ff] transition cursor-pointer text-xs font-bold"
                  >
-                   + Adjuntar Certificación
+                   + Adjuntar Certificación (PDF/Img)
                  </button>
               </section>
 
               {/* MÉTRICAS */}
               <section className="bg-white rounded-3xl p-6 border border-[#e2e8f0] shadow-sm">
-                 <h3 className="text-[10px] font-extrabold text-[#94a3b8] uppercase tracking-wider text-left mb-4">Métricas Cívicas</h3>
+                 <h3 className="text-[10px] font-extrabold text-[#94a3b8] uppercase tracking-wider text-left mb-4">Métricas Cívicas (Gestión Manual)</h3>
                  <div className="grid grid-cols-2 gap-4 text-center divide-x divide-[#e2e8f0]">
-                   <div className="bg-[#DCE9FF66] p-2 rounded-md">
-                     <p className="text-2xl font-black text-[#005684]">{horasTotalesDonadas}</p>
-                     <p className="text-[10px] font-bold text-[#64748b]">Horas donadas</p>
+                   <div className="bg-[#DCE9FF66] p-2 rounded-xl flex flex-col items-center justify-center border border-blue-100">
+                     <input 
+                       type="number"
+                       min="0"
+                       value={horasTotalesDonadas}
+                       onChange={(e) => { setHorasTotalesDonadas(Number(e.target.value)); markUnsaved(); }}
+                       className="w-20 bg-white border border-blue-200 text-2xl font-black text-[#005684] text-center rounded-lg outline-none focus:border-[#005684] py-1"
+                     />
+                     <p className="text-[10px] font-bold text-[#005684] mt-2">✏️ Horas donadas</p>
                    </div>
-                   <div className="bg-[#DCE9FF66] p-2 rounded-md">
+                   <div className="bg-[#ecfdf5] p-2 rounded-xl flex flex-col items-center justify-center border border-green-100">
                      <p className="text-2xl font-black text-[#047857]">100%</p>
-                     <p className="text-[10px] font-bold text-[#64748b]">Asistencia</p>
+                     <p className="text-[10px] font-bold text-[#047857] mt-2">Asistencia</p>
                    </div>
                  </div>
               </section>

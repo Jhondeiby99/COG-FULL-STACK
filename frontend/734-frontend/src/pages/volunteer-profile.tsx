@@ -80,6 +80,13 @@ export function VolunteerProfile() {
     return (sum / opiniones.length).toFixed(1);
   }, [opiniones]);
 
+  // NUEVO: Totalizador de horas
+  const totalHorasDonadas = useMemo(() => {
+    if (voluntario?.horas_totales_donadas) return voluntario.horas_totales_donadas;
+    if (historial.length === 0) return 0;
+    return historial.reduce((acc, curr) => acc + (curr.horas_invertidas || 0), 0) || 0;
+  }, [voluntario, historial]);
+
   // Manejo del Modal
   const openModal = (mode: 'contacto' | 'invitacion', initialMsg: string = '') => {
     setModalMode(mode);
@@ -165,6 +172,23 @@ const handleContactSubmit = async (e: React.FormEvent) => {
   }
 };
 
+  // FUNCIÓN PARA ABRIR BASE64 DE FORMA SEGURA
+  const handleViewDocument = (url: string) => {
+    if (!url) return;
+    if (url.startsWith('data:')) {
+      fetch(url)
+        .then(res => res.blob())
+        .then(blob => {
+          const blobUrl = URL.createObjectURL(blob);
+          window.open(blobUrl, '_blank');
+          setTimeout(() => URL.revokeObjectURL(blobUrl), 60000);
+        })
+        .catch(err => console.error("Error visualizando documento:", err));
+    } else {
+      window.open(url, '_blank');
+    }
+  };
+
   const getAvatarUrl = (url?: string | null) => {
     return url && url.trim() !== '' ? url : 'https://i.pravatar.cc/150';
   };
@@ -188,8 +212,8 @@ const handleContactSubmit = async (e: React.FormEvent) => {
       <div className="min-h-svh flex flex-col items-center justify-center bg-[#f4f7fb] gap-4">
         <h2 className="text-xl font-bold text-[#0f2a3f]">Voluntario no encontrado</h2>
         <p className="text-sm text-gray-500">El perfil solicitado no existe o no está registrado.</p>
-        <Link to="/" className="text-sm font-bold text-[#005684] hover:underline">
-          ← Volver a la página principal
+        <Link to="/explorar" className="text-sm font-bold text-[#005684] hover:underline">
+          ← Volver a explorar
         </Link>
       </div>
     );
@@ -233,7 +257,7 @@ const handleContactSubmit = async (e: React.FormEvent) => {
         <section className="bg-gradient-to-r from-[#eef6ff] to-[#f8fafc] py-8 border-b border-[#e2e8f0]">
           <div className="mx-auto w-full max-w-[1240px] px-4 md:px-8">
             <div className="text-xs text-[#64748b] mb-4">
-              <Link to="/" className="cursor-pointer hover:text-[#005684]">← Voluntarios</Link>
+              <Link to="/explorar" className="cursor-pointer hover:text-[#005684]">← Explorar directorio</Link>
               <span className="mx-2">/</span>
               <span className="font-bold text-[#0f2a3f]">{voluntario.nombre_completo}</span>
               <span className="mx-2">/</span>
@@ -328,7 +352,7 @@ const handleContactSubmit = async (e: React.FormEvent) => {
                   <span className="text-[10px] text-[#94a3b8] mt-0.5 leading-tight">En terreno o remota</span>
                 </div>
                 <div className="bg-white rounded-xl p-4 border border-[#e2e8f0] shadow-sm flex flex-col items-center text-center justify-center bg-gradient-to-br from-[#0f2a3f] to-[#005684]">
-                  <span className="text-3xl font-extrabold text-white">{voluntario.horas_totales_donadas || 0}</span>
+                  <span className="text-3xl font-extrabold text-white">{totalHorasDonadas}</span>
                   <span className="text-[11px] font-bold text-[#cbd5e1] uppercase mt-1">Horas Totales</span>
                   <span className="text-[10px] text-[#94a3b8] mt-1 border-t border-white/20 pt-1">Donadas en plataforma</span>
                 </div>
@@ -340,7 +364,7 @@ const handleContactSubmit = async (e: React.FormEvent) => {
                   <span className="text-xl">
                     <img src={Icons.PersonsIcon} className="h-6 w-6" alt="Persona" />
                   </span>
-                  <h2 className="m-0 text-xl font-extrabold text-[#0f2a3f]">Sobre mí y Servicio que ofrezco</h2>
+                  <h2 className="m-0 text-xl font-extrabold text-[#0f2a3f]">Sobre mí y Certificaciones</h2>
                 </div>
                 <p className="text-[14px] leading-relaxed text-[#4a5568] mb-4">
                   {voluntario.sobre_mi || voluntario.presentacion_civica || 'Este voluntario aún no ha agregado una descripción.'}
@@ -348,14 +372,25 @@ const handleContactSubmit = async (e: React.FormEvent) => {
 
                 {voluntario.servicios_ofrecidos && Array.isArray(voluntario.servicios_ofrecidos) && voluntario.servicios_ofrecidos.length > 0 && (
                   <>
-                    <p className="text-[14px] font-bold text-[#0f2a3f] mb-4">Apoyo a directores de fundaciones, hogares e iniciativas mediante:</p>
+                    <p className="text-[14px] font-bold text-[#0f2a3f] mb-4">Certificaciones y documentos validados de apoyo:</p>
                     <div className="grid md:grid-cols-2 gap-4">
                       {voluntario.servicios_ofrecidos.map((servicio: any, i: number) => (
                         <div key={i} className="bg-[#f8fafc] p-4 rounded-xl border border-[#e2e8f0]">
                           <h3 className="text-sm font-bold text-[#005684] flex items-center gap-2 mb-1">
-                            <span className="text-lg">{servicio.icono || '🌟'}</span> {servicio.titulo || servicio}
+                            <span className="text-lg">{servicio.icono || '📄'}</span> {servicio.titulo || servicio}
                           </h3>
-                          {servicio.descripcion && <p className="text-[12px] text-[#64748b] leading-tight">{servicio.descripcion}</p>}
+                          {servicio.descripcion && <p className="text-[12px] text-[#64748b] leading-tight mb-2">{servicio.descripcion}</p>}
+                          
+                          {/* BOTÓN PÚBLICO PARA VER EL DOCUMENTO ADJUNTO */}
+                          {servicio.archivo_url && (
+                            <button 
+                              type="button"
+                              onClick={() => handleViewDocument(servicio.archivo_url)} 
+                              className="inline-flex items-center gap-1.5 mt-2 bg-[#eef6ff] text-[#0284c7] border border-[#bae6fd] px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-[#e0f2fe] transition cursor-pointer"
+                            >
+                              <span>👁️</span> Ver documento adjunto
+                            </button>
+                          )}
                         </div>
                       ))}
                     </div>
@@ -395,7 +430,7 @@ const handleContactSubmit = async (e: React.FormEvent) => {
                   <div className="flex items-center gap-3 mt-4 md:mt-0">
                     <div className="bg-[#f0f9ff] px-3 py-1.5 rounded-lg border border-[#bae6fd]">
                       <span className="block text-[10px] font-bold text-[#0284c7] uppercase">Horas Avaladas</span>
-                      <span className="text-lg font-black text-[#0369a1]">{voluntario.horas_totales_donadas || 0}</span>
+                      <span className="text-lg font-black text-[#0369a1]">{totalHorasDonadas}</span>
                     </div>
                     <div className="bg-[#dcfce7] px-3 py-1.5 rounded-lg border border-[#86efac]">
                       <span className="block text-[10px] font-bold text-[#166534] uppercase">Misiones</span>
@@ -558,7 +593,7 @@ const handleContactSubmit = async (e: React.FormEvent) => {
               <p className="text-[11px] font-bold text-[#64748b] tracking-wider uppercase mb-1">7:34 AM</p>
               <h2 className="text-2xl font-extrabold text-[#0f2a3f] m-0">Más voluntarios disponibles</h2>
             </div>
-            <Link to="/" className="text-sm font-bold text-[#005684] hover:underline flex items-center gap-1">
+            <Link to="/explorar" className="text-sm font-bold text-[#005684] hover:underline flex items-center gap-1">
               Explorar todo el directorio →
             </Link>
           </div>
