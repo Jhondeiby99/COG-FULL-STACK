@@ -287,11 +287,11 @@ export function AdminFoundations() {
           </p>
         </div>
         
-        <div className="shrink-0">
+        {/* <div className="shrink-0">
           <button className="bg-[#0077b6] text-white px-6 py-3 rounded-xl text-sm font-bold hover:bg-[#005b8c] transition flex items-center gap-2 shadow-sm cursor-pointer">
             <span>+</span> Registrar Nueva Fundación
           </button>
-        </div>
+        </div> */}
       </div>
 
       {/* TARJETAS KPI (4 Columnas) */}

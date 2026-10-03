@@ -229,7 +229,7 @@ export function FoundationProfile() {
                     <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs font-medium text-[#64748b] md:text-sm">
                       <span className="flex items-center gap-1"><span className="opacity-60"><img src={Icons.NitIcon} alt="NIT"/></span> NIT: {fundacion.nit}</span>
                       <span className="flex items-center gap-1"><span className="text-blue-500"><img src={Icons.UbicacionIcon} alt="Ubicación"/></span> {fundacion.ubicacion || 'Colombia'}</span>
-                      <span className="flex items-center gap-1 text-[#047857] font-bold"><span><img src={Icons.CheckVerifyIcon} alt="Vigente"/></span> RUT y Personería Vigente</span>
+                      <span className="flex items-center gap-1 text-[#047857] font-bold"><span><img src={Icons.CheckVerifyIcon} alt="Vigente"/></span> RUT Verificado</span>
                     </div>
 
                     <div className="mt-4 flex flex-wrap gap-2">
@@ -299,10 +299,10 @@ export function FoundationProfile() {
                   <div className="mt-6 grid gap-4 sm:grid-cols-3">
                     <InfoChip icon={Icons.EntidadIcon} title="Tipo de entidad" value={fundacion.personeria_juridica || "Fundación sin ánimo de lucro"} />
                     <InfoChip icon="⚖️" title="Cobertura legal" value="Registro Cámara de Comercio" />
-                    <InfoChip icon={Icons.IconVerify} title="Confianza" value="Comité de transparencia activo" />
+                    {/* <InfoChip icon={Icons.IconVerify} title="Confianza" value="Comité de transparencia activo" /> */}
                   </div>
 
-                  <div className="mt-8 flex items-center gap-5 rounded-xl border border-[#e2e8f0] bg-[#f8fafc] p-5">
+                  {/* <div className="mt-8 flex items-center gap-5 rounded-xl border border-[#e2e8f0] bg-[#f8fafc] p-5">
                     <TransparencyRing value={fundacion.indice_transparencia || 0} />
                     <div>
                       <p className="m-0 text-[15px] font-extrabold text-[#0f2a3f]">{fundacion.indice_transparencia || 0}% Índice de transparencia</p>
@@ -310,7 +310,7 @@ export function FoundationProfile() {
                         Reportes de rendición publicados cada trimestre y necesidades auditadas por el comité.
                       </p>
                     </div>
-                  </div>
+                  </div> */}
                 </section>
 
                 {/* Necesidades Publicadas */}

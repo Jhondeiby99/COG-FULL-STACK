@@ -367,7 +367,7 @@ export function EditVolunteerProfile() {
               <span className="bg-[#dcfce7] text-[#166534] text-[10px] font-extrabold px-3 py-1 rounded-full uppercase border border-[#bbf7d0] mb-2">
                 VERIFICACIÓN AUTOMÁTICA OBTENIDA
               </span>
-              <h3 className="text-xl font-bold text-[#071d37] mb-2">¡Tu Perfil ha sido Verificado!</h3>
+              <h3 className="text-xl font-bold text-[#071d37] mb-2">¡Tu Perfil ha sido Completado!</h3>
               <p className="text-xs text-[#475569] leading-relaxed mb-4">
                 Has completado exitosamente las secciones obligatorias: <b>01 Identidad</b>, <b>02 Habilidades</b>, <b>03 Disponibilidad</b> y <b>05 Cobertura</b>.
               </p>
@@ -419,7 +419,7 @@ export function EditVolunteerProfile() {
                     ? 'bg-[#dcfce7] text-[#166534] border-[#EFF4FF]' 
                     : 'bg-[#fef3c7] text-[#92400e] border-[#fde68a]'
                 }`}>
-                  <img src={Icons.CheckVerifyIcon} alt="Verificado" /> {isVerified ? 'FICHA VERIFICADA' : 'PERFIL EN REVISIÓN'}
+                  <img src={Icons.CheckVerifyIcon} alt="Verificado" /> {isVerified ? 'FICHA COMPLETA' : 'PERFIL EN REVISIÓN'}
                 </span>
                 <span className="text-[11px] font-bold text-[#94a3b8]">
                   ID: {volunteerId ? `VOL-${volunteerId.substring(0, 8).toUpperCase()}` : 'SIN ID'}
