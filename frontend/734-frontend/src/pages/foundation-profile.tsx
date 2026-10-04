@@ -266,9 +266,10 @@ export function FoundationProfile() {
                       <h1 className="!m-0 !text-3xl !font-bold !text-[#071d37] !tracking-tight">
                         {fundacion.nombre_legal}
                       </h1>
-                      {fundacion.estado === 'aprobada' && (
-                        <span className="inline-flex items-center gap-1.5 rounded-full bg-[#edf6ff] px-2.5 py-0.5 text-xs font-bold text-[#005684]">
-                          <Icon name="verificado" size={14} className="text-[#006194]" /> Verificada Oficial
+                      {/* El sello solo aparece si el administrador verificó sus 3 documentos legales */}
+                      {fundacion.estado === 'aprobada' && fundacion.documentos_verificados && (
+                        <span className="inline-flex items-center gap-1.5 rounded-full bg-[#edf6ff] px-2.5 py-0.5 text-xs font-bold text-[#005684]" title="RUT, Cámara de Comercio y Personería jurídica verificados por 7:34 AM">
+                          <Icon name="verificado" size={14} className="text-[#006194]" /> Documentación verificada
                         </span>
                       )}
                     </div>
@@ -276,7 +277,9 @@ export function FoundationProfile() {
                     <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs font-medium text-[#64748b] md:text-sm">
                       <span className="flex items-center gap-1"><span className="opacity-60"><Icon name="nit" size={14} className="text-[#707881]" /></span> NIT: {fundacion.nit}</span>
                       <span className="flex items-center gap-1"><span className="text-blue-500"><Icon name="ubicacion" size={14} className="text-[#006194]" /></span> {fundacion.ubicacion || 'Colombia'}</span>
-                      <span className="flex items-center gap-1 text-[#047857] font-bold"><span><Icon name="completado" className="text-[#006194]" size={14} /></span> RUT Verificado</span>
+                      {fundacion.documentos_verificados && (
+                        <span className="flex items-center gap-1 text-[#047857] font-bold"><Icon name="completado" className="text-[#047857]" size={14} /> RUT, Cámara de Comercio y Personería verificados</span>
+                      )}
                     </div>
 
                     <div className="mt-4 flex flex-wrap gap-2">
@@ -322,9 +325,9 @@ export function FoundationProfile() {
 
             {/* Estadísticas Reales */}
             <div style={{ marginBottom: '2.5rem' }} className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              <Stat label="Trayectoria" value={fundacion.anos_operacion?.toString() || "0"} unit="años continuos" hint="Operación certificada" icon="trayectoria" />
+              <Stat label="Trayectoria" value={fundacion.anos_operacion?.toString() || "0"} unit="años continuos" hint={fundacion.ano_fundacion ? `Desde ${fundacion.ano_fundacion}` : "Años de trabajo"} icon="trayectoria" />
               <Stat label="Población Activa" value={fundacion.cantidad_beneficiarios?.toString() || fundacion.familias_acompanadas?.toString() || "0"} unit="beneficiarios" hint="En territorio" hintColor="text-[#10b981]" icon="beneficiarios" iconClass="text-[#006947]" />
-              <Stat label="Reputación Social" value={avgRating} unit="de 5" hint={`${resenas.length} opiniones auditadas`} icon="calificacion" iconClass="text-[#EAB308]" filled />
+              <Stat label="Reputación Social" value={avgRating} unit="de 5" hint={`${resenas.length} opiniones de la comunidad`} icon="calificacion" iconClass="text-[#EAB308]" filled />
               <Stat label="Efectividad" value={necesidadesResueltas.toString()} unit="necesidades resueltas" hint={necesidades.length ? `de ${necesidades.length} publicadas` : 'Aún sin necesidades publicadas'} hintColor="text-[#005684] font-bold" icon="completado" />
             </div>
 
@@ -543,7 +546,7 @@ export function FoundationProfile() {
                         <Icon name="telefono" size={16} className="text-[#006194]" />
                       </div>
                       <div className="flex flex-col">
-                        <span className="text-[11px] font-bold text-[#a0aec0] tracking-wide uppercase">Línea Verificada</span>
+                        <span className="text-[11px] font-bold text-[#a0aec0] tracking-wide uppercase">Teléfono</span>
                         <span className="text-xs font-bold text-[#071d37] mt-0.5">{fundacion.telefono || 'No registrado'}</span>
                       </div>
                     </div>

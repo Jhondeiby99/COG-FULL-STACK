@@ -89,7 +89,7 @@ export function AdminVolunteers() {
             name: vol.nombre_completo || `Voluntario ${idx + 1}`,
             avatar: vol.avatar_url || '',
             specialty: vol.profesion || 'Sin profesión registrada',
-            certification: vol.is_verified ? 'Verificado en plataforma' : 'Pendiente de verificación',
+            certification: vol.is_verified ? 'Perfil completo' : 'Perfil incompleto',
             location: vol.ciudad_base || vol.ubicacion || 'Colombia',
             hours: `${vol.horas_totales_donadas || 0} h donadas`,
             activity: activa ? 'Disponible para misión' : 'Perfil Inactivo',

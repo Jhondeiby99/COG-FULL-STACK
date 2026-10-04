@@ -16,7 +16,7 @@ export function Home() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [necesidades, setNecesidades] = useState<Necesidad[]>([]);
   const [voluntarios, setVoluntarios] = useState<Voluntario[]>([]);
-  const [stats, setStats] = useState({ fundaciones: 0, voluntarios: 0, donaciones: 0 });
+  const [stats, setStats] = useState({ fundaciones: 0, voluntarios: 0, resueltas: 0 });
   const [loading, setLoading] = useState(true);
 
   // Estados de Búsqueda y Filtros
@@ -55,9 +55,10 @@ export function Home() {
 
       const { count: countFundaciones } = await supabase.from('fundaciones').select('*', { count: 'exact', head: true }).eq('estado', 'aprobada');
       const { count: countVoluntarios } = await supabase.from('voluntarios').select('*', { count: 'exact', head: true }).eq('is_verified', true).eq('disponibilidad_activa', true);
-      const { data: metricas } = await supabase.from('metricas_globales').select('donaciones_canalizadas').maybeSingle();
+      // Necesidades resueltas por fundaciones aprobadas (la RLS solo deja ver las públicas)
+      const { count: countResueltas } = await supabase.from('necesidades').select('*', { count: 'exact', head: true }).eq('completada', true);
 
-      setStats({ fundaciones: countFundaciones || 0, voluntarios: countVoluntarios || 0, donaciones: metricas?.donaciones_canalizadas || 0 });
+      setStats({ fundaciones: countFundaciones || 0, voluntarios: countVoluntarios || 0, resueltas: countResueltas || 0 });
       setLoading(false);
     }
     fetchData();
@@ -286,11 +287,11 @@ export function Home() {
             </div>
             <div className="bg-emerald-50/50 rounded-2xl p-5 flex items-center gap-4 border border-emerald-100/50 text-left">
               <div className="w-12 h-12 rounded-2xl bg-emerald-100 flex items-center justify-center flex-shrink-0"><Icon name="donar" className="size-6 text-[#006947]" /></div>
-              <div><h3 className="text-2xl font-extrabold text-emerald-700">+{stats.voluntarios}</h3><p className="text-[11px] text-emerald-600/70 font-semibold uppercase tracking-wide">Voluntarios validados</p></div>
+              <div><h3 className="text-2xl font-extrabold text-emerald-700">+{stats.voluntarios}</h3><p className="text-[11px] text-emerald-600/70 font-semibold uppercase tracking-wide">Voluntarios disponibles</p></div>
             </div>
             <div className="bg-purple-50/50 rounded-2xl p-5 flex items-center gap-4 border border-purple-100/50 text-left">
-              <div className="w-12 h-12 rounded-2xl bg-purple-100 flex items-center justify-center flex-shrink-0"><Icon name="paquete" className="size-6 text-[#7c3aed]" /></div>
-              <div><h3 className="text-2xl font-extrabold text-purple-700">+{stats.donaciones.toLocaleString()}</h3><p className="text-[11px] text-purple-600/70 font-semibold uppercase tracking-wide">Insumos canalizados</p></div>
+              <div className="w-12 h-12 rounded-2xl bg-purple-100 flex items-center justify-center flex-shrink-0"><Icon name="completado" className="size-6 text-[#7c3aed]" /></div>
+              <div><h3 className="text-2xl font-extrabold text-purple-700">{stats.resueltas.toLocaleString('es-CO')}</h3><p className="text-[11px] text-purple-600/70 font-semibold uppercase tracking-wide">Necesidades resueltas</p></div>
             </div>
           </section>
         </section>

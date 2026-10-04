@@ -241,11 +241,9 @@ export function EditVolunteerProfile() {
     setSaving(true);
     try {
       const estadoSecciones = evaluarSeccionesCompletas();
-      let verificadoCalculado = isVerified;
       let fueVerificadoPorPrimeraVez = false;
 
       if (estadoSecciones.todasCompletas && !isVerified) {
-        verificadoCalculado = true;
         fueVerificadoPorPrimeraVez = true;
         setIsVerified(true);
       }
@@ -269,7 +267,7 @@ export function EditVolunteerProfile() {
         habilidades: habilidades, 
         franjas_horarias: horarios,
         servicios_ofrecidos: certificaciones,
-        is_verified: verificadoCalculado
+        // is_verified ("perfil completo") lo calcula la base de datos al guardar
       };
 
       const targetId = volunteerId || id;
@@ -497,7 +495,7 @@ export function EditVolunteerProfile() {
                 <Icon name="check" size="1.1em" />
               </div>
               <span className="bg-[#dcfce7] text-[#166534] text-[10px] font-extrabold px-3 py-1 rounded-full uppercase border border-[#bbf7d0] mb-2">
-                VERIFICACIÓN AUTOMÁTICA OBTENIDA
+                PERFIL COMPLETO
               </span>
               <h3 className="text-xl font-bold text-[#071d37] mb-2">¡Tu Perfil ha sido Completado!</h3>
               <p className="text-xs text-[#475569] leading-relaxed mb-4">
@@ -520,9 +518,9 @@ export function EditVolunteerProfile() {
               <div className="flex items-start gap-3">
                 <span className="text-xl"><Icon name="convocatoria" size="1.1em" /></span>
                 <div>
-                  <h4 className="text-xs font-bold text-[#0369a1]">Requisitos de Visibilidad Pública y Verificación</h4>
+                  <h4 className="text-xs font-bold text-[#0369a1]">Completa tu perfil para aparecer en el directorio</h4>
                   <p className="text-[11px] text-[#0284c7] mt-0.5">
-                    Completa las secciones obligatorias para ser verificado automáticamente y habilitado en el Directorio Nacional.
+                    Cuando completes las secciones obligatorias tu perfil quedará como “Perfil completo” y aparecerá en el directorio público de voluntarios.
                   </p>
                 </div>
               </div>
@@ -551,7 +549,7 @@ export function EditVolunteerProfile() {
                     ? 'bg-[#dcfce7] text-[#166534] border-[#EFF4FF]' 
                     : 'bg-[#fef3c7] text-[#92400e] border-[#fde68a]'
                 }`}>
-                  <Icon name="completado" className="text-[#006194]" /> {isVerified ? 'FICHA COMPLETA' : 'PERFIL EN REVISIÓN'}
+                  <Icon name="completado" className="text-[#006194]" /> {isVerified ? 'PERFIL COMPLETO' : 'PERFIL INCOMPLETO'}
                 </span>
                 <span className="text-[11px] font-bold text-[#94a3b8]">
                   ID: {volunteerId ? `VOL-${volunteerId.substring(0, 8).toUpperCase()}` : 'SIN ID'}

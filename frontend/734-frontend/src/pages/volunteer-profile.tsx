@@ -277,7 +277,7 @@ const handleContactSubmit = async (e: React.FormEvent) => {
               <span className="mx-2">/</span>
               <span className="font-bold text-[#0f2a3f]">{voluntario.nombre_completo}</span>
               <span className="mx-2">/</span>
-              Perfil {voluntario.is_verified ? 'verificado' : 'en revisión'}
+              Perfil {voluntario.is_verified ? 'completo' : 'incompleto'}
             </div>
 
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
@@ -289,7 +289,7 @@ const handleContactSubmit = async (e: React.FormEvent) => {
                     className="h-24 w-24 rounded-2xl object-cover shadow-sm border border-white"
                   />
                   {voluntario.is_verified && (
-                    <div className="absolute -bottom-2 -right-2 bg-white rounded-full p-1 shadow-sm">
+                    <div className="absolute -bottom-2 -right-2 bg-white rounded-full p-1 shadow-sm" title="Perfil completo">
                       <Icon name="completado" className="text-[#006194] h-5 w-5" />
                     </div>
                   )}
@@ -440,7 +440,7 @@ const handleContactSubmit = async (e: React.FormEvent) => {
                     <span className="text-xl"><Icon name="certificado" size="1.1em" /></span>
                     <div>
                       <h2 className="m-0 text-xl font-extrabold text-[#0f2a3f]">Historial de Voluntariado</h2>
-                      <p className="text-[13px] font-medium text-[#64748b] mt-0.5">Acreditaciones oficiales certificadas por el protocolo 7:34 AM.</p>
+                      <p className="text-[13px] font-medium text-[#64748b] mt-0.5">Certificaciones y títulos registrados por el voluntario.</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-3 mt-4 md:mt-0">
@@ -538,11 +538,15 @@ const handleContactSubmit = async (e: React.FormEvent) => {
             <aside className="flex flex-col gap-6">
               <section className="rounded-2xl bg-white p-6 shadow-sm border border-[#e2e8f0]">
                 <h3 className="flex items-center gap-2 mt-0 mb-4 text-[15px] font-extrabold text-[#0f2a3f] border-b border-[#e2e8f0] pb-3">
-                  <Icon name="seguridad" className="h-5 w-5" /> Acreditación 7:34 AM
+                  <Icon name="usuario" className="h-5 w-5" /> Estado del perfil
                 </h3>
                 <ul className="flex flex-col gap-3 text-[13px] text-[#4a5568] font-medium">
                   <li className="flex items-start gap-2">
-                    <Icon name="completado" className="text-[#006194] h-4 w-4 mt-0.5" /> Datos del voluntario Completos
+                    <Icon name={voluntario.is_verified ? 'completado' : 'reloj'} className={`h-4 w-4 mt-0.5 ${voluntario.is_verified ? 'text-[#006194]' : 'text-[#94a3b8]'}`} />
+                    {voluntario.is_verified ? 'Perfil completo: datos, habilidades, horarios y ciudad registrados' : 'Perfil en construcción'}
+                  </li>
+                  <li className="flex items-start gap-2 text-[11px] text-[#94a3b8]">
+                    <Icon name="info" className="h-4 w-4 mt-0.5" /> Los datos y certificaciones son registrados por el propio voluntario.
                   </li>
                   {/* <li className="flex items-start gap-2">
                     <Icon name="completado" className="text-[#006194] h-4 w-4 mt-0.5" /> Registro profesional confirmado
@@ -620,7 +624,7 @@ const handleContactSubmit = async (e: React.FormEvent) => {
                   <div>
                     <h3 className="text-[15px] font-bold text-[#0f2a3f] flex items-center gap-1">
                       {vol.nombre_completo}
-                      {vol.is_verified && <Icon name="verificado" className="text-[#006194] h-3.5 w-3.5" />}
+                      {vol.is_verified && <Icon name="completado" className="text-[#006194] h-3.5 w-3.5" label="Perfil completo" />}
                     </h3>
                     <p className="text-[11px] font-bold text-[#005684] uppercase tracking-wide">{vol.profesion || 'Voluntario Activo'}</p>
                     <p className="text-[11px] text-[#64748b] mt-0.5"><Icon name="ubicacion" className="text-[#006194]" size="1.1em" /> {vol.ubicacion || vol.ciudad_base || 'Colombia'}</p>
