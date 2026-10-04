@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
+import { DialogModal } from '../components/DialogModal';
 
 interface Fundacion {
   id: string;
@@ -17,6 +18,8 @@ interface Fundacion {
 }
 
 export function AdminApproval() {
+  const [aviso, setAviso] = useState<{ title: string; message: string } | null>(null);
+  const [rechazoPendiente, setRechazoPendiente] = useState<string | null>(null);
   const [tabActiva, setTabActiva] = useState<'pendientes' | 'aprobadas'>('pendientes');
   const [pendientes, setPendientes] = useState<Fundacion[]>([]);
   const [aprobadas, setAprobadas] = useState<Fundacion[]>([]);
@@ -69,20 +72,24 @@ export function AdminApproval() {
         .eq('id', id);
 
       if (error) {
-        alert('Error al aprobar la fundación: ' + error.message);
+        setAviso({ title: 'No se pudo aprobar', message: 'Error al aprobar la fundación: ' + error.message });
       } else {
         await cargarDatos();
       }
     } catch (err) {
       console.error('Error inesperado:', err);
+      setAviso({ title: 'Error de conexión', message: 'No se pudo contactar al servidor. Intenta de nuevo.' });
     } finally {
       setProcessingId(null);
     }
   };
 
-  // Rechazar Fundación en Supabase
-  const handleRechazar = async (id: string) => {
-    if (!confirm('¿Estás seguro de que deseas rechazar esta solicitud?')) return;
+  // Rechazar Fundación en Supabase (se confirma primero en un modal)
+  const handleRechazar = (id: string) => setRechazoPendiente(id);
+
+  const ejecutarRechazo = async () => {
+    const id = rechazoPendiente;
+    if (!id) return;
     setProcessingId(id);
     try {
       const { error } = await supabase
@@ -91,14 +98,16 @@ export function AdminApproval() {
         .eq('id', id);
 
       if (error) {
-        alert('Error al rechazar la fundación: ' + error.message);
+        setAviso({ title: 'No se pudo rechazar', message: 'Error al rechazar la fundación: ' + error.message });
       } else {
         await cargarDatos();
       }
     } catch (err) {
       console.error('Error inesperado:', err);
+      setAviso({ title: 'Error de conexión', message: 'No se pudo contactar al servidor. Intenta de nuevo.' });
     } finally {
       setProcessingId(null);
+      setRechazoPendiente(null);
     }
   };
 
@@ -137,6 +146,20 @@ export function AdminApproval() {
 
   return (
     <div className="flex flex-col gap-6">
+      {rechazoPendiente && (
+        <DialogModal
+          variant="confirmar"
+          danger
+          title="Rechazar solicitud"
+          message="La fundación quedará como rechazada y no será visible en la plataforma. ¿Deseas continuar?"
+          confirmLabel="Sí, rechazar"
+          loading={processingId === rechazoPendiente}
+          onClose={() => setRechazoPendiente(null)}
+          onConfirm={ejecutarRechazo}
+        />
+      )}
+      {aviso && <DialogModal title={aviso.title} message={aviso.message} onClose={() => setAviso(null)} />}
+
       
       {/* CABECERA PRINCIPAL SUPERIOR */}
       <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">

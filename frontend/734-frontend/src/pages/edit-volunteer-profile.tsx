@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
+import { DialogModal } from '../components/DialogModal';
 import * as Icons from "../assets/icons/index.ts";
 
 interface Certificacion {
@@ -69,6 +70,9 @@ export function EditVolunteerProfile() {
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [showFirstVerificationModal, setShowFirstVerificationModal] = useState(false);
+  const [aviso, setAviso] = useState<{ title: string; message: string } | null>(null);
+  // Certificado leído del dispositivo, a la espera de que el voluntario confirme título y entidad
+  const [certPendiente, setCertPendiente] = useState<{ archivo: string; titulo: string; entidad: string } | null>(null);
 
   const [volunteerId, setVolunteerId] = useState<string | null>(id || null);
 
@@ -296,7 +300,7 @@ export function EditVolunteerProfile() {
       }
     } catch (err: any) {
       console.error('Error al guardar en Supabase:', err);
-      alert('Ocurrió un problema al guardar los cambios: ' + (err.message || 'Error de conexión'));
+      setAviso({ title: 'No se pudieron guardar los cambios', message: err.message || 'Error de conexión. Intenta de nuevo.' });
     } finally {
       setSaving(false);
     }
@@ -347,32 +351,40 @@ export function EditVolunteerProfile() {
 
   const handleCertUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
+    event.target.value = ''; // permite volver a elegir el mismo archivo
     if (!file) return;
 
     if (file.size > 2 * 1024 * 1024) {
-      alert("El archivo es demasiado grande. Máximo 2MB permitido.");
+      setAviso({ title: 'Archivo muy grande', message: `"${file.name}" supera el máximo de 2MB permitido.` });
       return;
     }
 
-    const tituloCert = prompt('Ingresa el título de esta certificación (Ej. Curso APH):') || file.name;
-    const entidadCert = prompt('Entidad emisora / Folio (Opcional):') || 'Documento adjunto';
-
     const reader = new FileReader();
     reader.onloadend = () => {
-      const nueva: Certificacion = {
-        id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
-        titulo: tituloCert,
-        entidad_folio: entidadCert,
-        verificado: true, 
-        icono: '📄',
-        archivo_url: reader.result as string
-      };
-
-      setCertificaciones(prev => [...prev, nueva]);
-      markUnsaved();
-      mostrarToast('Documento adjuntado correctamente.');
+      setCertPendiente({
+        archivo: reader.result as string,
+        titulo: file.name.replace(/\.[^.]+$/, ''),
+        entidad: '',
+      });
     };
+    reader.onerror = () => setAviso({ title: 'No se pudo leer el archivo', message: 'Intenta con otro documento.' });
     reader.readAsDataURL(file);
+  };
+
+  const confirmarCertificado = () => {
+    if (!certPendiente || !certPendiente.titulo.trim()) return;
+    const nueva: Certificacion = {
+      id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
+      titulo: certPendiente.titulo.trim(),
+      entidad_folio: certPendiente.entidad.trim() || 'Documento adjunto',
+      verificado: true,
+      icono: '📄',
+      archivo_url: certPendiente.archivo,
+    };
+    setCertificaciones(prev => [...prev, nueva]);
+    setCertPendiente(null);
+    markUnsaved();
+    mostrarToast('Documento adjuntado correctamente.');
   };
 
   const handleViewDocument = (url: string) => {
@@ -409,7 +421,54 @@ export function EditVolunteerProfile() {
   };
 
   return (
-    <div className="flex min-h-svh w-full bg-[#f8fafc] text-[#2d3748] font-sans pb-24 relative">    
+    <div className="flex min-h-svh w-full bg-[#f8fafc] text-[#2d3748] font-sans pb-24 relative">
+      {aviso && <DialogModal title={aviso.title} message={aviso.message} onClose={() => setAviso(null)} />}
+
+      {certPendiente && (
+        <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" role="dialog" aria-modal="true">
+          <div className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-xl flex flex-col gap-4">
+            <div className="flex items-center gap-3">
+              <span className="text-3xl">📄</span>
+              <div>
+                <h3 className="text-lg font-bold text-[#071d37] leading-tight">Adjuntar certificación</h3>
+                <p className="text-[11px] text-[#64748b]">Así se mostrará en tu perfil.</p>
+              </div>
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-bold text-[#071d37]">Título de la certificación *</label>
+              <input
+                type="text"
+                autoFocus
+                value={certPendiente.titulo}
+                maxLength={100}
+                onChange={(e) => setCertPendiente({ ...certPendiente, titulo: e.target.value })}
+                placeholder="Ej: Curso de Atención Prehospitalaria"
+                className="w-full bg-[#f8fafc] border border-[#e2e8f0] rounded-xl px-4 py-2.5 text-sm text-[#071d37] focus:outline-none focus:border-[#005684] focus:ring-1 focus:ring-[#005684]"
+              />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-bold text-[#071d37]">Entidad emisora / folio <span className="font-normal text-[#94a3b8]">(opcional)</span></label>
+              <input
+                type="text"
+                value={certPendiente.entidad}
+                maxLength={100}
+                onChange={(e) => setCertPendiente({ ...certPendiente, entidad: e.target.value })}
+                placeholder="Ej: Cruz Roja Colombiana"
+                className="w-full bg-[#f8fafc] border border-[#e2e8f0] rounded-xl px-4 py-2.5 text-sm text-[#071d37] focus:outline-none focus:border-[#005684] focus:ring-1 focus:ring-[#005684]"
+              />
+            </div>
+            <div className="flex gap-3 pt-1">
+              <button type="button" onClick={() => setCertPendiente(null)} className="flex-1 bg-gray-100 text-[#334155] py-2.5 rounded-xl text-xs font-bold hover:bg-gray-200 transition cursor-pointer">
+                Cancelar
+              </button>
+              <button type="button" onClick={confirmarCertificado} disabled={!certPendiente.titulo.trim()} className="flex-1 bg-[#005684] text-white py-2.5 rounded-xl text-xs font-bold hover:bg-[#00456a] transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
+                Adjuntar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    
         {toastMessage && (
           <div className="fixed top-6 right-6 z-50 bg-[#047857] text-white px-5 py-3 rounded-2xl shadow-xl flex items-center gap-3 border border-[#6ee7b7]">
             <span className="text-lg">✓</span>

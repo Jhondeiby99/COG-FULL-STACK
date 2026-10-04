@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
+import { DialogModal } from '../components/DialogModal';
 
 export interface Voluntario {
   id: string;
@@ -71,6 +72,7 @@ const MOCK_VOLUNTARIOS: Voluntario[] = [
 ];
 
 export function AdminVolunteers() {
+  const [aviso, setAviso] = useState<{ title: string; message: string } | null>(null);
   const navigate = useNavigate();
   const [voluntarios, setVoluntarios] = useState<Voluntario[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -233,12 +235,14 @@ export function AdminVolunteers() {
 
       if (error) {
         console.error("Error al actualizar la disponibilidad en Supabase:", error.message);
-        alert("No se pudo actualizar el estado en la base de datos.");
+        setAviso({ title: 'No se pudo actualizar', message: 'No se pudo actualizar el estado del voluntario. Se restauró el valor anterior.' });
         // Revertir si hay error
         cargarVoluntarios();
       }
     } catch (e) {
       console.error("Error de red al actualizar:", e);
+      setAviso({ title: 'Error de conexión', message: 'No se pudo contactar al servidor. Intenta de nuevo.' });
+      cargarVoluntarios();
     }
   };
 
@@ -253,6 +257,8 @@ export function AdminVolunteers() {
 
   return (
     <div className="flex flex-col gap-6 w-full">
+      {aviso && <DialogModal title={aviso.title} message={aviso.message} onClose={() => setAviso(null)} />}
+
       
       {/* CABECERA */}
       <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
