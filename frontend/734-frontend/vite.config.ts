@@ -4,11 +4,12 @@ import tailwindcss from '@tailwindcss/vite'
 import { defineConfig } from 'vite'
 
 // https://vite.dev/config/
-export default defineConfig({
+// El prefijo de GitHub Pages solo aplica al build; en desarrollo se usa la raíz
+export default defineConfig(({ command }) => ({
   plugins: [
     react(),
     babel({ presets: [reactCompilerPreset()] }),
     tailwindcss(),
   ],
-  base: '/COG-FULL-STACK/',
-})
+  base: command === 'build' ? '/COG-FULL-STACK/' : '/',
+}))

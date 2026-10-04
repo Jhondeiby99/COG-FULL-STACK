@@ -82,7 +82,7 @@ function ProtectedRoute({ children, requiredRole }: { children: React.ReactNode;
 
 function App() {
   return (
-    <BrowserRouter>
+    <BrowserRouter basename={import.meta.env.BASE_URL}>
       <Routes>
         {/* RUTAS PÚBLICAS */}
         <Route path="/" element={<Home />} />

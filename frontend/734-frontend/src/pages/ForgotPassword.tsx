@@ -13,7 +13,7 @@ export function ForgotPassword() {
     setMensaje(null);
 
     // URL a donde redirigirá Supabase tras hacer clic en el correo
-    const redirectTo = `${window.location.origin}/reset-password`;
+    const redirectTo = `${window.location.origin}${import.meta.env.BASE_URL}reset-password`;
 
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo,
