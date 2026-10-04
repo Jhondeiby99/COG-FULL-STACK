@@ -2,8 +2,9 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { DialogModal } from '../components/DialogModal';
-import * as Icons from "../assets/icons/index.ts";
 
+import { Icon } from '../components/Icon';
+import { iconoDesdeEmoji } from '../lib/iconos';
 interface Certificacion {
   id: string;
   titulo: string;
@@ -378,7 +379,7 @@ export function EditVolunteerProfile() {
       titulo: certPendiente.titulo.trim(),
       entidad_folio: certPendiente.entidad.trim() || 'Documento adjunto',
       verificado: true,
-      icono: '📄',
+      icono: 'documento',
       archivo_url: certPendiente.archivo,
     };
     setCertificaciones(prev => [...prev, nueva]);
@@ -428,7 +429,7 @@ export function EditVolunteerProfile() {
         <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" role="dialog" aria-modal="true">
           <div className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-xl flex flex-col gap-4">
             <div className="flex items-center gap-3">
-              <span className="text-3xl">📄</span>
+              <span className="text-3xl"><Icon name="documento" size="1.1em" /></span>
               <div>
                 <h3 className="text-lg font-bold text-[#071d37] leading-tight">Adjuntar certificación</h3>
                 <p className="text-[11px] text-[#64748b]">Así se mostrará en tu perfil.</p>
@@ -471,7 +472,7 @@ export function EditVolunteerProfile() {
     
         {toastMessage && (
           <div className="fixed top-6 right-6 z-50 bg-[#047857] text-white px-5 py-3 rounded-2xl shadow-xl flex items-center gap-3 border border-[#6ee7b7]">
-            <span className="text-lg">✓</span>
+            <span className="text-lg"><Icon name="check" size="1.1em" /></span>
             <span className="text-xs font-bold">{toastMessage}</span>
           </div>
         )}
@@ -480,7 +481,7 @@ export function EditVolunteerProfile() {
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
             <div className="bg-white rounded-3xl max-w-lg w-full p-6 md:p-8 shadow-2xl border border-[#e2e8f0] text-center relative flex flex-col items-center">
               <div className="w-16 h-16 rounded-full bg-[#dcfce7] text-[#047857] flex items-center justify-center text-3xl mb-4 border border-[#86efac]">
-                ✓
+                <Icon name="check" size="1.1em" />
               </div>
               <span className="bg-[#dcfce7] text-[#166534] text-[10px] font-extrabold px-3 py-1 rounded-full uppercase border border-[#bbf7d0] mb-2">
                 VERIFICACIÓN AUTOMÁTICA OBTENIDA
@@ -504,7 +505,7 @@ export function EditVolunteerProfile() {
           {!isVerified && (
             <div className="bg-[#f0f9ff] border border-[#bae6fd] rounded-2xl p-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
               <div className="flex items-start gap-3">
-                <span className="text-xl">📢</span>
+                <span className="text-xl"><Icon name="convocatoria" size="1.1em" /></span>
                 <div>
                   <h4 className="text-xs font-bold text-[#0369a1]">Requisitos de Visibilidad Pública y Verificación</h4>
                   <p className="text-[11px] text-[#0284c7] mt-0.5">
@@ -514,16 +515,16 @@ export function EditVolunteerProfile() {
               </div>
               <div className="flex flex-wrap gap-1.5 shrink-0">
                 <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${estadoSecciones.sec01 ? 'bg-[#dcfce7] text-[#15803d] border-[#86efac]' : 'bg-[#f1f5f9] text-[#64748b] border-[#cbd5e1]'}`}>
-                  01 Identidad {estadoSecciones.sec01 ? '✓' : '○'}
+                  01 Identidad <Icon name={estadoSecciones.sec01 ? 'completado' : 'punto'} size={12} />
                 </span>
                 <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${estadoSecciones.sec02 ? 'bg-[#dcfce7] text-[#15803d] border-[#86efac]' : 'bg-[#f1f5f9] text-[#64748b] border-[#cbd5e1]'}`}>
-                  02 Habilidades {estadoSecciones.sec02 ? '✓' : '○'}
+                  02 Habilidades <Icon name={estadoSecciones.sec02 ? 'completado' : 'punto'} size={12} />
                 </span>
                 <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${estadoSecciones.sec03 ? 'bg-[#dcfce7] text-[#15803d] border-[#86efac]' : 'bg-[#f1f5f9] text-[#64748b] border-[#cbd5e1]'}`}>
-                  03 Disponibilidad {estadoSecciones.sec03 ? '✓' : '○'}
+                  03 Disponibilidad <Icon name={estadoSecciones.sec03 ? 'completado' : 'punto'} size={12} />
                 </span>
                 <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${estadoSecciones.sec05 ? 'bg-[#dcfce7] text-[#15803d] border-[#86efac]' : 'bg-[#f1f5f9] text-[#64748b] border-[#cbd5e1]'}`}>
-                  05 Cobertura {estadoSecciones.sec05 ? '✓' : '○'}
+                  05 Cobertura <Icon name={estadoSecciones.sec05 ? 'completado' : 'punto'} size={12} />
                 </span>
               </div>
             </div>
@@ -537,7 +538,7 @@ export function EditVolunteerProfile() {
                     ? 'bg-[#dcfce7] text-[#166534] border-[#EFF4FF]' 
                     : 'bg-[#fef3c7] text-[#92400e] border-[#fde68a]'
                 }`}>
-                  <img src={Icons.CheckVerifyIcon} alt="Verificado" /> {isVerified ? 'FICHA COMPLETA' : 'PERFIL EN REVISIÓN'}
+                  <Icon name="completado" className="text-[#006194]" /> {isVerified ? 'FICHA COMPLETA' : 'PERFIL EN REVISIÓN'}
                 </span>
                 <span className="text-[11px] font-bold text-[#94a3b8]">
                   ID: {volunteerId ? `VOL-${volunteerId.substring(0, 8).toUpperCase()}` : 'SIN ID'}
@@ -568,14 +569,14 @@ export function EditVolunteerProfile() {
                   onClick={() => navigate(`/voluntario/${volunteerId}`)}
                   className="bg-[#eef6ff] text-[#005684] px-4 py-2.5 rounded-xl text-xs font-bold hover:bg-[#d4e7fe] transition flex items-center gap-2 border border-[#dbeafe] cursor-pointer"
                 >
-                  <span>👁️</span> Previsualizar Perfil
+                  <span><Icon name="ver" size="1.1em" /></span> Previsualizar Perfil
                 </button>
                 <button 
                   onClick={handleSave} 
                   disabled={saving}
                   className="bg-[#005684] text-white px-5 py-2.5 rounded-xl text-xs font-bold hover:bg-[#00456a] transition shadow-sm flex items-center gap-2 cursor-pointer disabled:opacity-50"
                 >
-                  {saving ? 'Guardando...' : '✓ Guardar Cambios'}
+                  {saving ? 'Guardando...' : <><Icon name="check" size={14} /> Guardar Cambios</>}
                 </button>
               </div>
             </div>
@@ -589,7 +590,7 @@ export function EditVolunteerProfile() {
               <section className="bg-white rounded-3xl p-6 border border-[#e2e8f0] shadow-sm">
                 <div className="flex items-center justify-between mb-5">
                   <h3 className="text-[11px] font-bold text-[#005684] uppercase tracking-wider flex items-center gap-2">
-                    <span className="text-base">🪪</span> 01 / IDENTIDAD Y RESUMEN PROFESIONAL
+                    <span className="text-base"><Icon name="identificacion" size="1.1em" /></span> 01 / IDENTIDAD Y RESUMEN PROFESIONAL
                   </h3>
                   <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
                     estadoSecciones.sec01 ? 'text-[#10b981] bg-[#ecfdf5]' : 'text-[#f59e0b] bg-[#fffbe2]'
@@ -604,7 +605,7 @@ export function EditVolunteerProfile() {
                       {avatarUrl ? (
                         <img src={avatarUrl} className="w-full h-full object-cover" alt="Perfil" />
                       ) : (
-                        <span className="text-3xl text-slate-400">👤</span>
+                        <span className="text-3xl text-slate-400"><Icon name="usuario" size="1.1em" /></span>
                       )}
                     </div>
                     {/* INPUT OCULTO DE FOTO */}
@@ -667,7 +668,7 @@ export function EditVolunteerProfile() {
               <section className="bg-white rounded-3xl p-6 border border-[#e2e8f0] shadow-sm">
                 <div className="flex items-center justify-between mb-1">
                   <h3 className="text-[11px] font-bold text-[#005684] uppercase tracking-wider flex items-center gap-2">
-                    <span className="text-base">🛠️️</span> 02 / HABILIDADES Y ESPECIALIDADES
+                    <span className="text-base"><Icon name="herramientas" size="1.1em" />️</span> 02 / HABILIDADES Y ESPECIALIDADES
                   </h3>
                   <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
                     estadoSecciones.sec02 ? 'text-[#10b981] bg-[#ecfdf5]' : 'text-[#f59e0b] bg-[#fffbe2]'
@@ -714,7 +715,7 @@ export function EditVolunteerProfile() {
                           onClick={() => handleRemoveHabilidad(idx)}
                           className="text-[#94a3b8] hover:text-[#ef4444] font-black text-xs cursor-pointer ml-1"
                         >
-                          ✕
+                          <Icon name="cerrar" size="1.1em" />
                         </button>
                       </span>
                     ))
@@ -748,7 +749,7 @@ export function EditVolunteerProfile() {
               <section className="bg-white rounded-3xl p-6 border border-[#e2e8f0] shadow-sm">
                 <div className="flex items-center justify-between mb-2">
                   <h3 className="text-[11px] font-bold text-[#005684] uppercase tracking-wider flex items-center gap-2">
-                    <span className="text-base">📅</span> 03 / DISPONIBILIDAD Y MODALIDAD
+                    <span className="text-base"><Icon name="calendario" size="1.1em" /></span> 03 / DISPONIBILIDAD Y MODALIDAD
                   </h3>
                   <div className="flex items-center gap-2">
                     <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
@@ -802,12 +803,12 @@ export function EditVolunteerProfile() {
                     </thead>
                     <tbody>
                       {[
-                        { id: 'manana', label: '☀️ Mañana (07:00 - 12:00)' },
-                        { id: 'tarde', label: '🌤 Tarde (13:00 - 18:00)' },
-                        { id: 'noche', label: '🌙 Noche (18:30 - 22:00)' }
+                        { id: 'manana', label: 'Mañana (07:00 - 12:00)', icono: 'manana' as const },
+                        { id: 'tarde', label: 'Tarde (13:00 - 18:00)', icono: 'tarde' as const },
+                        { id: 'noche', label: 'Noche (18:30 - 22:00)', icono: 'noche' as const }
                       ].map((franja) => (
                         <tr key={franja.id} className="border-t border-[#f1f5f9] bg-white">
-                          <td className="py-2.5 text-xs font-semibold text-[#475569]">{franja.label}</td>
+                          <td className="py-2.5 text-xs font-semibold text-[#475569]"><span className="inline-flex items-center gap-1.5"><Icon name={franja.icono} size={14} className="text-[#005684]" />{franja.label}</span></td>
                           {['lun', 'mar', 'mie', 'jue', 'vie', 'sab', 'dom'].map((dia) => {
                             const isActive = horarios[franja.id as keyof HorariosFranjas]?.[dia];
                             return (
@@ -850,7 +851,7 @@ export function EditVolunteerProfile() {
               <section className="bg-white rounded-3xl p-6 border border-[#e2e8f0] shadow-sm mb-6">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-[11px] font-bold text-[#005684] uppercase tracking-wider flex items-center gap-2">
-                    <span className="text-base">🤝</span> 04 / HISTORIAL DE MISIONES Y TESTIMONIOS RECIBIDOS
+                    <span className="text-base"><Icon name="alianza" size="1.1em" /></span> 04 / HISTORIAL DE MISIONES Y TESTIMONIOS RECIBIDOS
                   </h3>
                 </div>
 
@@ -863,7 +864,7 @@ export function EditVolunteerProfile() {
                     <>
                       {historial.map((item) => (
                         <div key={item.id} className="flex gap-4 p-4 rounded-xl bg-[#EFF4FF] border border-[#e2e8f0]">
-                          <div className="w-8 h-8 rounded-lg bg-[#eef6ff] text-[#0284c7] flex items-center justify-center shrink-0">🏥</div>
+                          <div className="w-8 h-8 rounded-lg bg-[#eef6ff] text-[#0284c7] flex items-center justify-center shrink-0"><Icon name="hospital" size="1.1em" /></div>
                           <div className="flex-1">
                              <div className="flex justify-between items-start">
                                <div className="text-left">
@@ -890,7 +891,7 @@ export function EditVolunteerProfile() {
               <section className="bg-white rounded-3xl p-6 border border-[#e2e8f0] shadow-sm">
                  <div className="flex items-center justify-between mb-4">
                    <h3 className="text-[11px] font-bold text-[#005684] uppercase tracking-wider flex items-center gap-2">
-                      <span className="text-base">📍</span> 05 / COBERTURA Y MOVILIDAD
+                      <span className="text-base"><Icon name="ubicacion" className="text-[#006194]" size="1.1em" /></span> 05 / COBERTURA Y MOVILIDAD
                    </h3>
                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
                      estadoSecciones.sec05 ? 'text-[#10b981] bg-[#ecfdf5]' : 'text-[#f59e0b] bg-[#fffbe2]'
@@ -941,7 +942,7 @@ export function EditVolunteerProfile() {
               <section className="bg-white rounded-3xl p-6 border border-[#e2e8f0] shadow-sm">
                  <div className="flex items-center justify-between mb-4">
                    <h3 className="text-[11px] font-bold text-[#005684] uppercase tracking-wider flex items-center gap-2">
-                      <span className="text-base">🛡</span> 06 / CERTIFICACIONES
+                      <span className="text-base"><Icon name="seguridad" size="1.1em" /></span> 06 / CERTIFICACIONES
                    </h3>
                  </div>
 
@@ -954,7 +955,7 @@ export function EditVolunteerProfile() {
                      certificaciones.map((cert, idx) => (
                        <div key={cert.id || idx} className="bg-[#EFF4FF] border border-[#dbeafe] p-3 rounded-xl flex items-center justify-between">
                          <div className="flex items-center gap-2.5 overflow-hidden">
-                           <span className="text-[#047857] text-lg">{cert.icono || '📄'}</span>
+                           <span className="text-[#047857] text-lg"><Icon name={iconoDesdeEmoji(cert.icono, 'documento')} size="1.1em" /></span>
                            <div className="truncate">
                              <p className="text-[11px] font-bold text-[#071d37] truncate">{cert.titulo}</p>
                              {cert.archivo_url && (
@@ -963,7 +964,7 @@ export function EditVolunteerProfile() {
                                  onClick={() => handleViewDocument(cert.archivo_url!)} 
                                  className="text-[9px] text-[#0284c7] hover:underline font-bold cursor-pointer"
                                >
-                                 Ver adjunto ↗
+                                 Ver adjunto <Icon name="externo" size="1.1em" />
                                </button>
                              )}
                            </div>
@@ -972,7 +973,7 @@ export function EditVolunteerProfile() {
                            onClick={() => { setCertificaciones(prev => prev.filter((_, i) => i !== idx)); markUnsaved(); }}
                            className="text-red-400 hover:text-red-600 font-bold ml-2 cursor-pointer"
                          >
-                           ✕
+                           <Icon name="cerrar" size="1.1em" />
                          </button>
                        </div>
                      ))
@@ -1008,7 +1009,7 @@ export function EditVolunteerProfile() {
                        onChange={(e) => { setHorasTotalesDonadas(Number(e.target.value)); markUnsaved(); }}
                        className="w-20 bg-white border border-blue-200 text-2xl font-black text-[#005684] text-center rounded-lg outline-none focus:border-[#005684] py-1"
                      />
-                     <p className="text-[10px] font-bold text-[#005684] mt-2">✏️ Horas donadas</p>
+                     <p className="text-[10px] font-bold text-[#005684] mt-2"><Icon name="editar" size="1.1em" /> Horas donadas</p>
                    </div>
                    <div className="bg-[#ecfdf5] p-2 rounded-xl flex flex-col items-center justify-center border border-green-100">
                      <p className="text-2xl font-black text-[#047857]">100%</p>
@@ -1027,7 +1028,7 @@ export function EditVolunteerProfile() {
             <div className="bg-[#0f2a3f] text-white rounded-2xl p-4 pr-5 shadow-2xl flex flex-col sm:flex-row items-center gap-4 sm:gap-6 border border-[#1e3a8a] w-full">
               <div className="flex items-center gap-3 w-full sm:w-auto">
                 <div className="h-10 w-10 rounded-full bg-[#0284c7]/20 flex items-center justify-center text-[#38bdf8] shrink-0">
-                  <span className="text-lg">📝</span>
+                  <span className="text-lg"><Icon name="formulario" size="1.1em" /></span>
                 </div>
                 <div>
                   <p className="text-sm font-bold text-white">Tienes cambios pendientes de publicación</p>

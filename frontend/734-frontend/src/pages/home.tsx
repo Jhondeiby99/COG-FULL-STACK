@@ -2,18 +2,10 @@ import { useEffect, useState, useMemo, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import { Link, useNavigate } from 'react-router-dom';
 
-import iconFiltrosUrl from '../assets/icons/icon-filtros.svg';
-import SearchIcon from '../assets/icons/SearchIcon.svg';
-import CampanaIcon from '../assets/icons/CampanaIcon.svg';
-import FiltroDirectorio from '../assets/icons/FiltroDirectorio.svg';
-import EdificioIcon from '../assets/icons/EdificioIcon.svg';
-import ManoIcon from '../assets/icons/ManoIcon.svg';
-import PaqueteIcon from '../assets/icons/PaqueteIcon.svg';
-import IconVoluntario from '../assets/icons/IconVoluntario.svg';
 import { Header } from '../components/Header.tsx';
 import { Footer } from '../components/Footer.tsx';
-import * as Icons  from '../assets/icons/index.ts';
 
+import { Icon } from '../components/Icon';
 // Tipos
 type Fundacion = { id: string; nombre_legal: string; ubicacion: string | null; };
 type Necesidad = { id: string; titulo: string; descripcion: string | null; categoria: string | null; prioridad: 'alta' | 'media' | 'baja'; meta_texto: string | null; porcentaje_recaudado: number | null; completada: boolean | null; fundacion: Fundacion | Fundacion[] | null; };
@@ -151,9 +143,9 @@ export function Home() {
   };
 
   const getPriorityStyle = (prioridad: string) => {
-    if (prioridad === 'alta') return { badge: 'bg-red-100 text-red-700', text: '🔴 Alta Prioridad', bar: 'bg-red-500', icon: 'bg-red-50 text-red-600 border-red-200' };
-    if (prioridad === 'media') return { badge: 'bg-purple-100 text-purple-700', text: '🔵 Media Prioridad', bar: 'bg-purple-500', icon: 'bg-purple-50 text-purple-600 border-purple-200' };
-    return { badge: 'bg-green-100 text-green-700', text: '🟢 Baja Prioridad', bar: 'bg-green-500', icon: 'bg-green-50 text-green-600 border-green-200' };
+    if (prioridad === 'alta') return { badge: 'bg-red-100 text-red-700', text: 'Alta Prioridad', bar: 'bg-red-500', icon: 'bg-red-50 text-red-600 border-red-200' };
+    if (prioridad === 'media') return { badge: 'bg-purple-100 text-purple-700', text: 'Media Prioridad', bar: 'bg-purple-500', icon: 'bg-purple-50 text-purple-600 border-purple-200' };
+    return { badge: 'bg-green-100 text-green-700', text: 'Baja Prioridad', bar: 'bg-green-500', icon: 'bg-green-50 text-green-600 border-green-200' };
   };
 
   const getCategoryCount = (category: string) => {
@@ -185,7 +177,7 @@ export function Home() {
                     <img src={getAvatarUrl(f.logo_url)} className="w-12 h-12 rounded-xl object-cover bg-white shadow-sm border border-gray-100" alt="Logo" />
                     <div className="flex flex-col min-w-0">
                       <span className="text-base font-extrabold text-[#071d37] truncate">{f.nombre_legal}</span>
-                      <span className="text-xs text-gray-500 truncate font-medium">📍 {f.ubicacion || 'Colombia'}</span>
+                      <span className="text-xs text-gray-500 truncate font-medium"><Icon name="ubicacion" className="text-[#006194]" size="1.1em" /> {f.ubicacion || 'Colombia'}</span>
                     </div>
                   </Link>
                 ))}
@@ -199,7 +191,7 @@ export function Home() {
                   <Link key={v.id} to={`/voluntario/${v.id}`} onClick={() => setShowHeroDropdown(false)} className="flex items-center gap-4 px-5 py-3 hover:bg-emerald-50 transition border-b border-gray-50 last:border-0 cursor-pointer">
                     <img src={getAvatarUrl(v.avatar_url)} className="w-12 h-12 rounded-full object-cover bg-white shadow-sm border border-gray-100" alt="Avatar" />
                     <div className="flex flex-col min-w-0">
-                      <span className="text-base font-extrabold text-[#071d37] truncate flex items-center gap-1.5">{v.nombre_completo} <img src={Icons.IconVerify} className="w-4 h-4" alt="Verificado"/></span>
+                      <span className="text-base font-extrabold text-[#071d37] truncate flex items-center gap-1.5">{v.nombre_completo} <Icon name="verificado" className="text-[#006194] w-4 h-4" /></span>
                       <span className="text-xs text-emerald-600 font-bold truncate">{v.profesion || 'Voluntario Activo'}</span>
                     </div>
                   </Link>
@@ -252,7 +244,7 @@ export function Home() {
 
             <div className="flex flex-col md:flex-row gap-3">
               <div className="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 flex items-center gap-3 focus-within:border-[#005684] focus-within:ring-2 focus-within:ring-[#005684]/20 transition-all shadow-inner relative" ref={heroSearchRef}>
-                <img src={SearchIcon} className="w-5 h-5 opacity-50" alt="Buscar" />
+                <Icon name="buscar" className="size-5 text-[#707881]" />
                 <input
                   type="text"
                   value={searchQuery}
@@ -262,14 +254,14 @@ export function Home() {
                   className="bg-transparent border-none outline-none w-full text-sm text-[#071d37] font-medium placeholder-gray-400"
                 />
                 {searchQuery && (
-                  <button type="button" onClick={() => setSearchQuery('')} className="text-gray-400 hover:text-gray-600 font-bold text-lg px-2">✕</button>
+                  <button type="button" onClick={() => setSearchQuery('')} className="text-gray-400 hover:text-gray-600 font-bold text-lg px-2"><Icon name="cerrar" size="1.1em" /></button>
                 )}
                 {/* Renderizar Dropdown de Búsqueda de Hero aquí */}
                 {renderHeroDropdown()}
               </div>
               <div className="flex gap-2 relative z-0">
                 <button type="button" onClick={() => setIsFilterModalOpen(true)} className="flex items-center justify-center gap-2 bg-white border border-gray-200 text-gray-700 px-4 py-3 rounded-xl font-semibold hover:bg-gray-50 transition w-full md:w-auto text-sm shadow-sm active:scale-95">
-                  <img src={iconFiltrosUrl} className="w-4 h-4" alt="Filtros" /> <span className="hidden md:inline">Filtros</span>
+                  <Icon name="filtros" className="size-4 text-[#006194]" /> <span className="hidden md:inline">Filtros</span>
                 </button>
                 <button type="submit" className="bg-[#005684] hover:bg-[#004266] text-white px-6 py-3 rounded-xl font-bold transition w-full md:w-auto text-sm shadow-md active:scale-95">
                   Explorar →
@@ -279,25 +271,25 @@ export function Home() {
 
             <div className="flex flex-wrap items-center gap-2 mt-4 relative z-0">
               <span className="text-[10px] font-bold text-gray-400 tracking-wider uppercase">Accesos Rápidos:</span>
-              <button type="button" onClick={() => { setSearchQuery('Alimentos'); setActiveTab('needs'); }} className="px-3 py-1.5 bg-gray-50 hover:bg-gray-100 text-gray-600 text-[11px] font-semibold rounded-lg border border-gray-200 transition">🍲 Alimentos</button>
-              <button type="button" onClick={() => { setSearchQuery('Médicos'); setActiveTab('volunteers'); }} className="px-3 py-1.5 bg-gray-50 hover:bg-gray-100 text-gray-600 text-[11px] font-semibold rounded-lg border border-gray-200 transition">⚕️ Médicos</button>
-              <button type="button" onClick={() => { setSearchQuery('Bogotá'); }} className="px-3 py-1.5 bg-gray-50 hover:bg-gray-100 text-gray-600 text-[11px] font-semibold rounded-lg border border-gray-200 transition">📍 Bogotá D.C.</button>
-              <button type="button" onClick={() => { setSelectedCategory('Alta Prioridad'); setActiveTab('needs'); }} className={`px-3 py-1.5 text-[11px] font-bold rounded-lg border transition ${selectedCategory === 'Alta Prioridad' ? 'bg-red-100 text-red-700 border-red-200 shadow-sm' : 'bg-red-50 hover:bg-red-100 text-red-600 border-red-100'}`}>🔴 Alta Prioridad</button>
+              <button type="button" onClick={() => { setSearchQuery('Alimentos'); setActiveTab('needs'); }} className="px-3 py-1.5 bg-gray-50 hover:bg-gray-100 text-gray-600 text-[11px] font-semibold rounded-lg border border-gray-200 transition"><Icon name="alimentos" size="1.1em" /> Alimentos</button>
+              <button type="button" onClick={() => { setSearchQuery('Médicos'); setActiveTab('volunteers'); }} className="px-3 py-1.5 bg-gray-50 hover:bg-gray-100 text-gray-600 text-[11px] font-semibold rounded-lg border border-gray-200 transition"><Icon name="salud" size="1.1em" /> Médicos</button>
+              <button type="button" onClick={() => { setSearchQuery('Bogotá'); }} className="px-3 py-1.5 bg-gray-50 hover:bg-gray-100 text-gray-600 text-[11px] font-semibold rounded-lg border border-gray-200 transition"><Icon name="ubicacion" className="text-[#006194]" size="1.1em" /> Bogotá D.C.</button>
+              <button type="button" onClick={() => { setSelectedCategory('Alta Prioridad'); setActiveTab('needs'); }} className={`px-3 py-1.5 text-[11px] font-bold rounded-lg border transition ${selectedCategory === 'Alta Prioridad' ? 'bg-red-100 text-red-700 border-red-200 shadow-sm' : 'bg-red-50 hover:bg-red-100 text-red-600 border-red-100'}`}><Icon name="punto" size="1.1em" filled /> Alta Prioridad</button>
             </div>
           </form>
 
           {/* ESTADÍSTICAS */}
           <section className="grid grid-cols-1 sm:grid-cols-3 gap-4 md:gap-6 w-full max-w-5xl mt-16">
             <div className="bg-blue-50/50 rounded-2xl p-5 flex items-center gap-4 border border-blue-100/50 text-left">
-              <div className="w-12 h-12 rounded-2xl bg-blue-100 flex items-center justify-center flex-shrink-0"><img src={EdificioIcon} className="w-6 h-6 opacity-70" alt="Edificio" /></div>
+              <div className="w-12 h-12 rounded-2xl bg-blue-100 flex items-center justify-center flex-shrink-0"><Icon name="fundacion" className="size-6 text-[#006194]" /></div>
               <div><h3 className="text-2xl font-extrabold text-[#005684]">+{stats.fundaciones}</h3><p className="text-[11px] text-[#005684]/70 font-semibold uppercase tracking-wide">Fundaciones activas</p></div>
             </div>
             <div className="bg-emerald-50/50 rounded-2xl p-5 flex items-center gap-4 border border-emerald-100/50 text-left">
-              <div className="w-12 h-12 rounded-2xl bg-emerald-100 flex items-center justify-center flex-shrink-0"><img src={ManoIcon} className="w-6 h-6 opacity-70" alt="Mano" /></div>
+              <div className="w-12 h-12 rounded-2xl bg-emerald-100 flex items-center justify-center flex-shrink-0"><Icon name="donar" className="size-6 text-[#006947]" /></div>
               <div><h3 className="text-2xl font-extrabold text-emerald-700">+{stats.voluntarios}</h3><p className="text-[11px] text-emerald-600/70 font-semibold uppercase tracking-wide">Voluntarios validados</p></div>
             </div>
             <div className="bg-purple-50/50 rounded-2xl p-5 flex items-center gap-4 border border-purple-100/50 text-left">
-              <div className="w-12 h-12 rounded-2xl bg-purple-100 flex items-center justify-center flex-shrink-0"><img src={PaqueteIcon} className="w-6 h-6 opacity-70" alt="Paquete" /></div>
+              <div className="w-12 h-12 rounded-2xl bg-purple-100 flex items-center justify-center flex-shrink-0"><Icon name="paquete" className="size-6 text-[#7c3aed]" /></div>
               <div><h3 className="text-2xl font-extrabold text-purple-700">+{stats.donaciones.toLocaleString()}</h3><p className="text-[11px] text-purple-600/70 font-semibold uppercase tracking-wide">Insumos canalizados</p></div>
             </div>
           </section>
@@ -308,7 +300,7 @@ export function Home() {
           <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/3 blur-3xl pointer-events-none"></div>
           <div className="flex items-center gap-5 relative z-10">
             <div className="w-16 h-16 rounded-2xl bg-white/10 border border-white/20 flex items-center justify-center flex-shrink-0 backdrop-blur-sm">
-              <img src={CampanaIcon} className="w-8 h-8 invert opacity-90" alt="Campana" />
+              <Icon name="notificaciones" className="size-8 text-white/90" />
             </div>
             <div className="text-center md:text-left">
               <h3 className="text-xl md:text-2xl font-bold mb-1">¿Quieres ser parte de las soluciones de hoy?</h3>
@@ -323,7 +315,7 @@ export function Home() {
             )}
             <Link to="/explorar" className="w-full sm:w-auto">
               <button className="w-full bg-white/10 hover:bg-white/20 border border-white/20 text-white px-6 py-3 rounded-xl font-bold transition flex items-center justify-center gap-2 text-sm backdrop-blur-sm active:scale-95">
-                <img src={FiltroDirectorio} className="w-4 h-4 invert" alt="Filtrar" /> Ver Directorio Oficial
+                <Icon name="filtros" className="size-4" /> Ver Directorio Oficial
               </button>
             </Link>
           </div>
@@ -337,13 +329,13 @@ export function Home() {
             <section id="necesidades" className="scroll-mt-24 flex flex-col gap-6">
               <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
                 <div>
-                  <span className="inline-block bg-red-100 text-red-700 text-[10px] font-bold px-2.5 py-1 rounded-md mb-2 tracking-widest uppercase">🔴 Llamados urgentes</span>
+                  <span className="inline-block bg-red-100 text-red-700 text-[10px] font-bold px-2.5 py-1 rounded-md mb-2 tracking-widest uppercase"><Icon name="punto" size="1.1em" filled /> Llamados urgentes</span>
                   <h2 className="text-2xl md:text-3xl font-extrabold text-[#071d37]">Necesidades de Fundaciones</h2>
                   <p className="text-sm text-gray-500 mt-1 max-w-xl">Requerimientos puntuales, verificados por nuestro comité de transparencia.</p>
                 </div>
                 <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
                   <button className="hidden lg:flex items-center gap-2 text-[#005684] bg-blue-50 hover:bg-blue-100 px-4 py-2 rounded-xl text-xs font-bold transition border border-blue-100 shadow-sm" onClick={() => setIsFilterModalOpen(true)}>
-                    <img src={iconFiltrosUrl} className="w-3 h-3" alt="Filtro" /> Panel Filtros Avanzados
+                    <Icon name="filtros" className="size-3 text-[#006194]" /> Panel Filtros Avanzados
                   </button>
                   <div className="flex flex-wrap gap-2">
                     {['Todas', 'Alimentos', 'Medicamentos', 'Útiles', 'Alta Prioridad'].map((cat) => (
@@ -360,7 +352,7 @@ export function Home() {
                   <p className="text-gray-500 text-sm font-bold col-span-full">Cargando necesidades en tiempo real...</p>
                 ) : necesidadesFiltradas.length === 0 ? (
                   <div className="col-span-full bg-white p-10 rounded-3xl border border-gray-200 text-center shadow-sm">
-                    <span className="text-4xl mb-4 block">🔍</span>
+                    <span className="text-4xl mb-4 block"><Icon name="buscar" size="1.1em" /></span>
                     <h3 className="text-lg font-bold text-[#071d37] mb-2">No se encontraron resultados</h3>
                     <p className="text-gray-500 text-sm mb-4">No hay llamados urgentes que coincidan con los filtros y búsqueda actuales.</p>
                     <button onClick={clearFilters} className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold text-xs rounded-xl transition">Limpiar filtros</button>
@@ -373,7 +365,7 @@ export function Home() {
                     return (
                       <div key={need.id} className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 flex flex-col group">
                         <div className="flex justify-between items-center mb-4">
-                          <span className={`text-[10px] font-bold px-2.5 py-1 rounded-md ${style.badge}`}>{style.text}</span>
+                          <span className={`text-[10px] font-bold px-2.5 py-1 rounded-md ${style.badge} inline-flex items-center gap-1`}><Icon name="punto" size={7} filled />{style.text}</span>
                           <span className="text-[10px] text-gray-400 font-medium">Reciente</span>
                         </div>
                         
@@ -385,7 +377,7 @@ export function Home() {
                             <h4 className="text-sm font-bold text-[#071d37] truncate hover:text-[#005684] transition">
                               {fundacionObj?.id ? <Link to={`/fundacion/${fundacionObj.id}`}>{fundacionObj.nombre_legal}</Link> : <span>{fundacionObj?.nombre_legal || 'Desconocida'}</span>}
                             </h4>
-                            <p className="text-xs text-gray-500 truncate">📍 {fundacionObj?.ubicacion || 'Sin ubicación'}</p>
+                            <p className="text-xs text-gray-500 truncate"><Icon name="ubicacion" className="text-[#006194]" size="1.1em" /> {fundacionObj?.ubicacion || 'Sin ubicación'}</p>
                           </div>
                         </div>
 
@@ -404,7 +396,7 @@ export function Home() {
                         </div>
 
                         <div className="flex items-center justify-between gap-3 mt-auto">
-                          <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-md border border-emerald-100 flex items-center gap-1"><img src={Icons.IconVerify} className="w-3 h-3" alt="OK"/> Validada</span>
+                          <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-md border border-emerald-100 flex items-center gap-1"><Icon name="verificado" className="text-[#006194] w-3 h-3" /> Validada</span>
                           <Link to={`/fundacion/${fundacionObj?.id}`} className="flex-1">
                             <button className="w-full bg-[#071d37] hover:bg-[#005684] text-white text-xs font-bold py-2.5 rounded-xl transition shadow-sm active:scale-95">Ver necesidad →</button>
                           </Link>
@@ -422,14 +414,14 @@ export function Home() {
             <section id="voluntarios" className="scroll-mt-24 flex flex-col gap-6 pt-8 border-t border-gray-100">
               <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
                 <div>
-                  <span className="inline-block bg-emerald-100 text-emerald-700 text-[10px] font-bold px-2.5 py-1 rounded-md mb-2 tracking-widest uppercase">🟢 Talento & Solidaridad</span>
+                  <span className="inline-block bg-emerald-100 text-emerald-700 text-[10px] font-bold px-2.5 py-1 rounded-md mb-2 tracking-widest uppercase"><Icon name="punto" size="1.1em" filled /> Talento & Solidaridad</span>
                   <h2 className="text-2xl md:text-3xl font-extrabold text-[#071d37]">Voluntarios Disponibles</h2>
                   <p className="text-sm text-gray-500 mt-1 max-w-xl">Profesionales y ciudadanos dispuestos a donar horas, conocimientos y experiencia.</p>
                 </div>
                 {!isAuthenticated && (
                   <Link to="/signup">
                     <button className="flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-3 rounded-xl font-bold transition text-sm shadow-md w-full sm:w-auto active:scale-95">
-                      <img src={IconVoluntario} className="w-4 h-4 invert" alt="Voluntariado" /> Ofrecer voluntariado
+                      <Icon name="voluntario" className="size-4" /> Ofrecer voluntariado
                     </button>
                   </Link>
                 )}
@@ -440,7 +432,7 @@ export function Home() {
                   <p className="text-gray-500 text-sm font-bold col-span-full">Cargando talento solidario...</p>
                 ) : voluntariosFiltrados.length === 0 ? (
                   <div className="col-span-full bg-white p-10 rounded-3xl border border-gray-200 text-center shadow-sm">
-                    <span className="text-4xl mb-4 block">👩‍⚕️</span>
+                    <span className="text-4xl mb-4 block"><Icon name="usuario" size="1.1em" />‍<Icon name="salud" size="1.1em" /></span>
                     <h3 className="text-lg font-bold text-[#071d37] mb-2">No se encontraron voluntarios</h3>
                     <p className="text-gray-500 text-sm mb-4">No hay perfiles activos que coincidan con la búsqueda actual.</p>
                     <button onClick={clearFilters} className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold text-xs rounded-xl transition">Limpiar filtros</button>
@@ -450,7 +442,7 @@ export function Home() {
                     <div key={voluntario.id} className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 flex flex-col group relative overflow-hidden">
                       <div className="absolute top-0 right-0 p-4">
                         <span className={`text-[10px] font-bold px-2.5 py-1 rounded-md border ${voluntario.disponibilidad_viaje === 'Local' ? 'bg-blue-50 text-blue-700 border-blue-100' : 'bg-purple-50 text-purple-700 border-purple-100'}`}>
-                          {voluntario.disponibilidad_viaje === 'Local' ? '📍 Local' : '✈️️ Viaja Nal.'}
+                          <Icon name={voluntario.disponibilidad_viaje === 'Local' ? 'ubicacion' : 'viaje'} size={12} /> {voluntario.disponibilidad_viaje === 'Local' ? 'Local' : 'Viaja Nal.'}
                         </span>
                       </div>
                       
@@ -458,7 +450,7 @@ export function Home() {
                       
                       <h3 className="text-base font-extrabold text-gray-900 mb-0.5">{voluntario.nombre_completo}</h3>
                       <p className="text-[11px] font-bold text-[#005684] uppercase tracking-wide mb-1">{voluntario.profesion || 'Voluntario Activo'}</p>
-                      <p className="text-xs text-gray-500 mb-4">📍 {voluntario.ubicacion || 'No especificada'}</p>
+                      <p className="text-xs text-gray-500 mb-4"><Icon name="ubicacion" className="text-[#006194]" size="1.1em" /> {voluntario.ubicacion || 'No especificada'}</p>
 
                       <div className="bg-gray-50 p-4 rounded-xl border border-gray-100 mb-4 flex-1">
                         <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-1">Servicio que ofrece</span>
@@ -468,7 +460,7 @@ export function Home() {
                       </div>
 
                       <div className="text-[11px] text-gray-500 font-medium flex items-center gap-2 mb-4 bg-gray-50/50 p-2 rounded-lg border border-gray-100">
-                        <span>📅</span> {voluntario.tiempo_disponible || 'Disponibilidad a convenir'}
+                        <span><Icon name="calendario" size="1.1em" /></span> {voluntario.tiempo_disponible || 'Disponibilidad a convenir'}
                       </div>
 
                       <div className="flex items-center justify-between gap-3 mt-auto">
@@ -493,10 +485,10 @@ export function Home() {
           <div className="w-full max-w-md bg-white h-full shadow-2xl flex flex-col transform transition-transform duration-300 translate-x-0 overflow-y-auto">
             <div className="flex justify-between items-center p-6 border-b border-gray-100 sticky top-0 bg-white z-10">
               <h2 className="text-lg font-extrabold text-[#071d37] flex items-center gap-2">
-                <img src={iconFiltrosUrl} className="w-5 h-5" alt="Filtros" />
+                <Icon name="filtros" className="size-5 text-[#006194]" />
                 Filtros Avanzados
               </h2>
-              <button onClick={() => setIsFilterModalOpen(false)} className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center font-bold text-gray-500 transition">✕</button>
+              <button onClick={() => setIsFilterModalOpen(false)} className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center font-bold text-gray-500 transition"><Icon name="cerrar" size="1.1em" /></button>
             </div>
             
             <div className="p-6 flex flex-col gap-6 flex-1">
@@ -504,9 +496,9 @@ export function Home() {
               <div>
                 <label className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-3 block">Tipo de Búsqueda</label>
                 <div className="grid grid-cols-1 gap-2">
-                  <button onClick={() => setActiveTab('all')} className={`text-left px-4 py-3 rounded-xl border text-sm font-semibold transition ${activeTab === 'all' ? 'bg-[#005684] text-white border-[#005684] shadow-md' : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50'}`}>🌐 Mostrar Todo el Directorio</button>
-                  <button onClick={() => setActiveTab('needs')} className={`text-left px-4 py-3 rounded-xl border text-sm font-semibold transition ${activeTab === 'needs' ? 'bg-[#005684] text-white border-[#005684] shadow-md' : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50'}`}>🔴 Solo Necesidades y Causas</button>
-                  <button onClick={() => setActiveTab('volunteers')} className={`text-left px-4 py-3 rounded-xl border text-sm font-semibold transition ${activeTab === 'volunteers' ? 'bg-[#005684] text-white border-[#005684] shadow-md' : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50'}`}>🟢 Solo Voluntarios</button>
+                  <button onClick={() => setActiveTab('all')} className={`text-left px-4 py-3 rounded-xl border text-sm font-semibold transition ${activeTab === 'all' ? 'bg-[#005684] text-white border-[#005684] shadow-md' : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50'}`}><Icon name="sitioWeb" size="1.1em" /> Mostrar Todo el Directorio</button>
+                  <button onClick={() => setActiveTab('needs')} className={`text-left px-4 py-3 rounded-xl border text-sm font-semibold transition ${activeTab === 'needs' ? 'bg-[#005684] text-white border-[#005684] shadow-md' : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50'}`}><Icon name="punto" size="1.1em" filled /> Solo Necesidades y Causas</button>
+                  <button onClick={() => setActiveTab('volunteers')} className={`text-left px-4 py-3 rounded-xl border text-sm font-semibold transition ${activeTab === 'volunteers' ? 'bg-[#005684] text-white border-[#005684] shadow-md' : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50'}`}><Icon name="punto" size="1.1em" filled /> Solo Voluntarios</button>
                 </div>
               </div>
 

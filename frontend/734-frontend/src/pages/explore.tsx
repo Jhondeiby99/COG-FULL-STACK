@@ -3,8 +3,8 @@ import { useSearchParams, Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { Header } from '../components/Header';
 import { Footer } from '../components/Footer';
-import * as Icons from '../assets/icons/index.ts';
 
+import { Icon } from '../components/Icon';
 export function Explore() {
   const [searchParams, setSearchParams] = useSearchParams();
   const query = searchParams.get('q') || '';
@@ -131,7 +131,7 @@ export function Explore() {
                         <img src={getAvatarUrl(f.logo_url)} className="w-16 h-16 rounded-xl object-cover border border-gray-100" alt="Logo" />
                         <div>
                           <h3 className="font-extrabold text-[#071d37] leading-tight">{f.nombre_legal}</h3>
-                          <p className="text-xs text-gray-500 mt-1">📍 {f.ubicacion || 'Colombia'}</p>
+                          <p className="text-xs text-gray-500 mt-1"><Icon name="ubicacion" className="text-[#006194]" size="1.1em" /> {f.ubicacion || 'Colombia'}</p>
                         </div>
                       </div>
                       <p className="text-sm text-gray-600 line-clamp-2 mb-4">{f.descripcion || 'Sin descripción disponible.'}</p>
@@ -159,7 +159,7 @@ export function Explore() {
                         <div>
                           <h3 className="font-extrabold text-[#071d37] flex items-center gap-1">
                             {v.nombre_completo}
-                            <img src={Icons.IconVerify} className="w-4 h-4" alt="Verificado"/>
+                            <Icon name="verificado" className="text-[#006194] w-4 h-4" />
                           </h3>
                           <p className="text-xs font-bold text-emerald-600 mt-1 uppercase">{v.profesion || 'Voluntario Activo'}</p>
                         </div>

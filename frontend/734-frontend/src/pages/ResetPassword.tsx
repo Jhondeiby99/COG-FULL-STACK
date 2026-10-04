@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 
+import { Icon } from '../components/Icon';
 export function ResetPassword() {
   const navigate = useNavigate();
   const [newPassword, setNewPassword] = useState('');
@@ -58,7 +59,7 @@ export function ResetPassword() {
         <div className="form-wrapper flex flex-col gap-6">
           
           <div className="top-badge flex items-center gap-1.5 w-fit bg-[#eef6ff] text-[#005684] px-3 py-1 rounded-full text-xs font-bold">
-            <span>🔑</span> Nueva Credencial Cívica
+            <span><Icon name="llave" size="1.1em" /></span> Nueva Credencial Cívica
           </div>
 
           <div>

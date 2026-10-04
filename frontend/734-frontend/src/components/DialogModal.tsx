@@ -1,3 +1,6 @@
+import { Icon } from './Icon';
+import type { NombreIcono } from '../lib/iconos';
+
 interface DialogModalProps {
   title: string;
   message: string;
@@ -12,7 +15,12 @@ interface DialogModalProps {
   onConfirm?: () => void;
 }
 
-const ICONOS = { error: '⚠️', exito: '✅', info: 'ℹ️', confirmar: '❓' };
+const ICONOS: Record<NonNullable<DialogModalProps['variant']>, { nombre: NombreIcono; color: string }> = {
+  error: { nombre: 'advertencia', color: 'text-[#dc2626]' },
+  exito: { nombre: 'completado', color: 'text-[#059669]' },
+  info: { nombre: 'info', color: 'text-[#0284c7]' },
+  confirmar: { nombre: 'ayuda', color: 'text-[#005684]' },
+};
 
 /** Modal estándar de la plataforma para reemplazar alert() y confirm() */
 export function DialogModal({
@@ -30,7 +38,7 @@ export function DialogModal({
   return (
     <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" role="dialog" aria-modal="true">
       <div className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-xl flex flex-col items-center text-center">
-        <span className="text-4xl mb-3">{ICONOS[variant]}</span>
+        <span className={`mb-3 ${ICONOS[variant].color}`}><Icon name={ICONOS[variant].nombre} size={40} /></span>
         <h3 className="text-lg font-bold text-[#071d37] mb-2">{title}</h3>
         <p className="text-xs text-[#64748b] mb-6 whitespace-pre-line">{message}</p>
         {esConfirmacion ? (

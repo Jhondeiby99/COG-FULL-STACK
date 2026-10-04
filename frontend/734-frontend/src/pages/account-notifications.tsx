@@ -4,6 +4,8 @@ import { supabase } from '../lib/supabase';
 import { useNotifications } from '../hooks/useNotifications';
 import type { Notificacion } from '../hooks/useNotifications';
 
+import { Icon } from '../components/Icon';
+import { iconoDesdeEmoji } from '../lib/iconos';
 interface MensajeContactoDetalle {
   id: string;
   nombre_remitente: string;
@@ -259,7 +261,7 @@ export function AccountNotifications() {
     <div className="flex flex-col gap-6 w-full max-w-[1200px] mx-auto relative">
       {toastMessage && (
         <div className="fixed top-6 right-6 z-50 bg-[#047857] text-white px-5 py-3 rounded-2xl shadow-xl flex items-center gap-3 border border-[#6ee7b7]">
-          <span className="text-lg">✓</span>
+          <span className="text-lg"><Icon name="check" size="1.1em" /></span>
           <span className="text-xs font-bold">{toastMessage}</span>
         </div>
       )}
@@ -290,7 +292,7 @@ export function AccountNotifications() {
                 : 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
             }`}
           >
-            <span>✓</span> Marcar todas como leídas
+            <span><Icon name="check" size="1.1em" /></span> Marcar todas como leídas
           </button>
         </div>
       </div>
@@ -300,7 +302,7 @@ export function AccountNotifications() {
         <div className="flex-1 flex flex-col gap-4 min-w-0">
           <div className="flex items-center justify-between mb-2">
             <h2 className="text-lg font-bold text-[#071d37] flex items-center gap-2">
-              <span className="text-[#0284c7]">🔔</span> Avisos Recientes
+              <span className="text-[#0284c7]"><Icon name="notificaciones" size="1.1em" /></span> Avisos Recientes
             </h2>
             {unreadCount > 0 && (
               <span className="bg-[#e0f2fe] text-[#0284c7] text-[11px] font-bold px-2.5 py-1 rounded-full">
@@ -328,7 +330,7 @@ export function AccountNotifications() {
                   <div className={`mt-2 shrink-0 w-2.5 h-2.5 rounded-full ${!notif.leido ? 'bg-[#0284c7]' : 'bg-transparent'}`}></div>
                   
                   <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-xl shrink-0 ${notif.bg_icono || 'bg-[#f0f9ff]'} ${notif.text_icono || 'text-[#0284c7]'}`}>
-                    {notif.icono || '✉️'}
+                    <Icon name={iconoDesdeEmoji(notif.icono, 'correo')} size="1.1em" />
                   </div>
 
                   <div className="flex-1 min-w-0">
@@ -353,7 +355,7 @@ export function AccountNotifications() {
                       }}
                       className="bg-[#eef6ff] text-[#0284c7] text-[11px] font-bold px-3.5 py-1.5 rounded-lg hover:bg-[#d4e7fe] transition w-fit cursor-pointer border border-[#bae6fd]"
                     >
-                      {notif.accion_texto || 'Ver mensaje ➔'}
+                      {(notif.accion_texto || 'Ver mensaje').replace(/\s*[➔→]\s*$/, '')} <Icon name="siguiente" size={12} />
                     </button>
                   </div>
                 </div>
@@ -367,7 +369,7 @@ export function AccountNotifications() {
           {esAdmin && (
             <div className="mb-8">
               <h2 className="text-lg font-bold text-[#071d37] flex items-center gap-2 mb-6">
-                <span className="text-[#dc2626]">📢</span> Aviso Masivo a Voluntarios
+                <span className="text-[#dc2626]"><Icon name="convocatoria" size="1.1em" /></span> Aviso Masivo a Voluntarios
               </h2>
               <div className="bg-white rounded-3xl p-6 sm:p-8 border border-[#e2e8f0] shadow-sm flex flex-col gap-4">
                 <p className="text-[13px] text-[#64748b] leading-relaxed">
@@ -408,14 +410,14 @@ export function AccountNotifications() {
                   disabled={enviandoAviso || !avisoTitulo.trim() || !avisoMensaje.trim()}
                   className="w-full bg-[#dc2626] text-white px-5 py-3.5 rounded-xl text-xs font-bold hover:bg-[#b91c1c] transition shadow-sm flex justify-center items-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <span>🚨</span> Enviar aviso masivo
+                  <span><Icon name="emergencia" size="1.1em" /></span> Enviar aviso masivo
                 </button>
               </div>
             </div>
           )}
 
           <h2 className="text-lg font-bold text-[#071d37] flex items-center gap-2 mb-6">
-            <span className="text-[#005684]">🎛️</span> Canales y Preferencias
+            <span className="text-[#005684]"><Icon name="filtros" size="1.1em" /></span> Canales y Preferencias
           </h2>
 
           <div className={`bg-white rounded-3xl p-6 sm:p-8 border border-[#e2e8f0] shadow-sm flex flex-col gap-6 ${esAdmin ? '' : 'lg:sticky lg:top-24'}`}>
@@ -425,7 +427,7 @@ export function AccountNotifications() {
 
             <div className="flex flex-col gap-4">
               {/* <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded-2xl p-4 flex gap-4">
-                 <div className="text-xl shrink-0 mt-0.5">✉️</div>
+                 <div className="text-xl shrink-0 mt-0.5"><Icon name="correo" size="1.1em" /></div>
                  <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between gap-2 mb-1">
                       <h4 className="text-[14px] font-bold text-[#071d37] leading-tight">Alertas por Correo Electrónico</h4>
@@ -444,7 +446,7 @@ export function AccountNotifications() {
               </div> */}
 
               <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded-2xl p-4 flex gap-4">
-                 <div className="text-xl shrink-0 mt-0.5">🔔</div>
+                 <div className="text-xl shrink-0 mt-0.5"><Icon name="notificaciones" size="1.1em" /></div>
                  <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between gap-2 mb-1">
                       <h4 className="text-[14px] font-bold text-[#071d37] leading-tight">Notificaciones Push</h4>
@@ -463,7 +465,7 @@ export function AccountNotifications() {
               </div>
 
               <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded-2xl p-4 flex gap-4">
-                 <div className="text-xl shrink-0 mt-0.5">🚨</div>
+                 <div className="text-xl shrink-0 mt-0.5"><Icon name="emergencia" size="1.1em" /></div>
                  <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between gap-2 mb-1">
                       <h4 className="text-[14px] font-bold text-[#071d37] leading-tight">Avisos de Emergencia Cívica</h4>
@@ -488,7 +490,7 @@ export function AccountNotifications() {
               disabled={savingPrefs}
               className="w-full bg-[#005684] text-white px-5 py-3.5 rounded-xl text-xs font-bold hover:bg-[#00456a] transition shadow-sm mt-2 flex justify-center items-center gap-2 cursor-pointer disabled:opacity-70"
             >
-              <span>{savingPrefs ? '⏳' : '💾'}</span> {savingPrefs ? 'Guardando...' : 'Guardar Preferencias'}
+              <Icon name={savingPrefs ? 'cargando' : 'guardar'} size={14} className={savingPrefs ? 'animate-spin' : ''} /> {savingPrefs ? 'Guardando...' : 'Guardar Preferencias'}
             </button>
           </div>
         </div>
@@ -504,12 +506,12 @@ export function AccountNotifications() {
               onClick={cerrarModal}
               className="absolute top-5 right-5 text-gray-400 hover:text-gray-600 text-lg font-bold w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition cursor-pointer"
             >
-              ✕
+              <Icon name="cerrar" size="1.1em" />
             </button>
 
             <div className="flex items-center gap-3">
               <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-2xl shrink-0 ${notificacionModal.bg_icono || 'bg-[#f0f9ff]'} ${notificacionModal.text_icono || 'text-[#0284c7]'}`}>
-                {notificacionModal.icono || '✉️'}
+                <Icon name={iconoDesdeEmoji(notificacionModal.icono, 'correo')} size="1.1em" />
               </div>
               <div>
                 <span className="text-[11px] font-bold text-[#0284c7] uppercase tracking-wide">
@@ -570,10 +572,10 @@ export function AccountNotifications() {
                     className="bg-[#f0f9ff] border border-[#bae6fd] text-[#0284c7] rounded-2xl px-4 py-3 text-xs font-bold hover:bg-[#e0f2fe] transition flex items-center justify-between gap-3 cursor-pointer text-left"
                   >
                     <span className="flex items-center gap-2">
-                      <span>{detalleMensaje.remitente_rol === 'fundacion' ? '🏛️' : '🙋'}</span>
+                      <Icon name={detalleMensaje.remitente_rol === 'fundacion' ? 'institucion' : 'voluntario'} size={16} />
                       Ver perfil {detalleMensaje.remitente_rol === 'fundacion' ? 'de la fundación' : 'del voluntario'} remitente
                     </span>
-                    <span>➔</span>
+                    <span><Icon name="siguiente" size="1.1em" /></span>
                   </button>
                 ) : (
                   <p className="text-[11px] text-[#94a3b8] leading-relaxed">
@@ -599,7 +601,7 @@ export function AccountNotifications() {
                   href={`mailto:${detalleMensaje.email_remitente}?subject=Re: ${encodeURIComponent(detalleMensaje.tipo_consulta || 'Consulta')}`}
                   className="bg-[#e0f2fe] text-[#0284c7] px-4 py-2.5 rounded-xl text-xs font-bold hover:bg-[#bae6fd] transition flex items-center justify-center gap-2"
                 >
-                  ✉️ Responder por email
+                  <Icon name="correo" size="1.1em" /> Responder por email
                 </a>
               )}
               <button 
@@ -620,7 +622,7 @@ export function AccountNotifications() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
           <div className="bg-white rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-2xl border border-[#e2e8f0] flex flex-col gap-4">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl shrink-0 bg-red-100 text-red-600">🚨</div>
+              <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl shrink-0 bg-red-100 text-red-600"><Icon name="emergencia" size="1.1em" /></div>
               <div>
                 <span className="text-[11px] font-bold text-[#dc2626] uppercase tracking-wide">Confirmar envío</span>
                 <h3 className="text-lg font-extrabold text-[#071d37] leading-tight">{avisoTitulo.trim()}</h3>
@@ -658,7 +660,7 @@ export function AccountNotifications() {
       {resultadoModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
           <div className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-xl flex flex-col items-center text-center">
-            <span className="text-4xl mb-3">{resultadoModal.isError ? '⚠️' : '✅'}</span>
+            <span className="text-4xl mb-3"><Icon name={resultadoModal.isError ? 'advertencia' : 'completado'} size={40} className={resultadoModal.isError ? 'text-[#dc2626]' : 'text-[#059669]'} /></span>
             <h3 className="text-lg font-bold text-[#071d37] mb-2">{resultadoModal.title}</h3>
             <p className="text-xs text-[#64748b] mb-6">{resultadoModal.message}</p>
             <button

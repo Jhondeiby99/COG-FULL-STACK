@@ -11,6 +11,7 @@ import {
 import type { Necesidad, PrioridadNecesidad } from '../lib/necesidades';
 import { NeedFormModal } from '../components/NeedFormModal';
 
+import { Icon } from '../components/Icon';
 type FiltroEstado = 'todas' | 'abiertas' | 'resueltas';
 type FiltroPrioridad = 'todas' | PrioridadNecesidad;
 
@@ -212,7 +213,7 @@ export function ManageNeeds({ global = false }: { global?: boolean }) {
     return (
       <div className="flex min-h-[50vh] items-center justify-center p-4">
         <div className="bg-white rounded-3xl p-8 border border-[#e2e8f0] shadow-sm max-w-md w-full text-center flex flex-col items-center gap-3">
-          <span className="text-4xl">⚠️</span>
+          <span className="text-4xl"><Icon name="advertencia" size="1.1em" /></span>
           <h2 className="text-lg font-bold text-[#071d37]">No se pudieron cargar las necesidades</h2>
           <p className="text-xs text-[#64748b]">{errorCarga}</p>
           <button type="button" onClick={() => { setLoading(true); cargar(); }} className="bg-[#005684] text-white px-6 py-2.5 rounded-xl text-xs font-bold hover:bg-[#00456a] transition cursor-pointer">
@@ -225,16 +226,16 @@ export function ManageNeeds({ global = false }: { global?: boolean }) {
 
   const perfilTxt = esAdmin ? 'el perfil público de la fundación' : 'tu perfil público';
   const textoConfirmacion = confirmacion && {
-    resolver: { icono: '✅', titulo: 'Marcar como resuelta', msg: `La necesidad se mostrará como resuelta (100%) en ${perfilTxt} y dejará de recibir apoyos.`, boton: 'Sí, marcar resuelta', color: 'bg-[#059669] hover:bg-[#047857]' },
-    reabrir: { icono: '↩️', titulo: 'Reabrir necesidad', msg: `La necesidad volverá a mostrarse como abierta en ${perfilTxt}.`, boton: 'Sí, reabrir', color: 'bg-[#005684] hover:bg-[#00456a]' },
-    eliminar: { icono: '🗑️', titulo: 'Eliminar necesidad', msg: `Se eliminará definitivamente y dejará de mostrarse en ${perfilTxt}. Esta acción no se puede deshacer.`, boton: 'Sí, eliminar', color: 'bg-[#dc2626] hover:bg-[#b91c1c]' },
+    resolver: { icono: 'completado' as const, titulo: 'Marcar como resuelta', msg: `La necesidad se mostrará como resuelta (100%) en ${perfilTxt} y dejará de recibir apoyos.`, boton: 'Sí, marcar resuelta', color: 'bg-[#059669] hover:bg-[#047857]' },
+    reabrir: { icono: 'deshacer' as const, titulo: 'Reabrir necesidad', msg: `La necesidad volverá a mostrarse como abierta en ${perfilTxt}.`, boton: 'Sí, reabrir', color: 'bg-[#005684] hover:bg-[#00456a]' },
+    eliminar: { icono: 'eliminar' as const, titulo: 'Eliminar necesidad', msg: `Se eliminará definitivamente y dejará de mostrarse en ${perfilTxt}. Esta acción no se puede deshacer.`, boton: 'Sí, eliminar', color: 'bg-[#dc2626] hover:bg-[#b91c1c]' },
   }[confirmacion.tipo];
 
   return (
     <div className="flex flex-col gap-6 w-full relative">
       {toast && (
         <div className="fixed top-6 right-6 z-[60] bg-[#047857] text-white px-5 py-3 rounded-2xl shadow-xl flex items-center gap-3 border border-[#6ee7b7]">
-          <span className="text-lg">✓</span>
+          <span className="text-lg"><Icon name="check" size="1.1em" /></span>
           <span className="text-xs font-bold">{toast}</span>
         </div>
       )}
@@ -262,7 +263,7 @@ export function ManageNeeds({ global = false }: { global?: boolean }) {
         <div className="flex flex-col sm:flex-row gap-2 shrink-0">
           {(fundacionDestino) && (
             <Link to={`/fundacion/${fundacionDestino}`} className="bg-white border border-[#e2e8f0] text-[#071d37] px-4 py-2.5 rounded-xl text-xs font-bold hover:bg-gray-50 transition text-center shadow-sm">
-              👁️ Ver perfil público
+              <Icon name="ver" size="1.1em" /> Ver perfil público
             </Link>
           )}
           <button type="button" onClick={() => abrirFormulario()} className="bg-[#005684] text-white px-5 py-2.5 rounded-xl text-xs font-bold hover:bg-[#00456a] transition shadow-sm cursor-pointer">
@@ -296,10 +297,10 @@ export function ManageNeeds({ global = false }: { global?: boolean }) {
       {/* Resumen */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         {[
-          { t: 'Abiertas', v: resumen.abiertas, s: `${resumen.urgentes} de prioridad alta`, c: 'text-[#071d37]', i: '📌' },
-          { t: 'Resueltas', v: resumen.resueltas, s: `${resumen.cumplimiento}% de cumplimiento`, c: 'text-[#059669]', i: '✅' },
-          { t: 'Recaudo promedio', v: `${resumen.recaudoPromedio}%`, s: 'de las necesidades abiertas', c: 'text-[#0284c7]', i: '📈' },
-          { t: 'Publicadas', v: resumen.total, s: 'en total', c: 'text-[#071d37]', i: '🗂️' },
+          { t: 'Abiertas', v: resumen.abiertas, s: `${resumen.urgentes} de prioridad alta`, c: 'text-[#071d37]', i: 'fijado' as const },
+          { t: 'Resueltas', v: resumen.resueltas, s: `${resumen.cumplimiento}% de cumplimiento`, c: 'text-[#059669]', i: 'completado' as const },
+          { t: 'Recaudo promedio', v: `${resumen.recaudoPromedio}%`, s: 'de las necesidades abiertas', c: 'text-[#0284c7]', i: 'trayectoria' as const },
+          { t: 'Publicadas', v: resumen.total, s: 'en total', c: 'text-[#071d37]', i: 'expedientes' as const },
         ].map(k => (
           <div key={k.t} className="bg-white rounded-2xl p-4 sm:p-5 border border-[#e2e8f0] shadow-sm">
             <div className="flex justify-between items-start mb-1">
@@ -343,7 +344,7 @@ export function ManageNeeds({ global = false }: { global?: boolean }) {
       {/* Lista */}
       {visibles.length === 0 ? (
         <div className="bg-white rounded-3xl p-10 border border-dashed border-[#cbd5e1] text-center flex flex-col items-center gap-3">
-          <span className="text-4xl">{base.length === 0 ? '📋' : '🔍'}</span>
+          <span className="text-[#94a3b8]"><Icon name={base.length === 0 ? 'necesidad' : 'buscar'} size={40} /></span>
           <p className="text-sm font-bold text-[#071d37]">
             {base.length === 0
               ? (esAdmin ? 'No hay necesidades publicadas' : 'Aún no has publicado necesidades')
@@ -371,7 +372,7 @@ export function ManageNeeds({ global = false }: { global?: boolean }) {
                 <span className={`absolute inset-x-0 top-0 h-1 ${resuelta ? 'bg-[#10b981]' : p.barra}`} />
                 <div className="flex items-center justify-between gap-2 mt-1">
                   <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full border ${resuelta ? 'bg-[#dcfce7] text-[#166534] border-[#bbf7d0]' : p.chip}`}>
-                    {resuelta ? '✓ Resuelta' : p.label}
+                    {resuelta ? <><Icon name="check" size={11} /> Resuelta</> : p.label}
                   </span>
                   <span className="text-[10px] font-semibold text-[#94a3b8]">
                     {resuelta && nec.fecha_resolucion
@@ -387,7 +388,7 @@ export function ManageNeeds({ global = false }: { global?: boolean }) {
                     title="Ver solo esta fundación"
                     className="text-[11px] font-bold text-[#005684] hover:underline w-fit text-left truncate max-w-full cursor-pointer -mb-1"
                   >
-                    🏛️ {nombrePorId.get(nec.fundacion_id || '') || 'Fundación'}
+                    <Icon name="institucion" size="1.1em" /> {nombrePorId.get(nec.fundacion_id || '') || 'Fundación'}
                   </button>
                 )}
                 <div className="min-w-0">
@@ -409,20 +410,20 @@ export function ManageNeeds({ global = false }: { global?: boolean }) {
                 <div className="flex gap-2">
                   {resuelta ? (
                     <button type="button" onClick={() => setConfirmacion({ tipo: 'reabrir', nec })} className="flex-1 bg-white border border-[#e2e8f0] text-[#334155] py-2 rounded-xl text-[11px] font-bold hover:bg-gray-50 transition cursor-pointer">
-                      ↩ Reabrir
+                      <Icon name="deshacer" size="1.1em" /> Reabrir
                     </button>
                   ) : (
                     <>
                       <button type="button" onClick={() => setConfirmacion({ tipo: 'resolver', nec })} className="flex-1 bg-[#dcfce7] text-[#166534] border border-[#bbf7d0] py-2 rounded-xl text-[11px] font-bold hover:bg-[#bbf7d0] transition cursor-pointer">
-                        ✓ Resuelta
+                        <Icon name="check" size="1.1em" /> Resuelta
                       </button>
                       <button type="button" onClick={() => abrirFormulario(nec)} className="flex-1 bg-[#eef6ff] text-[#005684] border border-[#dbeafe] py-2 rounded-xl text-[11px] font-bold hover:bg-[#d4e7fe] transition cursor-pointer">
-                        ✏️ Editar
+                        <Icon name="editar" size="1.1em" /> Editar
                       </button>
                     </>
                   )}
                   <button type="button" onClick={() => setConfirmacion({ tipo: 'eliminar', nec })} aria-label="Eliminar necesidad" className="w-10 shrink-0 bg-white border border-[#fecaca] text-[#dc2626] rounded-xl text-sm hover:bg-[#fef2f2] transition cursor-pointer">
-                    🗑
+                    <Icon name="eliminar" size="1.1em" />
                   </button>
                 </div>
               </article>
@@ -464,7 +465,7 @@ export function ManageNeeds({ global = false }: { global?: boolean }) {
       {modal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
           <div className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-xl flex flex-col items-center text-center">
-            <span className="text-4xl mb-3">{modal.isError ? '⚠️' : '✅'}</span>
+            <span className="text-4xl mb-3"><Icon name={modal.isError ? 'advertencia' : 'completado'} size={40} className={modal.isError ? 'text-[#dc2626]' : 'text-[#059669]'} /></span>
             <h3 className="text-lg font-bold text-[#071d37] mb-2">{modal.title}</h3>
             <p className="text-xs text-[#64748b] mb-6">{modal.message}</p>
             <button type="button" onClick={() => setModal(null)} className="w-full bg-[#005684] text-white py-2.5 rounded-xl text-xs font-bold hover:bg-[#00456a] transition cursor-pointer">

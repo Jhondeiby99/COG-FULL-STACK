@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 
+import { Icon } from './Icon';
 // Leaflet se carga desde CDN con verificación de integridad (SRI) para no depender del bundle
 const LEAFLET_JS = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
 const LEAFLET_JS_SRI = 'sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=';
@@ -197,8 +198,8 @@ export function VolunteerMap({ voluntarios }: { voluntarios: VoluntarioMapa[] })
       {grupoSel ? (
         <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded-xl p-3">
           <div className="flex items-center justify-between mb-2">
-            <p className="text-[11px] font-bold text-[#071d37]">📍 {grupoSel.nombre} · {grupoSel.voluntarios.length}</p>
-            <button type="button" onClick={() => setCiudadSel(null)} className="text-[10px] font-bold text-[#64748b] hover:text-[#071d37] cursor-pointer">Cerrar ✕</button>
+            <p className="text-[11px] font-bold text-[#071d37]"><Icon name="ubicacion" className="text-[#006194]" size="1.1em" /> {grupoSel.nombre} · {grupoSel.voluntarios.length}</p>
+            <button type="button" onClick={() => setCiudadSel(null)} className="text-[10px] font-bold text-[#64748b] hover:text-[#071d37] cursor-pointer">Cerrar <Icon name="cerrar" size="1.1em" /></button>
           </div>
           <div className="flex flex-col gap-1 max-h-40 overflow-y-auto">
             {grupoSel.voluntarios.map(v => (

@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 
+import { Icon } from './Icon';
+import { Estrellas } from './Estrellas';
 interface RatingFormProps {
   /** Perfil que se califica: exactamente uno de los dos */
   fundacionId?: string;
@@ -141,7 +143,7 @@ export function RatingForm({ fundacionId, voluntarioId, onChange }: RatingFormPr
       <div className={`${contenedor} flex flex-col sm:flex-row sm:items-center justify-between gap-3`}>
         <div className="min-w-0">
           <p className="text-xs font-bold text-[#005684] uppercase tracking-wide">Tu calificación</p>
-          <p className="text-sm text-[#f59e0b] tracking-widest mt-0.5">{'★'.repeat(propia.rating)}{'☆'.repeat(5 - propia.rating)}</p>
+          <div className="mt-1"><Estrellas valor={propia.rating} /></div>
         </div>
         <div className="flex gap-2 shrink-0">
           <button type="button" onClick={() => iniciarEdicion(propia)} className="flex-1 sm:flex-none bg-white border border-[#bae6fd] text-[#0284c7] px-4 py-2 rounded-xl text-xs font-bold hover:bg-[#f0f9ff] transition cursor-pointer">
@@ -160,7 +162,7 @@ export function RatingForm({ fundacionId, voluntarioId, onChange }: RatingFormPr
           <span className="font-bold text-[#0f2a3f]">Comparte tu experiencia.</span> Tu calificación ayuda a otros a decidir con confianza.
         </p>
         <button type="button" onClick={() => iniciarEdicion(null)} className="shrink-0 bg-[#005684] text-white px-4 py-2.5 rounded-xl text-xs font-bold hover:bg-[#00456a] transition cursor-pointer">
-          ★ Calificar
+          <Icon name="calificacion" size="1.1em" filled /> Calificar
         </button>
       </div>
     );
@@ -181,7 +183,7 @@ export function RatingForm({ fundacionId, voluntarioId, onChange }: RatingFormPr
                   onClick={() => setRating(n)}
                   className={`text-3xl leading-none px-0.5 transition cursor-pointer ${n <= visible ? 'text-[#f59e0b]' : 'text-[#cbd5e1]'}`}
                 >
-                  ★
+                  <Icon name="calificacion" size="1.1em" filled />
                 </button>
               ))}
             </div>
@@ -225,7 +227,7 @@ export function RatingForm({ fundacionId, voluntarioId, onChange }: RatingFormPr
       {confirmarEliminar && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
           <div className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-xl flex flex-col items-center text-center">
-            <span className="text-4xl mb-3">🗑️</span>
+            <span className="text-4xl mb-3"><Icon name="eliminar" size="1.1em" /></span>
             <h3 className="text-lg font-bold text-[#071d37] mb-2">Eliminar calificación</h3>
             <p className="text-xs text-[#64748b] mb-6">Tu calificación dejará de mostrarse en este perfil. ¿Deseas continuar?</p>
             <div className="flex w-full gap-3">
@@ -243,7 +245,7 @@ export function RatingForm({ fundacionId, voluntarioId, onChange }: RatingFormPr
       {modal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
           <div className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-xl flex flex-col items-center text-center">
-            <span className="text-4xl mb-3">{modal.isError ? '⚠️' : '✅'}</span>
+            <span className="text-4xl mb-3"><Icon name={modal.isError ? 'advertencia' : 'completado'} size={40} className={modal.isError ? 'text-[#dc2626]' : 'text-[#059669]'} /></span>
             <h3 className="text-lg font-bold text-[#071d37] mb-2">{modal.title}</h3>
             <p className="text-xs text-[#64748b] mb-6">{modal.message}</p>
             <button type="button" onClick={() => setModal(null)} className="w-full bg-[#005684] text-white py-2.5 rounded-xl text-xs font-bold hover:bg-[#00456a] transition cursor-pointer">

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import * as Icons from "../assets/icons/index.ts";
 
+import { Icon } from './Icon';
 interface FooterProps {
   onSearchChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onFilterClick?: () => void;
@@ -38,7 +38,7 @@ export function Footer(_props: FooterProps) {
               Plataforma cívica de solidaridad transparente que canaliza voluntades hacia causas de impacto social comprobable.
             </p>
             <div className="inline-flex items-center gap-2 bg-[#005684]/30 border border-[#005684] rounded-full px-4 py-1.5 w-max mt-1">
-              <img src={Icons.IconVerify} className="w-4 h-4 md:w-5 md:h-5 invert opacity-90" alt="" />
+              <Icon name="verificado" className="text-blue-200 w-4 h-4 md:w-5 md:h-5" />
               <span className="text-xs md:text-sm font-semibold text-blue-200">Impacto Verificado</span>
             </div>
           </div>

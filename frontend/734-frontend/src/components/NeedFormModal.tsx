@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabase';
 import { actualizarNecesidad, porcentajeRecaudo, CATEGORIAS_NECESIDAD, PRIORIDAD_ESTILOS } from '../lib/necesidades';
 import type { Necesidad, PrioridadNecesidad } from '../lib/necesidades';
 
+import { Icon } from './Icon';
 const MAX_TITULO = 90;
 const MAX_DESCRIPCION = 400;
 
@@ -87,7 +88,7 @@ export function NeedFormModal({ fundacionId, opcionesFundacion, necesidad, onClo
       <div className="bg-white w-full sm:max-w-lg rounded-t-3xl sm:rounded-3xl shadow-2xl border border-[#e2e8f0] flex flex-col max-h-[92vh]">
         <div className="flex items-center justify-between px-6 pt-6 pb-3">
           <h3 className="text-lg font-extrabold text-[#071d37]">{esEdicion ? 'Editar necesidad' : 'Nueva necesidad'}</h3>
-          <button type="button" onClick={onClose} aria-label="Cerrar" className="text-gray-400 hover:text-gray-600 w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition cursor-pointer">✕</button>
+          <button type="button" onClick={onClose} aria-label="Cerrar" className="text-gray-400 hover:text-gray-600 w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition cursor-pointer"><Icon name="cerrar" size="1.1em" /></button>
         </div>
 
         <div className="px-6 pb-2 flex flex-col gap-4 overflow-y-auto">
@@ -188,7 +189,7 @@ export function NeedFormModal({ fundacionId, opcionesFundacion, necesidad, onClo
 
           {error && (
             <div className="bg-[#fef2f2] border border-[#fecaca] text-[#b91c1c] rounded-xl px-4 py-3 text-xs font-semibold">
-              ⚠️ {error}
+              <Icon name="advertencia" size="1.1em" /> {error}
             </div>
           )}
         </div>

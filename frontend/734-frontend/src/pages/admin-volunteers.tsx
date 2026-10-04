@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { DialogModal } from '../components/DialogModal';
 
+import { Icon } from '../components/Icon';
 export interface Voluntario {
   id: string;
   name: string;
@@ -282,7 +283,7 @@ export function AdminVolunteers() {
             onClick={handleExportar}
             className="bg-white border border-[#e2e8f0] text-[#475569] px-4 py-2.5 rounded-xl text-xs font-bold hover:bg-gray-50 transition flex items-center gap-2 shadow-sm cursor-pointer"
           >
-            <span>📥</span> Exportar Datos CSV
+            <span><Icon name="descargar" size="1.1em" /></span> Exportar Datos CSV
           </button>
         </div>
       </div>
@@ -290,7 +291,7 @@ export function AdminVolunteers() {
       {/* BARRA DE FILTROS Y BÚSQUEDA */}
       <div className="bg-white rounded-2xl p-4 border border-[#e2e8f0] shadow-sm flex flex-col md:flex-row items-center gap-4">
         <div className="flex-1 flex items-center bg-[#f8fafc] border border-[#e2e8f0] rounded-xl px-3 py-2.5 gap-2 w-full">
-          <span className="text-gray-400 text-sm">🔍</span>
+          <span className="text-gray-400 text-sm"><Icon name="buscar" size="1.1em" /></span>
           <input 
             type="text" 
             value={busqueda}
@@ -312,7 +313,7 @@ export function AdminVolunteers() {
             }}
             className="bg-white border border-[#e2e8f0] rounded-xl px-3 py-2.5 text-xs font-semibold text-[#475569] focus:outline-none cursor-pointer w-full sm:w-auto"
           >
-            <option value="todas">🏢 Todas las especialidades</option>
+            <option value="todas"><Icon name="fundacion" size="1.1em" /> Todas las especialidades</option>
             {listaEspecialidades.map((esp, i) => (
               <option key={i} value={esp}>{esp}</option>
             ))}
@@ -326,7 +327,7 @@ export function AdminVolunteers() {
             }}
             className="bg-white border border-[#e2e8f0] rounded-xl px-3 py-2.5 text-xs font-semibold text-[#475569] focus:outline-none cursor-pointer w-full sm:w-auto"
           >
-            <option value="cualquiera">📅 Cualquier estado</option>
+            <option value="cualquiera"><Icon name="calendario" size="1.1em" /> Cualquier estado</option>
             <option value="activo_general">Activos (Disponibles)</option>
             <option value="con_franjas">Con Franjas Horarias Definidas</option>
             <option value="inactivo">Inactivos</option>
@@ -355,7 +356,7 @@ export function AdminVolunteers() {
                   <img src={vol.avatar} alt={vol.name} className="w-12 h-12 sm:w-14 sm:h-14 rounded-full object-cover border border-[#e2e8f0]" />
                   {vol.disponibilidad_activa && (
                     <div className="absolute -bottom-1 -right-1 bg-white rounded-full p-0.5">
-                      <span className="bg-[#10b981] text-white text-[8px] w-4 h-4 flex items-center justify-center rounded-full font-bold">✓</span>
+                      <span className="bg-[#10b981] text-white text-[8px] w-4 h-4 flex items-center justify-center rounded-full font-bold"><Icon name="check" size="1.1em" /></span>
                     </div>
                   )}
                 </div>
@@ -370,14 +371,14 @@ export function AdminVolunteers() {
                   
                   <div className="flex flex-wrap items-center gap-2 text-[11px] text-[#0284c7] font-semibold mb-1.5">
                     <span className="bg-[#f0f9ff] border border-[#bae6fd] px-2 py-0.5 rounded-md flex items-center gap-1">
-                      🛡 {vol.certification}
+                      <Icon name="seguridad" size="1.1em" /> {vol.certification}
                     </span>
                   </div>
 
                   <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] sm:text-[11px] text-[#64748b]">
-                    <span className="flex items-center gap-1 truncate">📍 {vol.location}</span>
+                    <span className="flex items-center gap-1 truncate"><Icon name="ubicacion" className="text-[#006194]" size="1.1em" /> {vol.location}</span>
                     <span className="text-gray-300 hidden sm:inline">•</span>
-                    <span className="flex items-center gap-1 whitespace-nowrap">⏱️ {vol.hours}</span>
+                    <span className="flex items-center gap-1 whitespace-nowrap"><Icon name="reloj" size="1.1em" /> {vol.hours}</span>
                     <span className="text-gray-300 hidden sm:inline">•</span>
                     <span className="truncate">{vol.activity}</span>
                   </div>
@@ -397,13 +398,13 @@ export function AdminVolunteers() {
                     onClick={() => navigate(`/voluntario/${vol.id}`)}
                     className="bg-[#eef6ff] text-[#005684] px-3 sm:px-4 py-2 rounded-xl text-xs font-bold hover:bg-[#d4e7fe] transition flex items-center gap-1.5 border border-[#dbeafe] whitespace-nowrap cursor-pointer"
                   >
-                      Vista <span>↗</span>
+                      Vista <span><Icon name="externo" size="1.1em" /></span>
                   </button>
                   <button 
                     onClick={() => navigate(`/dashboard/voluntario/editar/${vol.id}`)}
                     className="bg-white border border-[#e2e8f0] text-[#475569] px-3 sm:px-4 py-2 rounded-xl text-xs font-bold hover:bg-gray-50 transition flex items-center gap-1.5 cursor-pointer"
                   >
-                      ✏️ Editar
+                      <Icon name="editar" size="1.1em" /> Editar
                   </button>
 
                   {/* Menú de Opciones (⋮) */}

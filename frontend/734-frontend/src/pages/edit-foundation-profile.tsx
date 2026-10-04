@@ -10,6 +10,8 @@ import {
   PRIORIDAD_ESTILOS,
 } from '../lib/necesidades';
 
+import { Icon } from '../components/Icon';
+import { iconoDesdeEmoji } from '../lib/iconos';
 interface CanalRecaudo {
   id: string;
   tipo: string;
@@ -709,10 +711,10 @@ export function EditFoundationProfile() {
       const nuevoCanal: CanalRecaudo = {
         id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
         tipo: canalModal.tipo,
-        icono: canalModal.tipo.toLowerCase().includes('nequi') ? '📱' : canalModal.tipo.toLowerCase().includes('wompi') || canalModal.tipo.toLowerCase().includes('pse') ? '💻' : '🏦',
+        icono: canalModal.tipo.toLowerCase().includes('nequi') ? 'movil' : canalModal.tipo.toLowerCase().includes('wompi') || canalModal.tipo.toLowerCase().includes('pse') ? 'computador' : 'banco',
         detalles: canalModal.detalles,
         titular_nota: canalModal.titular_nota,
-        estado_texto: '✓ Activa',
+        estado_texto: 'Activa',
         estado_color: 'text-[#047857]'
       };
       setCanalesRecaudo(prev => [...prev, nuevoCanal]);
@@ -788,7 +790,7 @@ export function EditFoundationProfile() {
     <div className="flex min-h-svh w-full bg-[#f8fafc] text-[#2d3748] font-sans pb-24 relative">    
         {toastMessage && (
           <div className="fixed top-6 right-6 z-50 bg-[#047857] text-white px-5 py-3 rounded-2xl shadow-xl flex items-center gap-3 border border-[#6ee7b7] animate-bounce">
-            <span className="text-lg">✓</span>
+            <span className="text-lg"><Icon name="check" size="1.1em" /></span>
             <span className="text-xs font-bold">{toastMessage}</span>
           </div>
         )}
@@ -799,7 +801,7 @@ export function EditFoundationProfile() {
             <div className="text-left">
               <div className="flex items-center gap-2 mb-1">
                 <span className="bg-[#dcfce7] text-[#166534] text-[10px] font-extrabold px-2.5 py-1 rounded-full uppercase border border-[#bbf7d0] flex items-center gap-1">
-                  ✓ Entidad Verificada
+                  <Icon name="check" size="1.1em" /> Entidad Verificada
                 </span>
                 <span className="text-[11px] font-bold text-[#94a3b8]">
                   ID: {foundationId ? `FDN-${foundationId.substring(0, 40).toUpperCase()}` : 'SIN ID'}
@@ -818,7 +820,7 @@ export function EditFoundationProfile() {
                 onClick={handleVerPerfilPublico}
                 className="bg-white text-[#005684] px-4 py-2.5 rounded-xl text-xs font-bold hover:bg-[#eef6ff] transition flex items-center gap-2 border border-[#dbeafe] cursor-pointer"
               >
-                Ver Perfil Público ↗
+                Ver Perfil Público <Icon name="externo" size="1.1em" />
               </button>
               <button
                 onClick={handleSave}
@@ -826,26 +828,26 @@ export function EditFoundationProfile() {
                 title={!hasUnsavedChanges ? 'No hay cambios por guardar' : undefined}
                 className="bg-[#005684] text-white px-5 py-2.5 rounded-xl text-xs font-bold hover:bg-[#00456a] transition shadow-sm flex items-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {saving ? <span>Guardando...</span> : hasUnsavedChanges ? <><span>✓</span> Guardar Cambios</> : <><span>✓</span> Sin cambios</>}
+                {saving ? <span>Guardando...</span> : hasUnsavedChanges ? <><span><Icon name="check" size="1.1em" /></span> Guardar Cambios</> : <><span><Icon name="check" size="1.1em" /></span> Sin cambios</>}
               </button>
             </div>
           </div>
 
           <div className="flex flex-wrap gap-2 border-b border-[#e2e8f0] pb-4">
              <button onClick={() => setActiveTab('basica')} className={`px-4 py-2 rounded-xl text-[11px] font-bold flex items-center gap-2 transition cursor-pointer ${activeTab === 'basica' ? 'bg-[#005684] text-white shadow-sm' : 'bg-white text-[#64748b] hover:bg-gray-50 border border-transparent hover:border-gray-200'}`}>
-               <span>📁</span> Información Básica & Contacto
+               <span><Icon name="carpeta" size="1.1em" /></span> Información Básica & Contacto
              </button>
              <button onClick={() => setActiveTab('causas')} className={`px-4 py-2 rounded-xl text-[11px] font-bold flex items-center gap-2 transition cursor-pointer ${activeTab === 'causas' ? 'bg-[#005684] text-white shadow-sm' : 'bg-white text-[#64748b] hover:bg-gray-50 border border-transparent hover:border-gray-200'}`}>
-               <span>🎯</span> Causas & Misión
+               <span><Icon name="objetivo" size="1.1em" /></span> Causas & Misión
                {intentoGuardar && Object.keys(erroresImpacto).length > 0 && (
                  <span className="w-2 h-2 rounded-full bg-red-500" title="Hay campos obligatorios por completar" />
                )}
              </button>
              <button onClick={() => setActiveTab('recaudo')} className={`px-4 py-2 rounded-xl text-[11px] font-bold flex items-center gap-2 transition cursor-pointer ${activeTab === 'recaudo' ? 'bg-[#005684] text-white shadow-sm' : 'bg-white text-[#64748b] hover:bg-gray-50 border border-transparent hover:border-gray-200'}`}>
-               <span>💳</span> Canales de Recaudo & Donación
+               <span><Icon name="pago" size="1.1em" /></span> Canales de Recaudo & Donación
              </button>
              <button onClick={() => setActiveTab('documentos')} className={`px-4 py-2 rounded-xl text-[11px] font-bold flex items-center gap-2 transition cursor-pointer ${activeTab === 'documentos' ? 'bg-[#005684] text-white shadow-sm' : 'bg-white text-[#64748b] hover:bg-gray-50 border border-transparent hover:border-gray-200'}`}>
-               <span>🛡️️</span> Documentación & Sellos
+               <span><Icon name="seguridad" size="1.1em" />️</span> Documentación & Sellos
              </button>
           </div>
 
@@ -857,7 +859,7 @@ export function EditFoundationProfile() {
                   <section className="bg-white rounded-3xl p-6 border border-[#e2e8f0] shadow-sm">
                     <div className="flex items-center justify-between mb-4">
                       <h3 className="text-[11px] font-bold text-[#005684] uppercase tracking-wider flex items-center gap-2">
-                        <span className="text-base">🖼️</span> Identidad Gráfica Institucional
+                        <span className="text-base"><Icon name="imagen" size="1.1em" /></span> Identidad Gráfica Institucional
                       </h3>
                       <span className="text-[10px] text-[#64748b] font-bold">Aspect ratio 16:9 y 1:1</span>
                     </div>
@@ -882,7 +884,7 @@ export function EditFoundationProfile() {
                             )}
                             <input type="file" accept="image/png,image/jpeg,image/webp" id="portada-upload" className="hidden" disabled={procesandoImagen !== null} onChange={(e) => handleImageUpload(e, 'portada')} />
                             <label htmlFor="portada-upload" className="bg-white/90 text-[#071d37] px-3 py-1.5 rounded-lg text-[10px] font-bold hover:bg-white transition cursor-pointer">
-                              {procesandoImagen === 'portada' ? 'Procesando...' : portadaUrl ? '📷 Cambiar Portada' : '📷 Subir Portada'}
+                              {procesandoImagen === 'portada' ? 'Procesando...' : <><Icon name="camara" size={14} /> {portadaUrl ? 'Cambiar Portada' : 'Subir Portada'}</>}
                             </label>
                           </div>
                         </div>
@@ -895,7 +897,7 @@ export function EditFoundationProfile() {
                             <img src={logoUrl} alt="Logo" className="w-full h-full object-contain" />
                           ) : (
                             <>
-                              <span className="text-2xl text-[#005684]">☀️</span>
+                              <span className="text-2xl text-[#005684]"><Icon name="manana" size="1.1em" /></span>
                               <span className="text-[6px] font-bold text-[#071d37] mt-1 text-center leading-tight uppercase">{sigla || razonSocial || 'SIN LOGO'}</span>
                             </>
                           )}
@@ -938,7 +940,7 @@ export function EditFoundationProfile() {
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
                       <div>
                         <h3 className="text-[11px] font-bold text-[#005684] uppercase tracking-wider flex items-center gap-2">
-                          <span className="text-base">📸</span> Galería de Actividades
+                          <span className="text-base"><Icon name="camara" size="1.1em" /></span> Galería de Actividades
                         </h3>
                         <p className="text-[10px] text-[#64748b] mt-1">
                           Las fotos se publican de inmediato en tu perfil público. {galeria.length}/{MAX_FOTOS_GALERIA} fotografías.
@@ -972,7 +974,7 @@ export function EditFoundationProfile() {
                         htmlFor="galeria-upload"
                         className="border-2 border-dashed border-[#e2e8f0] rounded-2xl p-8 flex flex-col items-center justify-center text-center bg-[#f8fafc] cursor-pointer hover:border-[#005684] transition"
                       >
-                        <span className="text-3xl mb-2">🖼️</span>
+                        <span className="text-3xl mb-2"><Icon name="imagen" size="1.1em" /></span>
                         <p className="text-xs font-bold text-[#071d37]">Aún no has publicado fotografías</p>
                         <p className="text-[10px] text-[#64748b] mt-1">Selecciona una o varias imágenes desde tu dispositivo (JPG, PNG o WEBP, máx. {MAX_ARCHIVO_MB}MB c/u).</p>
                       </label>
@@ -987,7 +989,7 @@ export function EditFoundationProfile() {
                               title="Eliminar fotografía"
                               className="absolute top-2 right-2 bg-white/90 text-red-600 w-7 h-7 rounded-lg text-xs font-bold shadow-sm opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition cursor-pointer"
                             >
-                              🗑️
+                              <Icon name="eliminar" size="1.1em" />
                             </button>
                           </div>
                         ))}
@@ -998,7 +1000,7 @@ export function EditFoundationProfile() {
                   <section className="bg-white rounded-3xl p-6 border border-[#e2e8f0] shadow-sm mb-6">
                     <div className="flex items-center justify-between mb-4">
                       <h3 className="text-[11px] font-bold text-[#005684] uppercase tracking-wider flex items-center gap-2">
-                        <span className="text-base">📍</span> Ubicación y Recepción de Ayudas
+                        <span className="text-base"><Icon name="ubicacion" className="text-[#006194]" size="1.1em" /></span> Ubicación y Recepción de Ayudas
                       </h3>
                       <button onClick={handleUpdateMap} className="text-[10px] text-[#005684] font-bold bg-[#eef6ff] px-2 py-1 rounded-full flex items-center gap-1 hover:bg-[#dbeafe] transition cursor-pointer">
                         <span>⊕</span> Refrescar Mapa
@@ -1039,7 +1041,7 @@ export function EditFoundationProfile() {
                   <section className="bg-white rounded-3xl p-6 border border-[#e2e8f0] shadow-sm">
                     <div className="flex items-center justify-between mb-5">
                       <h3 className="text-[11px] font-bold text-[#005684] uppercase tracking-wider flex items-center gap-2">
-                        <span className="text-base">🎯</span> Misión, Visión e Impacto Social
+                        <span className="text-base"><Icon name="objetivo" size="1.1em" /></span> Misión, Visión e Impacto Social
                       </h3>
                     </div>
                     
@@ -1100,7 +1102,7 @@ export function EditFoundationProfile() {
                                   className="text-[#005684] hover:text-red-500 opacity-60 hover:opacity-100 transition-opacity cursor-pointer font-bold"
                                   title="Quitar área"
                                 >
-                                  ✕
+                                  <Icon name="cerrar" size="1.1em" />
                                 </button>
                               </span>
                             ))}
@@ -1186,7 +1188,7 @@ export function EditFoundationProfile() {
                   <section className="bg-white rounded-3xl p-6 border border-[#e2e8f0] shadow-sm">
                     <div className="flex items-start justify-between mb-2">
                       <div className="flex items-center gap-2">
-                        <span className="text-xl text-[#005684]">💳</span>
+                        <span className="text-xl text-[#005684]"><Icon name="pago" size="1.1em" /></span>
                         <h3 className="text-sm font-bold text-[#071d37] leading-tight">Canales de Recaudo Certificados</h3>
                       </div>
                       <span className="bg-[#eef6ff] text-[#005684] text-[10px] font-extrabold px-2 py-1 rounded-lg border border-[#dbeafe] flex flex-col text-center leading-tight">
@@ -1202,7 +1204,7 @@ export function EditFoundationProfile() {
                           <div key={canal.id || idx} className="bg-[#f8fafc] border border-[#e2e8f0] p-4 rounded-xl">
                             <div className="flex justify-between items-start mb-1">
                               <div className="flex items-center gap-2">
-                                <span className="text-base">{canal.icono || '💳'}</span>
+                                <span className="text-base"><Icon name={iconoDesdeEmoji(canal.icono, 'pago')} size="1.1em" /></span>
                                 <h4 className="text-[13px] font-bold text-[#071d37]">{canal.tipo}</h4>
                               </div>
                             </div>
@@ -1229,7 +1231,7 @@ export function EditFoundationProfile() {
                 <>
                   <section className="bg-white rounded-3xl p-6 border border-[#e2e8f0] shadow-sm mb-6">
                     <h3 className="text-[11px] font-bold text-[#005684] uppercase tracking-wider flex items-center gap-2 mb-5">
-                      <span className="text-base">⚖️</span> Datos Legales y Registro
+                      <span className="text-base"><Icon name="legal" size="1.1em" /></span> Datos Legales y Registro
                     </h3>
                     
                     <div className="flex flex-col gap-4">
@@ -1246,7 +1248,7 @@ export function EditFoundationProfile() {
                         <div>
                           <label className="text-[10px] font-extrabold text-[#94a3b8] uppercase block mb-1 flex items-center justify-between">
                             NIT / Registro Tributario
-                            <span className="text-[#047857] flex items-center gap-1 normal-case"><span className="text-sm">✓</span> Validado DIAN</span>
+                            <span className="text-[#047857] flex items-center gap-1 normal-case"><span className="text-sm"><Icon name="check" size="1.1em" /></span> Validado DIAN</span>
                           </label>
                           <input type="text" value={nit} readOnly placeholder="No especificado" className="w-full bg-[#f1f5f9] border border-[#e2e8f0] rounded-xl px-4 py-2.5 text-xs font-semibold text-[#64748b] outline-none" />
                         </div>
@@ -1267,10 +1269,10 @@ export function EditFoundationProfile() {
 
                   <section className="bg-white rounded-3xl p-6 border border-[#e2e8f0] shadow-sm">
                     <h3 className="text-[11px] font-bold text-[#005684] uppercase tracking-wider flex items-center gap-2 mb-4">
-                      <span className="text-base">📁</span> Archivos Adjuntos Oficiales
+                      <span className="text-base"><Icon name="carpeta" size="1.1em" /></span> Archivos Adjuntos Oficiales
                     </h3>
                     <div className="border-2 border-dashed border-[#e2e8f0] rounded-2xl p-8 flex flex-col items-center justify-center text-center bg-[#f8fafc]">
-                        <span className="text-3xl mb-2 text-gray-400">📄</span>
+                        <span className="text-3xl mb-2 text-gray-400"><Icon name="documento" size="1.1em" /></span>
                         <p className="text-xs font-bold text-[#071d37]">Sube tu RUT Actualizado y Cámara de Comercio</p>
                         <p className="text-[10px] text-[#64748b] mt-1 mb-4">Formatos PDF aceptados, máximo 5MB por archivo.</p>
                         <button className="bg-white border border-[#e2e8f0] text-[#005684] px-4 py-2 rounded-xl text-xs font-bold hover:bg-gray-50 transition cursor-pointer shadow-sm">Examinar Archivos</button>
@@ -1285,27 +1287,27 @@ export function EditFoundationProfile() {
               {activeTab === 'basica' && (
                 <section className="bg-white rounded-3xl p-6 border border-[#e2e8f0] shadow-sm">
                     <h3 className="text-[11px] font-bold text-[#005684] uppercase tracking-wider flex items-center gap-2 mb-4">
-                        <span className="text-base">💬</span> Contacto & Redes
+                        <span className="text-base"><Icon name="mensaje" size="1.1em" /></span> Contacto & Redes
                     </h3>
                     <div className="flex flex-col gap-4">
                       <div>
                         <label className="text-[9px] font-extrabold text-[#94a3b8] uppercase block mb-1">WhatsApp Solidario</label>
                         <div className="relative">
-                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-emerald-500">💬</span>
+                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-emerald-500"><Icon name="mensaje" size="1.1em" /></span>
                             <input type="text" value={whatsapp} onChange={(e) => { setWhatsapp(e.target.value); }} placeholder="+57 300 000 0000" className="w-full bg-[#f8fafc] border border-[#e2e8f0] focus:border-[#005684] rounded-xl pl-9 pr-4 py-2 text-xs font-semibold text-[#071d37] outline-none transition" />
                         </div>
                       </div>
                       <div>
                         <label className="text-[9px] font-extrabold text-[#94a3b8] uppercase block mb-1">Teléfono Fijo</label>
                         <div className="relative">
-                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-emerald-500">📞</span>
+                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-emerald-500"><Icon name="telefono" size="1.1em" /></span>
                             <input type="text" value={telFijo} onChange={(e) => { setTelFijo(e.target.value); }} placeholder="601 000 0000" className="w-full bg-[#f8fafc] border border-[#e2e8f0] focus:border-[#005684] rounded-xl pl-9 pr-4 py-2 text-xs font-semibold text-[#071d37] outline-none transition" />
                         </div>
                       </div>
                       <div>
                         <label className="text-[9px] font-extrabold text-[#94a3b8] uppercase block mb-1">Correo Donaciones</label>
                         <div className="relative">
-                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">✉️</span>
+                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"><Icon name="correo" size="1.1em" /></span>
                             <input type="email" value={email} onChange={(e) => { setEmail(e.target.value); }} placeholder="contacto@fundacion.org" className="w-full bg-[#f8fafc] border border-[#e2e8f0] focus:border-[#005684] rounded-xl pl-9 pr-4 py-2 text-xs font-semibold text-[#071d37] outline-none transition" />
                         </div>
                       </div>
@@ -1327,7 +1329,7 @@ export function EditFoundationProfile() {
                 <section className="bg-white rounded-3xl p-6 border border-[#e2e8f0] shadow-sm">
                   <div className="flex items-center justify-between mb-2">
                     <h3 className="text-[11px] font-bold text-[#005684] uppercase tracking-wider flex items-center gap-2">
-                        <span className="text-base">📋</span> Necesidades
+                        <span className="text-base"><Icon name="necesidad" size="1.1em" /></span> Necesidades
                     </h3>
                     <button onClick={() => setNecesidadModalAbierto(true)} className="text-[10px] font-bold text-[#005684] hover:bg-[#eef6ff] px-2 py-1 rounded-lg transition flex items-center gap-1 cursor-pointer">
                       <span>+</span> Añadir
@@ -1360,7 +1362,7 @@ export function EditFoundationProfile() {
                                   <span className="text-[9px] text-[#64748b] truncate">{nec.meta_texto || 'Sin meta especificada'}</span>
                                 </div>
                               </div>
-                              <button onClick={() => handleDeleteNecesidad(nec)} title="Eliminar necesidad" className="text-[#94a3b8] hover:text-red-500 text-xs cursor-pointer">🗑️</button>
+                              <button onClick={() => handleDeleteNecesidad(nec)} title="Eliminar necesidad" className="text-[#94a3b8] hover:text-red-500 text-xs cursor-pointer"><Icon name="eliminar" size="1.1em" /></button>
                             </div>
 
                             <div className="flex items-center gap-2 mt-1">
@@ -1372,11 +1374,11 @@ export function EditFoundationProfile() {
 
                             {!isCompleted ? (
                               <button onClick={() => handleResolveNecesidad(nec)} className="w-full mt-1 py-1.5 bg-[#dcfce7] text-[#166534] text-[9px] font-bold rounded-lg border border-[#bbf7d0] hover:bg-[#bbf7d0] transition cursor-pointer">
-                                ✓ Marcar como Resuelta
+                                <Icon name="check" size="1.1em" /> Marcar como Resuelta
                               </button>
                             ) : (
                               <span className="w-full text-center bg-[#dcfce7] text-[#166534] text-[9px] font-bold px-2 py-1 mt-1 rounded-md">
-                                ✓ Resuelta{nec.fecha_resolucion ? ` el ${new Date(nec.fecha_resolucion).toLocaleDateString('es-CO')}` : ''}
+                                <Icon name="check" size="1.1em" /> Resuelta{nec.fecha_resolucion ? ` el ${new Date(nec.fecha_resolucion).toLocaleDateString('es-CO')}` : ''}
                               </span>
                             )}
                           </div>
@@ -1396,7 +1398,7 @@ export function EditFoundationProfile() {
 
               {(activeTab === 'recaudo' || activeTab === 'documentos') && (
                 <div className="bg-gradient-to-br from-[#f8fafc] to-[#eef6ff] p-6 rounded-3xl border border-[#dbeafe] text-center shadow-sm">
-                    <span className="text-3xl mb-2 block">💡</span>
+                    <span className="text-3xl mb-2 block"><Icon name="idea" size="1.1em" /></span>
                     <h4 className="text-[13px] font-bold text-[#071d37] mt-2">Transparencia</h4>
                     <p className="text-[11px] text-[#64748b] mt-2 leading-relaxed">
                       Mantener la documentación legal y los canales actualizados aumenta el <strong>nivel de confianza</strong> en un 80% frente a los donantes.
@@ -1413,7 +1415,7 @@ export function EditFoundationProfile() {
             <div className="bg-[#0f2a3f] text-white rounded-2xl p-4 pr-5 shadow-2xl flex flex-col sm:flex-row items-center gap-4 sm:gap-6 border border-[#1e3a8a] w-full">
               <div className="flex items-center gap-3 w-full sm:w-auto">
                 <div className="h-10 w-10 rounded-full bg-[#0284c7]/20 flex items-center justify-center text-[#38bdf8] shrink-0">
-                  <span className="text-lg">📝</span>
+                  <span className="text-lg"><Icon name="formulario" size="1.1em" /></span>
                 </div>
                 <div>
                   <p className="text-sm font-bold text-white">Tienes cambios pendientes de publicación</p>
@@ -1446,7 +1448,7 @@ export function EditFoundationProfile() {
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
             <div className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-xl flex flex-col items-center text-center">
               <span className={`text-4xl mb-3 ${alertModal.isError ? 'text-red-500' : 'text-blue-500'}`}>
-                {alertModal.isError ? '⚠️' : 'ℹ️'}
+                <Icon name={alertModal.isError ? 'advertencia' : 'info'} size={40} />
               </span>
               <h3 className="text-lg font-bold text-[#071d37] mb-2">{alertModal.title}</h3>
               <p className="text-xs text-[#64748b] mb-6 whitespace-pre-line text-left">{alertModal.message}</p>
@@ -1461,7 +1463,7 @@ export function EditFoundationProfile() {
         {confirmModal.isOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
             <div className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-xl flex flex-col items-center text-center">
-              <span className="text-4xl mb-3 text-orange-500">{confirmModal.tone === 'primary' ? '✅' : '❓'}</span>
+              <span className="text-4xl mb-3 text-orange-500"><Icon name={confirmModal.tone === 'primary' ? 'completado' : 'ayuda'} size={40} /></span>
               <h3 className="text-lg font-bold text-[#071d37] mb-2">{confirmModal.title || 'Confirmar Acción'}</h3>
               <p className="text-xs text-[#64748b] mb-6">{confirmModal.message}</p>
               <div className="flex gap-3 w-full">

@@ -5,6 +5,8 @@ import { supabase } from '../lib/supabase';
 import { VolunteerMap } from '../components/VolunteerMap';
 import type { VoluntarioMapa } from '../components/VolunteerMap';
 
+import { Icon } from '../components/Icon';
+import type { NombreIcono } from '../lib/iconos';
 interface Fundacion {
   id: string;
   nombre_legal: string;
@@ -343,7 +345,7 @@ export function AdminDashboard() {
     return (
       <div className="flex min-h-[60vh] w-full items-center justify-center p-4">
         <div className="bg-white rounded-3xl p-8 border border-[#e2e8f0] shadow-sm max-w-md w-full text-center flex flex-col items-center gap-3">
-          <span className="text-4xl">⚠️</span>
+          <span className="text-4xl"><Icon name="advertencia" size="1.1em" /></span>
           <h2 className="text-lg font-bold text-[#071d37]">No se pudo cargar el panel</h2>
           <p className="text-xs text-[#64748b]">{errorCarga}</p>
           <button type="button" onClick={reintentarCarga} className="bg-[#005684] text-white px-6 py-2.5 rounded-xl text-xs font-bold hover:bg-[#00456a] transition cursor-pointer">
@@ -386,7 +388,7 @@ export function AdminDashboard() {
                 Datos en vivo • Actualizado {actualizado?.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' })}
               </span>
               <button type="button" onClick={() => cargarDatosDashboard()} className="text-[10px] font-bold text-[#64748b] hover:text-[#005684] cursor-pointer print:hidden" title="Actualizar datos">
-                ↻ Actualizar
+                <Icon name="actualizar" size="1.1em" /> Actualizar
               </button>
             </div>
             <h1 className="text-2xl md:text-3xl font-bold text-[#071d37] mb-1 mt-1">Panel de Control y Supervisión General</h1>
@@ -408,10 +410,10 @@ export function AdminDashboard() {
             </div>
             <div className="flex gap-2">
               <button type="button" onClick={exportarCSV} className="flex-1 bg-white border border-[#e2e8f0] text-[#071d37] text-[11px] font-bold px-4 py-1.5 rounded-lg shadow-sm hover:bg-gray-50 transition flex items-center justify-center gap-2 cursor-pointer">
-                <span>📊</span> Exportar CSV
+                <span><Icon name="reporte" size="1.1em" /></span> Exportar CSV
               </button>
               <button type="button" onClick={() => window.print()} className="flex-1 bg-white border border-[#e2e8f0] text-[#071d37] text-[11px] font-bold px-4 py-1.5 rounded-lg shadow-sm hover:bg-gray-50 transition flex items-center justify-center gap-2 cursor-pointer">
-                <span>🖨️</span> Imprimir / PDF
+                <span><Icon name="imprimir" size="1.1em" /></span> Imprimir / PDF
               </button>
             </div>
           </div>
@@ -420,28 +422,28 @@ export function AdminDashboard() {
         {/* TARJETAS KPI */}
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
           <KpiCard
-            categoria="Organizaciones" icono="🏢" titulo="Fundaciones Registradas"
+            categoria="Organizaciones" icono="fundacion" titulo="Fundaciones Registradas"
             valor={m.totalFundaciones.toLocaleString('es-CO')}
             extra={m.nuevasPeriodo > 0 ? `+${m.nuevasPeriodo} en ${etiquetaPeriodo}` : `Sin nuevas en ${etiquetaPeriodo}`}
             pieIzq={`${m.activas} activas`}
             pieDer={<span className={`font-bold px-2 py-0.5 rounded-full border ${m.pendientes.length ? 'bg-red-100 text-red-600 border-red-200' : 'bg-emerald-50 text-emerald-700 border-emerald-200'}`}>{m.pendientes.length} pendientes</span>}
           />
           <KpiCard
-            categoria="Capital Humano" icono="👥" titulo="Voluntarios Registrados"
+            categoria="Capital Humano" icono="voluntarios" titulo="Voluntarios Registrados"
             valor={m.totalVoluntarios.toLocaleString('es-CO')}
             extra={`${m.pctVolActivos}% activos`}
             pieIzq="Disponibles para misiones"
             pieDer={<span className="text-[#005684] font-bold">{m.volActivos} activos</span>}
           />
           <KpiCard
-            categoria="Necesidades" icono="📋" titulo="Publicadas / Completadas"
+            categoria="Necesidades" icono="necesidad" titulo="Publicadas / Completadas"
             valor={<>{m.necTotal}<span className="text-xl text-[#94a3b8] font-bold"> / </span><span className="text-[#059669]">{m.necCompletadas}</span></>}
             extra={`${m.tasaCumplimiento}% cumplidas`}
             pieIzq={`En ${etiquetaPeriodo}`}
             pieDer={<span className="font-bold text-[#071d37]">+{m.necPublicadasPeriodo} publ. · {m.necCompletadasPeriodo} compl.</span>}
           />
           <KpiCard
-            categoria="Garantía Operativa" icono="🛡️" titulo="Tiempo de Auditoría"
+            categoria="Garantía Operativa" icono="auditoria" titulo="Tiempo de Auditoría"
             valor={formatearDuracion(m.promedioAuditoria)}
             extra={m.decisionesPeriodo ? `promedio · ${m.decisionesPeriodo} decisión${m.decisionesPeriodo === 1 ? '' : 'es'}` : `sin decisiones en ${etiquetaPeriodo}`}
             pieIzq="Solicitud pendiente más antigua"
@@ -522,7 +524,7 @@ export function AdminDashboard() {
 
           <div className="mt-4 bg-[#f8fafc] p-3 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between border border-[#e2e8f0] gap-2">
             <p className="text-[11px] text-[#475569] flex items-center gap-2">
-              <span className="text-[#005684]">📈</span>
+              <span className="text-[#005684]"><Icon name="trayectoria" size="1.1em" /></span>
               <span>
                 <strong>Lectura operativa:</strong> {m.necAbiertas} necesidad{m.necAbiertas === 1 ? '' : 'es'} abierta{m.necAbiertas === 1 ? '' : 's'} y una tasa de cumplimiento histórica del <strong>{m.tasaCumplimiento}%</strong>.
               </span>
@@ -543,7 +545,7 @@ export function AdminDashboard() {
           <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
             <div>
               <h3 className="text-lg font-bold text-[#071d37] flex items-center gap-2 mb-1">
-                <span className="text-[#005684]">🛡️</span> Cola de Aprobaciones de Fundaciones
+                <span className="text-[#005684]"><Icon name="seguridad" size="1.1em" /></span> Cola de Aprobaciones de Fundaciones
               </h3>
               <p className="text-xs text-[#64748b]">Ordenadas por antigüedad: las solicitudes que más tiempo llevan esperando aparecen primero.</p>
             </div>
@@ -562,7 +564,7 @@ export function AdminDashboard() {
 
           {m.pendientes.length === 0 ? (
             <div className="text-center py-10 bg-[#f8fafc] rounded-2xl border border-dashed border-[#e2e8f0]">
-              <p className="text-xs font-bold text-[#059669]">🎉 No hay fundaciones pendientes de revisión.</p>
+              <p className="text-xs font-bold text-[#059669]"><Icon name="celebracion" size="1.1em" /> No hay fundaciones pendientes de revisión.</p>
             </div>
           ) : (
             <div className="overflow-x-auto -mx-1 px-1">
@@ -590,7 +592,7 @@ export function AdminDashboard() {
                         </div>
                       </td>
                       <td className="py-4 pr-4">
-                        <p className="text-[11px] font-semibold text-[#071d37]">📍 {item.ciudad || 'Sin ciudad'}</p>
+                        <p className="text-[11px] font-semibold text-[#071d37]"><Icon name="ubicacion" className="text-[#006194]" size="1.1em" /> {item.ciudad || 'Sin ciudad'}</p>
                         <p className="text-[10px] text-[#64748b]">{item.direccion_fisica || item.ubicacion || '—'}</p>
                       </td>
                       <td className="py-4 pr-4">
@@ -604,14 +606,14 @@ export function AdminDashboard() {
                           <div className="flex flex-wrap gap-1">
                             {item.documentos_lista.map((doc, i) => (
                               <span key={i} className="text-[9px] bg-white border border-[#e2e8f0] px-1.5 py-0.5 rounded text-[#64748b] font-semibold flex items-center gap-1">
-                                <span className="text-[#005684]">📄</span> {doc}
+                                <span className="text-[#005684]"><Icon name="documento" size="1.1em" /></span> {doc}
                               </span>
                             ))}
                           </div>
                         ) : (
                           <span className="text-[10px] text-[#94a3b8]">Sin documentos</span>
                         )}
-                        {item.documentos_faltantes && <p className="text-[9px] text-red-500 font-bold mt-1">⚠️ Documentación incompleta</p>}
+                        {item.documentos_faltantes && <p className="text-[9px] text-red-500 font-bold mt-1"><Icon name="advertencia" size="1.1em" /> Documentación incompleta</p>}
                       </td>
                       <td className="py-4 pr-4">
                         <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full border ${getRiesgoStyle(item.nivel_riesgo)} flex items-center gap-1 w-max`}>
@@ -625,7 +627,7 @@ export function AdminDashboard() {
                           disabled={processingId === item.id}
                           className="bg-[#059669] hover:bg-[#047857] text-white text-[11px] font-bold px-4 py-2 rounded-xl shadow-sm transition inline-flex items-center gap-1 cursor-pointer disabled:opacity-50 print:hidden"
                         >
-                          {processingId === item.id ? 'Aprobando...' : '✓ Aprobar'}
+                          {processingId === item.id ? 'Aprobando...' : <><Icon name="check" size={13} /> Aprobar</>}
                         </button>
                       </td>
                     </tr>
@@ -674,10 +676,10 @@ export function AdminDashboard() {
                     </div>
                   )}
                   <div className="flex-1 min-w-0">
-                    <h4 className="text-[11px] font-bold text-[#071d37] truncate">{fund.nombre_legal} <span className="text-[#059669]">✓</span></h4>
+                    <h4 className="text-[11px] font-bold text-[#071d37] truncate">{fund.nombre_legal} <span className="text-[#059669]"><Icon name="check" size="1.1em" /></span></h4>
                     <p className="text-[9px] text-[#64748b] truncate">
                       {fund.ciudad || 'Sin ciudad'} • <span className="text-[#005684] font-semibold">{fund.completadas}/{fund.publicadas} necesidades cubiertas</span>
-                      {fund.rating !== null && <> • ⭐ {fund.rating.toFixed(1)}</>}
+                      {fund.rating !== null && <> • <Icon name="calificacion" size="1.1em" filled /> {fund.rating.toFixed(1)}</>}
                     </p>
                   </div>
                   <div className="text-right w-20 sm:w-24 shrink-0">
@@ -733,7 +735,7 @@ export function AdminDashboard() {
               onClick={() => navigate('/dashboard/admin-notificaciones')}
               className="w-full bg-[#eef6ff] text-[#005684] text-xs font-bold py-2.5 rounded-xl mt-4 hover:bg-[#d4e7fe] transition flex justify-center items-center gap-2 border border-[#dbeafe] cursor-pointer print:hidden"
             >
-              <span>⚡</span> Despachar Convocatoria Extraordinaria
+              <span><Icon name="rapido" size="1.1em" /></span> Despachar Convocatoria Extraordinaria
             </button>
           </section>
         </div>
@@ -743,7 +745,7 @@ export function AdminDashboard() {
       {confirmarAprobar && (
         <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
           <div className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-xl flex flex-col items-center text-center">
-            <span className="text-4xl mb-3">🛡️</span>
+            <span className="text-4xl mb-3"><Icon name="seguridad" size="1.1em" /></span>
             <h3 className="text-lg font-bold text-[#071d37] mb-2">Aprobar fundación</h3>
             <p className="text-xs text-[#64748b] mb-6">
               <span className="font-bold text-[#071d37]">{confirmarAprobar.nombre_legal}</span> quedará activa y visible públicamente en la plataforma. ¿Deseas continuar?
@@ -763,7 +765,7 @@ export function AdminDashboard() {
       {modal && (
         <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
           <div className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-xl flex flex-col items-center text-center">
-            <span className="text-4xl mb-3">{modal.isError ? '⚠️' : '✅'}</span>
+            <span className="text-4xl mb-3"><Icon name={modal.isError ? 'advertencia' : 'completado'} size={40} className={modal.isError ? 'text-[#dc2626]' : 'text-[#059669]'} /></span>
             <h3 className="text-lg font-bold text-[#071d37] mb-2">{modal.title}</h3>
             <p className="text-xs text-[#64748b] mb-6">{modal.message}</p>
             <button type="button" onClick={() => setModal(null)} className="w-full bg-[#005684] text-white py-2.5 rounded-xl text-xs font-bold hover:bg-[#00456a] transition cursor-pointer">
@@ -778,7 +780,7 @@ export function AdminDashboard() {
 
 function KpiCard({ categoria, icono, titulo, valor, extra, pieIzq, pieDer, titleAttr }: {
   categoria: string;
-  icono: string;
+  icono: NombreIcono;
   titulo: string;
   valor: ReactNode;
   extra: string;
@@ -790,7 +792,7 @@ function KpiCard({ categoria, icono, titulo, valor, extra, pieIzq, pieDer, title
     <div className="bg-white rounded-2xl p-5 border border-[#e2e8f0] shadow-sm flex flex-col justify-between" title={titleAttr}>
       <div className="flex justify-between items-start mb-2">
         <p className="text-[9px] font-extrabold text-[#94a3b8] uppercase tracking-wider">{categoria}</p>
-        <span className="bg-[#eef6ff] text-[#005684] p-1.5 rounded-lg">{icono}</span>
+        <span className="bg-[#eef6ff] text-[#005684] p-1.5 rounded-lg"><Icon name={icono} size={16} /></span>
       </div>
       <h3 className="text-sm font-bold text-[#64748b]">{titulo}</h3>
       <div className="flex flex-wrap items-end gap-x-2 mt-1 mb-3">

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 
+import { Icon } from '../components/Icon';
 export function Login() {
   const navigate = useNavigate();
   const [activeUserType, setActiveUserType] = useState<'voluntario' | 'fundacion' | 'administrador'>('voluntario');
@@ -116,7 +117,7 @@ export function Login() {
           </div>
 
           <div className="top-badge inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold mb-2">
-            <span className="time-icon">🕒</span> 7:34 AM <span className="status-dot">•</span>
+            <span className="time-icon"><Icon name="reloj" size="1.1em" /></span> 7:34 AM <span className="status-dot">•</span>
           </div>
 
           <h1 className="text-xl md:text-2xl font-extrabold text-[#071d37] mb-1">Bienvenido de nuevo</h1>
@@ -131,7 +132,7 @@ export function Login() {
               className={`py-1.5 text-xs font-bold rounded-xl transition-all ${activeUserType === 'voluntario' ? 'bg-[#005684] text-white shadow-sm' : 'text-gray-600'}`}
               onClick={() => setActiveUserType('voluntario')}
             >
-              🙋 Voluntario
+              <Icon name="voluntario" size="1.1em" /> Voluntario
             </button>
 
             <button 
@@ -139,7 +140,7 @@ export function Login() {
               className={`py-1.5 text-xs font-bold rounded-xl transition-all ${activeUserType === 'fundacion' ? 'bg-[#005684] text-white shadow-sm' : 'text-gray-600'}`}
               onClick={() => setActiveUserType('fundacion')}
             >
-              🏢 Fundación
+              <Icon name="fundacion" size="1.1em" /> Fundación
             </button>
 
             <button 
@@ -147,7 +148,7 @@ export function Login() {
               className={`py-1.5 text-xs font-bold rounded-xl transition-all ${activeUserType === 'administrador' ? 'bg-amber-600 text-white shadow-sm' : 'text-gray-600'}`}
               onClick={() => setActiveUserType('administrador')}
             >
-              🛡️ Admin
+              <Icon name="seguridad" size="1.1em" /> Admin
             </button>
           </div>
 
@@ -158,7 +159,7 @@ export function Login() {
                 <span className="text-gray-400">Requerido</span>
               </div>
               <div className="input-wrapper relative flex items-center">
-                <span className="absolute left-3 text-gray-400 text-xs">✉️</span>
+                <span className="absolute left-3 text-gray-400 text-xs"><Icon name="correo" size="1.1em" /></span>
                 <input 
                   type="email" 
                   id="email" 
@@ -177,7 +178,7 @@ export function Login() {
                 <span className="text-gray-400">Mín. 6 caracteres</span>
               </div>
               <div className="input-wrapper relative flex items-center">
-                <span className="absolute left-3 text-gray-400 text-xs">🔒</span>
+                <span className="absolute left-3 text-gray-400 text-xs"><Icon name="candado" size="1.1em" /></span>
                 <input 
                   type={showPassword ? "text" : "password"} 
                   id="password" 
@@ -193,7 +194,7 @@ export function Login() {
                   className="absolute right-3 text-xs text-gray-500 hover:text-gray-700 cursor-pointer"
                   title={showPassword ? "Ocultar contraseña" : "Ver contraseña"}
                 >
-                  {showPassword ? "👁️‍🗨️" : "👁"}
+                  <Icon name={showPassword ? 'ocultar' : 'ver'} size={18} />
                 </button>
               </div>
             </div>
@@ -214,7 +215,7 @@ export function Login() {
 
           {/* Banner de seguridad más compacto */}
           <div className="security-banner mt-4 flex items-center gap-3 bg-blue-50/50 p-3 rounded-2xl border border-blue-100">
-            <div className="shield-icon text-base">🛡️</div>
+            <div className="shield-icon text-base"><Icon name="seguridad" size="1.1em" /></div>
             <div className="security-info text-left">
               <h4 className="text-[11px] font-bold text-[#071d37]">Acceso Seguro y Transparente <span className="text-[8px] bg-blue-100 text-blue-700 px-1 py-0.5 rounded">TLS 1.3</span></h4>
               <p className="text-[10px] text-gray-500">Identidad cívica blindada en tiempo real.</p>
@@ -222,7 +223,7 @@ export function Login() {
           </div>
 
           <div className="login-footer mt-4 text-center">
-            <Link to="/signup" className="text-xs font-bold text-[#005684] hover:underline">¿Aún no tienes cuenta? Regístrate gratis ↗</Link>
+            <Link to="/signup" className="text-xs font-bold text-[#005684] hover:underline">¿Aún no tienes cuenta? Regístrate gratis <Icon name="externo" size="1.1em" /></Link>
           </div>
 
         </div>

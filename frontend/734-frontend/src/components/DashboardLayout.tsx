@@ -1,11 +1,11 @@
 import { useNavigate, Outlet, Link, useLocation } from 'react-router-dom';
 import type { Notificacion } from '../hooks/useNotifications';
 import { supabase } from '../lib/supabase';
-import * as Icons from "../assets/icons/index.ts";
 import { useState, useEffect, useRef } from 'react';
 import { RealtimeChannel } from '@supabase/supabase-js';
 import { useNotifications } from '../hooks/useNotifications';
 
+import { Icon } from './Icon';
 interface SesionUsuario {
   id: string;
   es_actual: boolean;
@@ -223,7 +223,7 @@ export function DashboardLayout() {
               className="lg:hidden text-gray-400 hover:text-gray-600 cursor-pointer"
               onClick={() => setIsMobileMenuOpen(false)}
             >
-              ✕
+              <Icon name="cerrar" size="1.1em" />
             </button>
           </div>
 
@@ -236,11 +236,11 @@ export function DashboardLayout() {
             <div className="flex flex-col gap-2">
               <span className="text-[11px] font-extrabold text-[#94a3b8] uppercase tracking-wider">Panel Admin</span>
               <nav className="flex flex-col gap-1">
-                <Link to="/dashboard/admin-dashboard" className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition ${isActive('/admin-dashboard') ? 'bg-[#005684] text-white shadow-sm' : 'text-[#64748b] hover:bg-gray-50'}`}><span>🗂️</span> Resumen</Link>
-                <Link to="/dashboard/admin-aprobaciones" className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition ${isActive('/admin-aprobaciones') ? 'bg-[#005684] text-white shadow-sm' : 'text-[#64748b] hover:bg-gray-50'}`}><span>🗂️</span> Aprobaciones</Link>
-                <Link to="/dashboard/admin-fundaciones" className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition ${isActive('/admin-fundaciones') ? 'bg-[#005684] text-white shadow-sm' : 'text-[#64748b] hover:bg-gray-50'}`}><span>🗂️</span> Fundaciones</Link>
-                <Link to="/dashboard/admin-voluntarios" className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition ${isActive('/admin-voluntarios') ? 'bg-[#005684] text-white shadow-sm' : 'text-[#64748b] hover:bg-gray-50'}`}><span>👥</span> Voluntarios</Link>
-                <Link to="/dashboard/admin-necesidades" className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition ${isActive('/admin-necesidades') || (rol === 'administrador' && isActive('/fundacion/necesidades')) ? 'bg-[#005684] text-white shadow-sm' : 'text-[#64748b] hover:bg-gray-50'}`}><span>📋</span> Necesidades</Link>
+                <Link to="/dashboard/admin-dashboard" className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition ${isActive('/admin-dashboard') ? 'bg-[#005684] text-white shadow-sm' : 'text-[#64748b] hover:bg-gray-50'}`}><span><Icon name="expedientes" size="1.1em" /></span> Resumen</Link>
+                <Link to="/dashboard/admin-aprobaciones" className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition ${isActive('/admin-aprobaciones') ? 'bg-[#005684] text-white shadow-sm' : 'text-[#64748b] hover:bg-gray-50'}`}><span><Icon name="expedientes" size="1.1em" /></span> Aprobaciones</Link>
+                <Link to="/dashboard/admin-fundaciones" className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition ${isActive('/admin-fundaciones') ? 'bg-[#005684] text-white shadow-sm' : 'text-[#64748b] hover:bg-gray-50'}`}><span><Icon name="expedientes" size="1.1em" /></span> Fundaciones</Link>
+                <Link to="/dashboard/admin-voluntarios" className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition ${isActive('/admin-voluntarios') ? 'bg-[#005684] text-white shadow-sm' : 'text-[#64748b] hover:bg-gray-50'}`}><span><Icon name="voluntarios" size="1.1em" /></span> Voluntarios</Link>
+                <Link to="/dashboard/admin-necesidades" className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition ${isActive('/admin-necesidades') || (rol === 'administrador' && isActive('/fundacion/necesidades')) ? 'bg-[#005684] text-white shadow-sm' : 'text-[#64748b] hover:bg-gray-50'}`}><span><Icon name="necesidad" size="1.1em" /></span> Necesidades</Link>
               </nav>
             </div>
           )}
@@ -250,13 +250,13 @@ export function DashboardLayout() {
               <span className="text-[11px] font-extrabold text-[#94a3b8] uppercase tracking-wider">Usuario</span>
               {rol === 'voluntario' && (
                 <nav className="flex flex-col gap-1">
-                  <Link to={`/dashboard/voluntario/editar/${profileData?.id ?? ''}`} className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition ${isActive('/voluntario/editar') ? 'bg-[#005684] text-white shadow-sm' : 'text-[#64748b] hover:bg-gray-50 font-semibold'}`}><span>👤</span> Editar Perfil Voluntario</Link>
+                  <Link to={`/dashboard/voluntario/editar/${profileData?.id ?? ''}`} className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition ${isActive('/voluntario/editar') ? 'bg-[#005684] text-white shadow-sm' : 'text-[#64748b] hover:bg-gray-50 font-semibold'}`}><span><Icon name="usuario" size="1.1em" /></span> Editar Perfil Voluntario</Link>
                 </nav>
               )}
               {rol === 'fundacion' && (
                 <nav className="flex flex-col gap-1">
-                  <Link to={`/dashboard/fundacion/editar/${profileData?.id ?? ''}`} className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition ${isActive('/fundacion/editar') ? 'bg-[#005684] text-white shadow-sm' : 'text-[#64748b] hover:bg-gray-50 font-semibold'}`}><span>🏢</span> Editar Perfil Fundación</Link>
-                  <Link to={`/dashboard/fundacion/necesidades/${profileData?.id ?? ''}`} className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition ${isActive('/fundacion/necesidades') ? 'bg-[#005684] text-white shadow-sm' : 'text-[#64748b] hover:bg-gray-50 font-semibold'}`}><span>📋</span> Gestionar Necesidades</Link>
+                  <Link to={`/dashboard/fundacion/editar/${profileData?.id ?? ''}`} className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition ${isActive('/fundacion/editar') ? 'bg-[#005684] text-white shadow-sm' : 'text-[#64748b] hover:bg-gray-50 font-semibold'}`}><span><Icon name="fundacion" size="1.1em" /></span> Editar Perfil Fundación</Link>
+                  <Link to={`/dashboard/fundacion/necesidades/${profileData?.id ?? ''}`} className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition ${isActive('/fundacion/necesidades') ? 'bg-[#005684] text-white shadow-sm' : 'text-[#64748b] hover:bg-gray-50 font-semibold'}`}><span><Icon name="necesidad" size="1.1em" /></span> Gestionar Necesidades</Link>
                 </nav>
               )}
             </div>
@@ -265,8 +265,8 @@ export function DashboardLayout() {
           <div className="flex flex-col gap-2">
             <span className="text-[11px] font-extrabold text-[#94a3b8] uppercase tracking-wider">Sistema</span>
             <nav className="flex flex-col gap-1">
-              <Link to="/dashboard/ajustes" className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition ${isActive('/ajustes') ? 'bg-[#005684] text-white shadow-sm' : 'text-[#64748b] hover:bg-gray-50 font-semibold'}`}><span>⚙</span> Seguridad</Link>
-              <Link to="/dashboard/admin-notificaciones" className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition ${isActive('/admin-notificaciones') ? 'bg-[#005684] text-white shadow-sm' : 'text-[#64748b] hover:bg-gray-50 font-semibold'}`}><span>🔔</span> Notificaciones</Link>
+              <Link to="/dashboard/ajustes" className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition ${isActive('/ajustes') ? 'bg-[#005684] text-white shadow-sm' : 'text-[#64748b] hover:bg-gray-50 font-semibold'}`}><span><Icon name="configuracion" size="1.1em" /></span> Seguridad</Link>
+              <Link to="/dashboard/admin-notificaciones" className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition ${isActive('/admin-notificaciones') ? 'bg-[#005684] text-white shadow-sm' : 'text-[#64748b] hover:bg-gray-50 font-semibold'}`}><span><Icon name="notificaciones" size="1.1em" /></span> Notificaciones</Link>
             </nav>
           </div>
         </div>
@@ -277,14 +277,14 @@ export function DashboardLayout() {
             to="/" 
             className="flex items-center justify-center gap-2 text-[#005684] bg-white border border-[#dbeafe] hover:bg-[#eef6ff] hover:border-[#bae6fd] shadow-sm text-xs font-bold transition w-full px-3 py-2.5 rounded-xl cursor-pointer"
           >
-            <span>🌍</span> Ir al Sitio Público
+            <span><Icon name="sitioWeb" size="1.1em" /></span> Ir al Sitio Público
           </Link>
           
           <button 
             onClick={handleLogout} 
             className="flex items-center justify-center gap-2 text-red-600 bg-transparent hover:bg-red-50 text-xs font-bold transition w-full px-3 py-2.5 rounded-xl cursor-pointer"
           >
-            <span><img src={Icons.LogoutIcon} alt="Cerrar sesión" className="w-4 h-4" /></span> Cerrar Sesión
+            <span><Icon name="cerrarSesion" className="w-4 h-4" /></span> Cerrar Sesión
           </button>
         </div>
       </aside>
@@ -296,7 +296,7 @@ export function DashboardLayout() {
               onClick={() => setIsMobileMenuOpen(true)}
               className="lg:hidden p-1.5 -ml-1.5 text-[#071d37] hover:bg-blue-50 rounded-lg transition cursor-pointer"
             >
-              ☰
+              <Icon name="menu" size="1.1em" />
             </button>
             <div className="flex items-center gap-2 text-xs font-semibold text-[#64748b]">
               <span className="hidden sm:inline">Dashboard</span>
@@ -307,7 +307,7 @@ export function DashboardLayout() {
 
           {/* {(rol === 'administrador' || rol === 'admin') && (
             <div className="hidden md:flex items-center bg-[#f8fafc] border border-[#e2e8f0] rounded-xl px-3 py-2 w-60 gap-2">
-              <span className="text-gray-400 text-xs"><img src={Icons.SearchIcon} alt="Buscar" /></span>
+              <span className="text-gray-400 text-xs"><Icon name="buscar" /></span>
               <input type="text" placeholder="Buscar voluntarios..." className="bg-transparent text-xs w-full focus:outline-none" />
             </div>
           )} */}
@@ -325,7 +325,7 @@ export function DashboardLayout() {
                 onClick={() => setShowNotifs(!showNotifs)}
                 className="relative p-2 hover:bg-gray-100 rounded-full transition cursor-pointer"
               >
-                <img src={Icons.CampanaIcon2} alt="Notificaciones" />
+                <Icon name="notificaciones" />
                 {unreadCount > 0 && (
                   <span className="absolute top-1 right-1 flex h-2.5 w-2.5">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
@@ -383,7 +383,7 @@ export function DashboardLayout() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-fade-in">
           <div className="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl border border-gray-100 flex flex-col items-center text-center gap-5 transform transition-all scale-100">
             <div className="h-16 w-16 rounded-2xl bg-amber-50 text-amber-500 border border-amber-200/60 flex items-center justify-center text-3xl shadow-sm">
-              🛡
+              <Icon name="seguridad" size="1.1em" />
             </div>
             <div className="flex flex-col gap-2">
               <h3 className="text-base font-extrabold text-[#071d37]">

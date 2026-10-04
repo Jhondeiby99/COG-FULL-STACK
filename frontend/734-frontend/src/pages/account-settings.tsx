@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '../lib/supabase';
-import * as Icons from "../assets/icons/index.ts";
 
+import { Icon } from '../components/Icon';
 interface Sesion {
   id: string;
   dispositivo: string;
@@ -150,7 +150,7 @@ export function AccountSettings() {
 
         <div className="flex flex-col items-end justify-center gap-2 bg-white p-3 rounded-xl self-end text-right shrink-0 w-full md:w-[35%] border border-[#e2e8f0] shadow-sm"> 
           <div className="flex items-center gap-2 bg-[#EFF4FF] text-[11px] text-[#005684] px-2 py-1 rounded-xl font-bold border border-[#bae6fd]">
-            <span><img height="16px" width="16" src={Icons.IconVerify} alt="Verify Icon" className="opacity-80" /></span> 
+            <span><Icon name="verificado" className="text-[#006194] opacity-80" /></span> 
             Identidad Verificada 7:34 AM
           </div>
           <span className="text-[11px] font-semibold text-[#64748b]">
@@ -169,7 +169,7 @@ export function AccountSettings() {
               <h2 className="text-base font-extrabold text-[#071d37]">Contraseña y Credenciales</h2>
               <p className="text-xs text-[#64748b] mt-0.5">Mantén una clave robusta con entropía alta para proteger tu historial solidario.</p>
             </div>
-            <span className="text-xl text-gray-400">🔑</span>
+            <span className="text-xl text-gray-400"><Icon name="llave" size="1.1em" /></span>
           </div>
 
           <form onSubmit={handleUpdatePassword} className="flex flex-col gap-5 max-w-3xl">
@@ -185,7 +185,7 @@ export function AccountSettings() {
                     className="w-full bg-[#f8fafc] border border-[#e2e8f0] rounded-xl px-4 py-3 text-sm focus:outline-none focus:bg-white focus:border-[#005684]"
                     required 
                   />
-                  <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400">🔒</span>
+                  <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400"><Icon name="candado" size="1.1em" /></span>
                 </div>
               </div>
 
@@ -207,7 +207,7 @@ export function AccountSettings() {
                     required 
                   />
                   <span className="absolute right-4 top-1/2 -translate-y-1/2">
-                    {passwordsMatch === null ? '🔒' : passwordsMatch ? '✅' : '❌'}
+                    <Icon name={passwordsMatch === null ? 'candado' : passwordsMatch ? 'completado' : 'error'} size="1.1em" className={passwordsMatch === null ? '' : passwordsMatch ? 'text-[#059669]' : 'text-[#dc2626]'} />
                   </span>
                 </div>
                 {passwordsMatch === false && (
@@ -231,7 +231,7 @@ export function AccountSettings() {
                 <div className={`h-full rounded-full w-1/3 transition-all duration-300 ${passwordStrength.bars >= 3 ? passwordStrength.color : 'bg-transparent'}`}></div>
               </div>
               <p className="text-[11px] text-[#64748b] mt-2 flex items-center gap-1.5">
-                <span className="text-[#005684]">✓</span> 
+                <span className="text-[#005684]"><Icon name="check" size="1.1em" /></span> 
                 Usa mayúsculas, minúsculas, números y símbolos para máxima seguridad FIPS-140.
               </p>
             </div>
@@ -266,7 +266,7 @@ export function AccountSettings() {
               disabled={sesiones.length <= 1}
               className="bg-red-50 text-red-600 border border-red-100 px-4 py-2.5 rounded-xl text-xs font-bold hover:bg-red-100 transition cursor-pointer flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <span>🚪</span> Cerrar todas las demás sesiones
+              <span><Icon name="cerrarSesion" size="1.1em" /></span> Cerrar todas las demás sesiones
             </button>
           </div>
 
@@ -283,7 +283,7 @@ export function AccountSettings() {
                   <div key={sesion.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-2xl bg-[#f8fafc] border border-[#e2e8f0] gap-4 transition hover:border-[#bae6fd]">
                     <div className="flex items-center gap-3">
                       <div className={`h-10 w-10 rounded-xl flex items-center justify-center text-lg shrink-0 ${esEsteDispositivo ? 'bg-[#e0f2fe] border-[#bae6fd] border' : 'bg-white border border-[#e2e8f0]'}`}>
-                        {sesion.dispositivo.toLowerCase().includes('móvil') ? '📱' : '💻'}
+                        <Icon name={sesion.dispositivo.toLowerCase().includes('móvil') ? 'movil' : 'computador'} size="1.1em" />
                       </div>
                       <div>
                         <div className="flex items-center gap-2">

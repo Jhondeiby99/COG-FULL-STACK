@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 
+import { Icon } from '../components/Icon';
 interface FundacionDB {
   id: string;
   nombre_legal?: string | null;
@@ -275,7 +276,7 @@ export function AdminFoundations() {
       {/* TARJETAS KPI */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-white rounded-2xl p-5 border border-[#e2e8f0] shadow-sm flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl bg-[#e0f2fe] text-[#0284c7] flex items-center justify-center text-xl shrink-0">🏢</div>
+          <div className="w-12 h-12 rounded-xl bg-[#e0f2fe] text-[#0284c7] flex items-center justify-center text-xl shrink-0"><Icon name="fundacion" size="1.1em" /></div>
           <div>
             <p className="text-[10px] font-extrabold text-[#64748b] uppercase tracking-wider mb-0.5">Total Registradas</p>
             <p className="text-2xl font-black text-[#071d37]">{totalRegistradas}</p>
@@ -283,7 +284,7 @@ export function AdminFoundations() {
         </div>
         
         <div className="bg-white rounded-2xl p-5 border border-[#e2e8f0] shadow-sm flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl bg-[#dcfce7] text-[#166534] flex items-center justify-center text-xl shrink-0">✓</div>
+          <div className="w-12 h-12 rounded-xl bg-[#dcfce7] text-[#166534] flex items-center justify-center text-xl shrink-0"><Icon name="check" size="1.1em" /></div>
           <div>
             <p className="text-[10px] font-extrabold text-[#64748b] uppercase tracking-wider mb-0.5">Activas Operando</p>
             <p className="text-2xl font-black text-[#071d37]">{activasCount}</p>
@@ -291,7 +292,7 @@ export function AdminFoundations() {
         </div>
 
         <div className="bg-white rounded-2xl p-5 border border-[#e2e8f0] shadow-sm flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl bg-[#fee2e2] text-[#991b1b] flex items-center justify-center text-xl shrink-0">📋</div>
+          <div className="w-12 h-12 rounded-xl bg-[#fee2e2] text-[#991b1b] flex items-center justify-center text-xl shrink-0"><Icon name="necesidad" size="1.1em" /></div>
           <div>
             <p className="text-[10px] font-extrabold text-[#64748b] uppercase tracking-wider mb-0.5">En Revisión</p>
             <p className="text-2xl font-black text-[#071d37]">{enRevisionCount}</p>
@@ -299,7 +300,7 @@ export function AdminFoundations() {
         </div>
 
         <div className="bg-white rounded-2xl p-5 border border-[#e2e8f0] shadow-sm flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl bg-[#f1f5f9] text-[#475569] flex items-center justify-center text-xl shrink-0">👥</div>
+          <div className="w-12 h-12 rounded-xl bg-[#f1f5f9] text-[#475569] flex items-center justify-center text-xl shrink-0"><Icon name="voluntarios" size="1.1em" /></div>
           <div>
             <p className="text-[10px] font-extrabold text-[#64748b] uppercase tracking-wider mb-0.5">Red Consolidada</p>
             <p className="text-2xl font-black text-[#071d37]">{totalRegistradas} Entidades</p>
@@ -310,7 +311,7 @@ export function AdminFoundations() {
       {/* FILTROS Y BÚSQUEDA */}
       <div className="bg-white rounded-2xl p-4 border border-[#e2e8f0] shadow-sm flex flex-col md:flex-row items-center gap-4">
         <div className="flex-1 flex items-center bg-[#f8fafc] border border-[#e2e8f0] rounded-xl px-3 py-2.5 gap-2 w-full">
-          <span className="text-gray-400 text-sm">🔍</span>
+          <span className="text-gray-400 text-sm"><Icon name="buscar" size="1.1em" /></span>
           <input 
             type="text" 
             value={busqueda}
@@ -367,10 +368,10 @@ export function AdminFoundations() {
                   <div className="flex flex-wrap items-center gap-2 text-[10px] sm:text-[11px] text-[#64748b] mb-1.5">
                     <span className="whitespace-nowrap">NIT: {fund.nit}</span>
                     <span className="text-gray-300 hidden sm:inline">•</span>
-                    <span className="truncate">📍 {fund.location}</span>
+                    <span className="truncate"><Icon name="ubicacion" className="text-[#006194]" size="1.1em" /> {fund.location}</span>
                   </div>
                   <div className="flex items-center gap-1 text-[10px] sm:text-[11px] text-[#0284c7] font-semibold">
-                    <span>🏢</span> <span className="truncate">{fund.category}</span>
+                    <span><Icon name="fundacion" size="1.1em" /></span> <span className="truncate">{fund.category}</span>
                   </div>
                 </div>
               </div>
@@ -394,13 +395,13 @@ export function AdminFoundations() {
                     onClick={() => navigate(`/fundacion/${fund.id}`)}
                     className="bg-[#eef6ff] text-[#005684] px-3 sm:px-4 py-2 rounded-xl text-xs font-bold hover:bg-[#d4e7fe] transition flex items-center gap-1.5 border border-[#dbeafe] whitespace-nowrap cursor-pointer"
                   >
-                      Vista <span>↗</span>
+                      Vista <span><Icon name="externo" size="1.1em" /></span>
                   </button>
                   <button 
                     onClick={() => navigate(`/dashboard/fundacion/editar/${fund.id}`)}
                     className="bg-white border border-[#e2e8f0] text-[#475569] px-3 sm:px-4 py-2 rounded-xl text-xs font-bold hover:bg-gray-50 transition flex items-center gap-1.5 cursor-pointer"
                   >
-                      ✏️ Editar
+                      <Icon name="editar" size="1.1em" /> Editar
                   </button>
 
                   {/* MENÚ DE TRES PUNTOS (INACTIVAR / ACTIVAR) */}
@@ -431,7 +432,7 @@ export function AdminFoundations() {
                           onClick={(e) => { e.stopPropagation(); setMenuAbiertoId(null); navigate(`/dashboard/fundacion/necesidades/${fund.id}`); }}
                           className="w-full text-left px-4 py-3 text-xs font-bold transition hover:bg-gray-50 flex items-center gap-2 text-[#475569] border-t border-[#f1f5f9]"
                         >
-                          <span>📋</span> Gestionar necesidades
+                          <span><Icon name="necesidad" size="1.1em" /></span> Gestionar necesidades
                         </button>
                       </div>
                     )}
@@ -487,7 +488,7 @@ export function AdminFoundations() {
       {errorModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
           <div className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-xl flex flex-col items-center text-center">
-            <span className="text-4xl mb-3 text-red-500">⚠️</span>
+            <span className="text-4xl mb-3 text-red-500"><Icon name="advertencia" size="1.1em" /></span>
             <h3 className="text-lg font-bold text-[#071d37] mb-2">{errorModal.title}</h3>
             <p className="text-xs text-[#64748b] mb-6">{errorModal.message}</p>
             <button onClick={() => setErrorModal(null)} className="w-full bg-[#005684] text-white py-2.5 rounded-xl text-xs font-bold hover:bg-[#00456a] transition cursor-pointer">

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 
+import { Icon } from '../components/Icon';
 export function ForgotPassword() {
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
@@ -37,7 +38,7 @@ export function ForgotPassword() {
         <div className="form-wrapper flex flex-col gap-6">
           
           <div className="top-badge flex items-center gap-1.5 w-fit bg-[#eef6ff] text-[#005684] px-3 py-1 rounded-full text-xs font-bold">
-            <span>🔒</span> Seguridad & Recuperación 7:34 AM
+            <span><Icon name="candado" size="1.1em" /></span> Seguridad & Recuperación 7:34 AM
           </div>
 
           <div>
@@ -51,7 +52,7 @@ export function ForgotPassword() {
             <div className="input-group flex flex-col gap-1.5">
               <label className="text-xs font-bold text-[#475569]">Correo electrónico institucional o personal</label>
               <div className="relative">
-                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400">✉️</span>
+                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400"><Icon name="correo" size="1.1em" /></span>
                 <input 
                   type="email" 
                   value={email} 

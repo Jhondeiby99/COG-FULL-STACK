@@ -4,8 +4,10 @@ import { supabase } from '../lib/supabase';
 import { Header } from '../components/Header.tsx';
 import { Footer } from '../components/Footer.tsx';
 import { RatingForm } from '../components/RatingForm';
-import * as Icons from "../assets/icons/index.ts";
 
+import { Icon } from '../components/Icon';
+import { iconoDesdeEmoji } from '../lib/iconos';
+import { Estrellas } from '../components/Estrellas';
 export function VolunteerProfile() {
   const { id } = useParams<{ id: string }>();
   const [voluntario, setVoluntario] = useState<any>(null);
@@ -285,7 +287,7 @@ const handleContactSubmit = async (e: React.FormEvent) => {
                   />
                   {voluntario.is_verified && (
                     <div className="absolute -bottom-2 -right-2 bg-white rounded-full p-1 shadow-sm">
-                      <img src={Icons.CheckVerifyIcon} alt="Verificado" className="h-5 w-5" />
+                      <Icon name="completado" className="text-[#006194] h-5 w-5" />
                     </div>
                   )}
                 </div>
@@ -294,7 +296,7 @@ const handleContactSubmit = async (e: React.FormEvent) => {
                     <h1 className="text-2xl font-extrabold text-[#0f2a3f] tracking-tight">{voluntario.nombre_completo}</h1>
                     {/* {voluntario.is_verified ? (
                       <span className="inline-flex items-center gap-1.5 rounded-full bg-[#dcfce7] px-2.5 py-0.5 text-xs font-bold text-[#047857]">
-                        <img src={Icons.IconVerify} alt="Verificada" className="h-3.5 w-3.5" /> Verificada Oficial
+                        <Icon name="verificado" className="text-[#006194] h-3.5 w-3.5" /> Verificada Oficial
                       </span>
                     ) : (
                       <span className="inline-flex items-center gap-1.5 rounded-full bg-[#fef3c7] px-2.5 py-0.5 text-xs font-bold text-[#b45309]">
@@ -305,13 +307,13 @@ const handleContactSubmit = async (e: React.FormEvent) => {
                   <p className="text-sm font-bold text-[#005684]">{voluntario.profesion || 'Voluntario Activo'}</p>
                   <div className="flex items-center gap-4 mt-2 text-xs font-medium text-[#64748b]">
                     <span className="flex items-center gap-1">
-                      <img src={Icons.UbicacionIcon} className="h-3.5 w-3.5" alt="Ubicación" /> {ubicacionTexto}
+                      <Icon name="ubicacion" className="text-[#006194] h-3.5 w-3.5" /> {ubicacionTexto}
                     </span>
-                    <span className="flex items-center gap-1">✈️ {dispViajeTexto}</span>
+                    <span className="flex items-center gap-1"><Icon name="viaje" size="1.1em" /> {dispViajeTexto}</span>
                   </div>
                   {voluntario.id_colegiada && (
                     <div className="flex items-center gap-1 mt-1 text-xs font-medium text-[#64748b]">
-                      <span>💬 ID Colegiada / Registro: {voluntario.id_colegiada}</span>
+                      <span><Icon name="mensaje" size="1.1em" /> ID Colegiada / Registro: {voluntario.id_colegiada}</span>
                     </div>
                   )}
                 </div>
@@ -323,14 +325,14 @@ const handleContactSubmit = async (e: React.FormEvent) => {
                   onClick={() => openModal('contacto')}
                   className="flex items-center justify-center gap-2 rounded-xl bg-[#005684] px-6 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-[#00456a]"
                 >
-                  <img src={Icons.MensajeIcon} className="h-4 w-4" alt="Mensaje" /> Contactar Voluntario
+                  <Icon name="mensaje" className="h-4 w-4" /> Contactar Voluntario
                 </button>
                 <button
                   type="button"
                   onClick={() => openModal('invitacion', `Hola ${voluntario.nombre_completo}, nos gustaría invitarte a participar en un proyecto con nuestra organización.`)}
                   className="flex items-center justify-center gap-2 rounded-xl border border-[#cbd5e1] bg-white px-6 py-3 text-sm font-bold text-[#0f2a3f] shadow-sm transition hover:bg-[#f8fafc]"
                 >
-                  <img src={Icons.HojaIcon} className="h-4 w-4" alt="Invitar" /> Invitar a proyecto
+                  <Icon name="formulario" className="h-4 w-4" /> Invitar a proyecto
                 </button>
               </div>
             </div>
@@ -345,19 +347,19 @@ const handleContactSubmit = async (e: React.FormEvent) => {
               {/* Tarjetas Rápidas */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div className="bg-white rounded-xl p-4 border border-[#e2e8f0] shadow-sm flex flex-col items-center text-center">
-                  <div className="h-8 w-8 rounded-full bg-[#e6f0ff] flex items-center justify-center mb-2">⏳</div>
+                  <div className="h-8 w-8 rounded-full bg-[#e6f0ff] flex items-center justify-center mb-2"><Icon name="cargando" size="1.1em" /></div>
                   <span className="text-[11px] font-bold text-[#64748b] uppercase">Tiempo disponible</span>
                   <span className="text-[15px] font-extrabold text-[#0f2a3f] mt-1">{voluntario.tiempo_disponible?.split('/')[0] || 'A convenir'}</span>
                   <span className="text-[10px] text-[#94a3b8] mt-0.5 leading-tight">Por semana</span>
                 </div>
                 <div className="bg-white rounded-xl p-4 border border-[#e2e8f0] shadow-sm flex flex-col items-center text-center">
-                  <div className="h-8 w-8 rounded-full bg-[#e6f0ff] flex items-center justify-center mb-2">📍</div>
+                  <div className="h-8 w-8 rounded-full bg-[#e6f0ff] flex items-center justify-center mb-2"><Icon name="ubicacion" className="text-[#006194]" size="1.1em" /></div>
                   <span className="text-[11px] font-bold text-[#64748b] uppercase">Disp. de viaje</span>
                   <span className="text-[15px] font-extrabold text-[#0f2a3f] mt-1">{voluntario.disponibilidad_viaje || 'Móvil total'}</span>
                   <span className="text-[10px] text-[#94a3b8] mt-0.5 leading-tight">A nivel departamental</span>
                 </div>
                 <div className="bg-white rounded-xl p-4 border border-[#e2e8f0] shadow-sm flex flex-col items-center text-center">
-                  <div className="h-8 w-8 rounded-full bg-[#dcfce7] flex items-center justify-center mb-2 text-[#047857]">⚕️</div>
+                  <div className="h-8 w-8 rounded-full bg-[#dcfce7] flex items-center justify-center mb-2 text-[#047857]"><Icon name="salud" size="1.1em" /></div>
                   <span className="text-[11px] font-bold text-[#64748b] uppercase">Modalidad</span>
                   <span className="text-[15px] font-extrabold text-[#0f2a3f] mt-1">{voluntario.modalidad_apoyo || 'Presencial'}</span>
                   <span className="text-[10px] text-[#94a3b8] mt-0.5 leading-tight">En terreno o remota</span>
@@ -373,7 +375,7 @@ const handleContactSubmit = async (e: React.FormEvent) => {
               <section className="rounded-2xl bg-white p-6 shadow-sm border border-[#e2e8f0] md:p-8">
                 <div className="flex items-center gap-2 mb-4">
                   <span className="text-xl">
-                    <img src={Icons.PersonsIcon} className="h-6 w-6" alt="Persona" />
+                    <Icon name="voluntarios" className="h-6 w-6" />
                   </span>
                   <h2 className="m-0 text-xl font-extrabold text-[#0f2a3f]">Sobre mí y Certificaciones</h2>
                 </div>
@@ -388,7 +390,7 @@ const handleContactSubmit = async (e: React.FormEvent) => {
                       {voluntario.servicios_ofrecidos.map((servicio: any, i: number) => (
                         <div key={i} className="bg-[#f8fafc] p-4 rounded-xl border border-[#e2e8f0]">
                           <h3 className="text-sm font-bold text-[#005684] flex items-center gap-2 mb-1">
-                            <span className="text-lg">{servicio.icono || '📄'}</span> {servicio.titulo || servicio}
+                            <span className="text-lg"><Icon name={iconoDesdeEmoji(servicio.icono, 'documento')} size="1.1em" /></span> {servicio.titulo || servicio}
                           </h3>
                           {servicio.descripcion && <p className="text-[12px] text-[#64748b] leading-tight mb-2">{servicio.descripcion}</p>}
                           
@@ -399,7 +401,7 @@ const handleContactSubmit = async (e: React.FormEvent) => {
                               onClick={() => handleViewDocument(servicio.archivo_url)} 
                               className="inline-flex items-center gap-1.5 mt-2 bg-[#eef6ff] text-[#0284c7] border border-[#bae6fd] px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-[#e0f2fe] transition cursor-pointer"
                             >
-                              <span>👁️</span> Ver documento adjunto
+                              <span><Icon name="ver" size="1.1em" /></span> Ver documento adjunto
                             </button>
                           )}
                         </div>
@@ -412,7 +414,7 @@ const handleContactSubmit = async (e: React.FormEvent) => {
               {/* Habilidades */}
               <section className="rounded-2xl bg-white p-6 shadow-sm border border-[#e2e8f0] md:p-8">
                 <div className="flex items-center gap-2 mb-4">
-                  <span className="text-xl">🛠️</span>
+                  <span className="text-xl"><Icon name="herramientas" size="1.1em" /></span>
                   <h2 className="m-0 text-xl font-extrabold text-[#0f2a3f]">Habilidades y Especialidades</h2>
                 </div>
                 <div className="flex flex-wrap gap-2.5">
@@ -432,7 +434,7 @@ const handleContactSubmit = async (e: React.FormEvent) => {
               <section className="rounded-2xl bg-white p-6 shadow-sm border border-[#e2e8f0] md:p-8">
                 <div className="flex flex-col md:flex-row md:items-end justify-between mb-6 border-b border-[#e2e8f0] pb-4">
                   <div className="flex items-center gap-2">
-                    <span className="text-xl">📜</span>
+                    <span className="text-xl"><Icon name="certificado" size="1.1em" /></span>
                     <div>
                       <h2 className="m-0 text-xl font-extrabold text-[#0f2a3f]">Historial de Voluntariado</h2>
                       <p className="text-[13px] font-medium text-[#64748b] mt-0.5">Acreditaciones oficiales certificadas por el protocolo 7:34 AM.</p>
@@ -466,7 +468,7 @@ const handleContactSubmit = async (e: React.FormEvent) => {
                         <p className="text-[13px] text-[#4a5568] leading-relaxed mb-3">{item.descripcion}</p>
                         {item.certificado_por && (
                           <div className="inline-flex items-center gap-1 text-[11px] font-bold text-[#047857] bg-[#dcfce7] px-2.5 py-1 rounded-full border border-[#bbf7d0]">
-                            <img src={Icons.IconVerify} className="h-3 w-3" alt="Check" /> {item.certificado_por}
+                            <Icon name="verificado" className="text-[#006194] h-3 w-3" /> {item.certificado_por}
                           </div>
                         )}
                       </div>
@@ -479,7 +481,7 @@ const handleContactSubmit = async (e: React.FormEvent) => {
               <section className="rounded-2xl bg-white p-6 shadow-sm border border-[#e2e8f0] md:p-8">
                 <div className="flex items-center justify-between border-b border-[#e2e8f0] pb-4 mb-6">
                   <div className="flex items-center gap-2">
-                    <span className="text-xl">⭐</span>
+                    <span className="text-xl"><Icon name="calificacion" size="1.1em" filled /></span>
                     <div>
                       <h2 className="m-0 text-xl font-extrabold text-[#0f2a3f]">Calificaciones y Opiniones</h2>
                       <p className="text-[13px] font-medium text-[#64748b] mt-0.5">Evaluaciones de fundaciones y usuarios registrados en la plataforma.</p>
@@ -487,7 +489,7 @@ const handleContactSubmit = async (e: React.FormEvent) => {
                   </div>
                   <div className="text-right">
                     <div className="text-3xl font-black text-[#0f2a3f]">
-                      {avgRating} <span className="text-[#f59e0b] text-2xl">★</span>
+                      {avgRating} <span className="text-[#f59e0b] text-2xl"><Icon name="calificacion" size="1.1em" filled /></span>
                     </div>
                     <p className="text-[11px] font-bold text-[#64748b]">Basado en {opiniones.length} reseña{opiniones.length === 1 ? '' : 's'}</p>
                   </div>
@@ -518,10 +520,7 @@ const handleContactSubmit = async (e: React.FormEvent) => {
                             <span className="text-xs text-[#94a3b8] block">
                               {opinion.created_at ? new Date(opinion.created_at).toLocaleDateString() : ''}
                             </span>
-                            <span className="text-xs text-[#f59e0b] tracking-wider">
-                              {'★'.repeat(opinion.rating || 5)}
-                              {'☆'.repeat(5 - (opinion.rating || 5))}
-                            </span>
+                            <Estrellas valor={opinion.rating || 5} size={12} />
                           </div>
                         </div>
                         <p className="text-[13px] leading-relaxed text-[#4a5568] italic">"{opinion.texto_comentario}"</p>
@@ -536,24 +535,24 @@ const handleContactSubmit = async (e: React.FormEvent) => {
             <aside className="flex flex-col gap-6">
               <section className="rounded-2xl bg-white p-6 shadow-sm border border-[#e2e8f0]">
                 <h3 className="flex items-center gap-2 mt-0 mb-4 text-[15px] font-extrabold text-[#0f2a3f] border-b border-[#e2e8f0] pb-3">
-                  <img src={Icons.GarantiaIcon} className="h-5 w-5" alt="Garantía" /> Acreditación 7:34 AM
+                  <Icon name="seguridad" className="h-5 w-5" /> Acreditación 7:34 AM
                 </h3>
                 <ul className="flex flex-col gap-3 text-[13px] text-[#4a5568] font-medium">
                   <li className="flex items-start gap-2">
-                    <img src={Icons.CheckVerifyIcon} className="h-4 w-4 mt-0.5" alt="Check" /> Datos del voluntario Completos
+                    <Icon name="completado" className="text-[#006194] h-4 w-4 mt-0.5" /> Datos del voluntario Completos
                   </li>
                   {/* <li className="flex items-start gap-2">
-                    <img src={Icons.CheckVerifyIcon} className="h-4 w-4 mt-0.5" alt="Check" /> Registro profesional confirmado
+                    <Icon name="completado" className="text-[#006194] h-4 w-4 mt-0.5" /> Registro profesional confirmado
                   </li>
                   <li className="flex items-start gap-2">
-                    <img src={Icons.CheckVerifyIcon} className="h-4 w-4 mt-0.5" alt="Check" /> Antecedentes disciplinarios y legales al día
+                    <Icon name="completado" className="text-[#006194] h-4 w-4 mt-0.5" /> Antecedentes disciplinarios y legales al día
                   </li>
                   <li className="flex items-start gap-2">
-                    <img src={Icons.CheckVerifyIcon} className="h-4 w-4 mt-0.5" alt="Check" /> Protocolo de Protección a Menores firmado
+                    <Icon name="completado" className="text-[#006194] h-4 w-4 mt-0.5" /> Protocolo de Protección a Menores firmado
                   </li> */}
                 </ul>
                 {/* <div className="mt-5 bg-[#eef8ff] border border-[#bae6fd] rounded-xl p-4 flex items-center gap-3">
-                  <div className="h-10 w-10 bg-white rounded-full flex items-center justify-center text-[#0284c7] shadow-sm shrink-0">🛡️</div>
+                  <div className="h-10 w-10 bg-white rounded-full flex items-center justify-center text-[#0284c7] shadow-sm shrink-0"><Icon name="seguridad" size="1.1em" /></div>
                   <div>
                     <p className="text-xs font-bold text-[#0369a1]">100% Voluntaria Segura</p>
                     <p className="text-[10px] text-[#0284c7]">Acreditada recientemente</p>
@@ -563,7 +562,7 @@ const handleContactSubmit = async (e: React.FormEvent) => {
 
               {/* Bloques Libres Dinámicos */}
               <section className="rounded-2xl bg-white p-6 shadow-sm border border-[#e2e8f0]">
-                <h3 className="text-[15px] font-extrabold text-[#0f2a3f] mb-2">📅 Bloques y Franjas Disponibles</h3>
+                <h3 className="text-[15px] font-extrabold text-[#0f2a3f] mb-2"><Icon name="calendario" size="1.1em" /> Bloques y Franjas Disponibles</h3>
                 <div className="flex flex-col gap-2">
                   {horariosLista.length > 0 ? (
                     horariosLista.map((item: any, i: number) => (
@@ -580,7 +579,7 @@ const handleContactSubmit = async (e: React.FormEvent) => {
 
               <section className="rounded-2xl bg-gradient-to-br from-[#0f2a3f] to-[#005684] p-6 text-white shadow-md">
                 <div className="flex items-center gap-3 mb-3">
-                  <div className="h-10 w-10 bg-white/10 rounded-full flex items-center justify-center text-xl">🤝</div>
+                  <div className="h-10 w-10 bg-white/10 rounded-full flex items-center justify-center text-xl"><Icon name="alianza" size="1.1em" /></div>
                   <h3 className="text-lg font-bold">¿Tienes una causa urgente?</h3>
                 </div>
                 <p className="text-[13px] text-[#cbd5e1] leading-relaxed mb-5">
@@ -591,7 +590,7 @@ const handleContactSubmit = async (e: React.FormEvent) => {
                   onClick={() => openModal('contacto', 'Solicitud urgente de apoyo comunitario desde la plataforma.')}
                   className="w-full bg-white text-[#005684] py-3 rounded-xl font-bold text-sm shadow-sm transition hover:bg-[#f8fafc] flex items-center justify-center gap-2"
                 >
-                  <img src={Icons.MensajeIcon} className="h-4 w-4" alt="Mensaje" /> Enviar mensaje directo
+                  <Icon name="mensaje" className="h-4 w-4" /> Enviar mensaje directo
                 </button>
               </section>
             </aside>
@@ -618,10 +617,10 @@ const handleContactSubmit = async (e: React.FormEvent) => {
                   <div>
                     <h3 className="text-[15px] font-bold text-[#0f2a3f] flex items-center gap-1">
                       {vol.nombre_completo}
-                      {vol.is_verified && <img src={Icons.IconVerify} className="h-3.5 w-3.5" alt="Verificado" />}
+                      {vol.is_verified && <Icon name="verificado" className="text-[#006194] h-3.5 w-3.5" />}
                     </h3>
                     <p className="text-[11px] font-bold text-[#005684] uppercase tracking-wide">{vol.profesion || 'Voluntario Activo'}</p>
-                    <p className="text-[11px] text-[#64748b] mt-0.5">📍 {vol.ubicacion || vol.ciudad_base || 'Colombia'}</p>
+                    <p className="text-[11px] text-[#64748b] mt-0.5"><Icon name="ubicacion" className="text-[#006194]" size="1.1em" /> {vol.ubicacion || vol.ciudad_base || 'Colombia'}</p>
                   </div>
                 </div>
                 <p className="text-[12px] text-[#4a5568] mb-4 flex-1">
@@ -636,7 +635,7 @@ const handleContactSubmit = async (e: React.FormEvent) => {
                   </span>
                 </div>
                 <div className="flex items-center justify-between mt-auto pt-4 border-t border-[#f1f5f9]">
-                  <span className="text-[12px] font-bold text-[#f59e0b]">⭐ 5.0</span>
+                  <span className="text-[12px] font-bold text-[#f59e0b]"><Icon name="calificacion" size="1.1em" filled /> 5.0</span>
                   <Link to={`/voluntario/${vol.id}`} className="text-[12px] font-bold text-[#005684] hover:underline">
                     Ver perfil
                   </Link>
@@ -660,7 +659,7 @@ const handleContactSubmit = async (e: React.FormEvent) => {
                 onClick={() => setShowContactModal(false)}
                 className="text-gray-400 hover:text-gray-600 font-bold"
               >
-                ✕
+                <Icon name="cerrar" size="1.1em" />
               </button>
             </div>
 

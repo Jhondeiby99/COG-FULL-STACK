@@ -2,10 +2,10 @@ import React, { useEffect, useState, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import type { Notificacion } from '../hooks/useNotifications';
 import { supabase } from '../lib/supabase';
-import * as Icons from "../assets/icons/index.ts";
 import { RealtimeChannel } from '@supabase/supabase-js';
 import { useNotifications } from '../hooks/useNotifications';
 
+import { Icon } from './Icon';
 interface HeaderProps {
   onSearchChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onFilterClick?: () => void;
@@ -194,7 +194,7 @@ export function Header({ onSearchChange, onFilterClick, searchPlaceholder = "Cau
     }
   };
 
-  const getAvatar = () => (profileData?.avatar && profileData.avatar.trim() !== '') ? profileData.avatar : Icons.PersonIcon;
+  const avatarUrl = profileData?.avatar?.trim() || null;
   const getAvatarUrlHelper = (url: string) => url && url.trim() !== '' ? url : 'https://i.pravatar.cc/150';
 
   const getDashboardPath = () => {
@@ -229,7 +229,7 @@ export function Header({ onSearchChange, onFilterClick, searchPlaceholder = "Cau
                     <img src={getAvatarUrlHelper(f.logo_url)} className="w-10 h-10 rounded-xl object-cover bg-white shadow-sm border border-gray-100" alt="Logo" />
                     <div className="flex flex-col min-w-0">
                       <span className="text-sm font-bold text-[#071d37] truncate">{f.nombre_legal}</span>
-                      <span className="text-[11px] text-gray-500 truncate">📍 {f.ubicacion || 'Colombia'}</span>
+                      <span className="text-[11px] text-gray-500 truncate"><Icon name="ubicacion" className="text-[#006194]" size="1.1em" /> {f.ubicacion || 'Colombia'}</span>
                     </div>
                   </Link>
                 ))}
@@ -243,7 +243,7 @@ export function Header({ onSearchChange, onFilterClick, searchPlaceholder = "Cau
                   <Link key={v.id} to={`/voluntario/${v.id}`} onClick={() => setShowDropdown(false)} className="flex items-center gap-3 px-4 py-3 hover:bg-emerald-50 transition border-b border-gray-50 last:border-0 cursor-pointer">
                     <img src={getAvatarUrlHelper(v.avatar_url)} className="w-10 h-10 rounded-full object-cover bg-white shadow-sm border border-gray-100" alt="Avatar" />
                     <div className="flex flex-col min-w-0">
-                      <span className="text-sm font-bold text-[#071d37] truncate flex items-center gap-1">{v.nombre_completo} <img src={Icons.IconVerify} className="w-3 h-3" alt="Verificado"/></span>
+                      <span className="text-sm font-bold text-[#071d37] truncate flex items-center gap-1">{v.nombre_completo} <Icon name="verificado" className="text-[#006194] w-3 h-3" /></span>
                       <span className="text-[11px] text-emerald-600 font-bold truncate">{v.profesion || 'Voluntario Activo'}</span>
                     </div>
                   </Link>
@@ -273,11 +273,11 @@ export function Header({ onSearchChange, onFilterClick, searchPlaceholder = "Cau
         <header className="home-header relative !overflow-visible z-[9999]">
           <div className="header-left">
             <button className="btn-filtros transition hover:opacity-80" onClick={onFilterClick} type="button">
-              <img src={Icons.iconFiltrosUrl} className="icon-svg" alt="Filtros" />
+              <Icon name="filtros" className="icon-svg" />
               Filtros <span className="badge bg-[#005684] text-white">3</span>
             </button>
             <div className="header-search relative focus-within:ring-2 focus-within:ring-[#005684]/20 transition-all !overflow-visible" ref={searchRefDesktop}>
-              <img src={Icons.SearchIcon} className="icon-search" alt="Buscar" />
+              <Icon name="buscar" className="icon-search" />
               <input type="text" placeholder={searchPlaceholder} value={internalSearch} onChange={handleInputChange} onFocus={() => { if(internalSearch.length >= 2) setShowDropdown(true); }} />
               {renderSearchDropdown()}
             </div>
@@ -303,7 +303,7 @@ export function Header({ onSearchChange, onFilterClick, searchPlaceholder = "Cau
                   {/* CAMPANA NOTIFICACIONES */}
                   <div className="relative flex items-center justify-center !overflow-visible" ref={notifRefDesktop}>
                     <button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowNotifs((prev) => !prev); }} className="relative p-2 hover:bg-gray-200 bg-gray-100 rounded-full transition cursor-pointer">
-                      <img src={Icons.CampanaIcon2} alt="Notificaciones" />
+                      <Icon name="notificaciones" />
                       {unreadCount > 0 && (
                         <span className="absolute top-0 right-0 flex h-2.5 w-2.5">
                           <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
@@ -345,7 +345,7 @@ export function Header({ onSearchChange, onFilterClick, searchPlaceholder = "Cau
                   <Link to="/login" className="nav-link font-bold text-[#005684]">Iniciar sesión</Link>
                   <Link to="/signup">
                     <button className="bg-[#005684] hover:bg-[#004266] text-white text-xs font-bold px-4 py-2 rounded-xl transition shadow-sm flex items-center gap-2" type="button">
-                      Crear usuario <img src={Icons.arrowDownIcon} className="w-3 h-3 invert" alt="Desplegar" />
+                      Crear usuario <Icon name="abajo" className="w-3 h-3" />
                     </button>
                   </Link>
                 </>
@@ -373,7 +373,7 @@ export function Header({ onSearchChange, onFilterClick, searchPlaceholder = "Cau
                   
                   <div ref={notifRefMobile} className="!overflow-visible">
                     <button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowNotifs((prev) => !prev); }} className="relative p-1.5 bg-gray-50 hover:bg-gray-100 rounded-full transition border border-gray-100 flex-shrink-0">
-                      <img src={Icons.CampanaIcon2} alt="Notificaciones" className="w-4 h-4" />
+                      <Icon name="notificaciones" className="w-4 h-4" />
                       {unreadCount > 0 && (
                         <span className="absolute -top-1 -right-1 flex h-2 w-2">
                           <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
@@ -406,7 +406,7 @@ export function Header({ onSearchChange, onFilterClick, searchPlaceholder = "Cau
 
                   <Link to={getDashboardPath()} className="rounded-md bg-[#005684] px-2 py-1.5 text-[10px] font-bold text-white transition hover:bg-[#00456a] shadow-sm flex-shrink-0">Panel</Link>
                   <button onClick={handleLogout} type="button" className="rounded-md bg-red-50 px-2 py-1.5 text-[10px] font-bold text-red-600 border border-red-200 transition hover:bg-red-100 flex-shrink-0">Salir</button>
-                  <div className="w-7 h-7 rounded-full overflow-hidden border border-gray-200 bg-gray-50 flex-shrink-0 shadow-sm"><img src={getAvatar()} className="w-full h-full object-cover" alt="Avatar" /></div>
+                  <div className="w-7 h-7 rounded-full overflow-hidden border border-gray-200 bg-gray-50 flex-shrink-0 shadow-sm flex items-center justify-center text-[#64748b]">{avatarUrl ? <img src={avatarUrl} className="w-full h-full object-cover" alt="Avatar" /> : <Icon name="usuario" size={14} />}</div>
                 </div>
               ) : (
                 <div className="flex items-center gap-2">
@@ -423,11 +423,11 @@ export function Header({ onSearchChange, onFilterClick, searchPlaceholder = "Cau
 
           <div className="flex items-center w-full gap-2 !overflow-visible">
             <button className="flex items-center justify-center gap-1.5 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 hover:bg-gray-100 transition-colors flex-shrink-0 active:scale-95" onClick={onFilterClick} type="button">
-              <img src={Icons.iconFiltrosUrl} className="w-4 h-4" alt="Filtros" />
+              <Icon name="filtros" className="w-4 h-4" />
               <span className="bg-[#005684] text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full">3</span>
             </button>
             <div className="flex items-center bg-gray-50 rounded-lg px-3 py-2 flex-1 min-w-0 border border-gray-200 focus-within:border-[#005684] focus-within:ring-1 transition-all relative !overflow-visible" ref={searchRefMobile}>
-              <img src={Icons.SearchIcon} className="w-3.5 h-3.5 opacity-50 mr-2 flex-shrink-0" alt="Buscar" />
+              <Icon name="buscar" className="w-3.5 h-3.5 opacity-50 mr-2 flex-shrink-0" />
               <input type="text" placeholder={searchPlaceholder} value={internalSearch} onChange={handleInputChange} onFocus={() => { if(internalSearch.length >= 2) setShowDropdown(true); }} className="bg-transparent border-none outline-none text-xs w-full text-gray-700 placeholder-gray-400" />
               {renderSearchDropdown()}
             </div>
@@ -438,7 +438,7 @@ export function Header({ onSearchChange, onFilterClick, searchPlaceholder = "Cau
       {modalExpulsion && (
         <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-fade-in">
           <div className="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl border border-gray-100 flex flex-col items-center text-center gap-5">
-            <div className="h-16 w-16 rounded-2xl bg-amber-50 text-amber-500 border border-amber-200/60 flex items-center justify-center text-3xl shadow-sm">🛡️</div>
+            <div className="h-16 w-16 rounded-2xl bg-amber-50 text-amber-500 border border-amber-200/60 flex items-center justify-center text-3xl shadow-sm"><Icon name="seguridad" size="1.1em" /></div>
             <div className="flex flex-col gap-2">
               <h3 className="text-base font-extrabold text-[#071d37]">Sesión Finalizada</h3>
               <p className="text-xs text-gray-500 leading-relaxed font-medium">Tu sesión ha sido cerrada desde otro dispositivo o panel de seguridad. Por protección, deberás ingresar de nuevo.</p>

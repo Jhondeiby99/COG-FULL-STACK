@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { DialogModal } from '../components/DialogModal';
 
+import { Icon } from '../components/Icon';
 interface Fundacion {
   id: string;
   nombre_legal: string;
@@ -180,10 +181,10 @@ export function AdminApproval() {
         
         <div className="flex items-center gap-3 shrink-0">
           <button className="bg-white border border-[#e2e8f0] text-[#475569] px-4 py-2.5 rounded-xl text-xs font-bold hover:bg-gray-50 transition flex items-center gap-2 shadow-sm cursor-pointer">
-            <span>⏱️</span> Historial General
+            <span><Icon name="reloj" size="1.1em" /></span> Historial General
           </button>
           <button className="bg-[#eef6ff] text-[#005684] px-4 py-2.5 rounded-xl text-xs font-bold hover:bg-[#d4e7fe] transition flex items-center gap-2 border border-[#dbeafe] cursor-pointer">
-            <span>📥</span> Descargar Acta
+            <span><Icon name="descargar" size="1.1em" /></span> Descargar Acta
           </button>
         </div>
       </div>
@@ -198,7 +199,7 @@ export function AdminApproval() {
               : 'bg-transparent border-transparent text-[#64748b] hover:bg-white/50'
           }`}
         >
-          <span>📋</span> Pendientes por Aprobar
+          <span><Icon name="necesidad" size="1.1em" /></span> Pendientes por Aprobar
           <span className={`px-2 py-0.5 rounded-full text-[10px] ${tabActiva === 'pendientes' ? 'bg-red-100 text-red-600' : 'bg-gray-200 text-gray-600'}`}>
             {pendientes.length}
           </span>
@@ -211,7 +212,7 @@ export function AdminApproval() {
               : 'bg-transparent border-transparent text-[#64748b] hover:bg-white/50'
           }`}
         >
-          <span>✓</span> Fundaciones Aprobadas
+          <span><Icon name="check" size="1.1em" /></span> Fundaciones Aprobadas
           <span className={`px-2 py-0.5 rounded-full text-[10px] ${tabActiva === 'aprobadas' ? 'bg-[#e2e8f0] text-[#475569]' : 'bg-gray-200 text-gray-600'}`}>
             {aprobadas.length}
           </span>
@@ -222,7 +223,7 @@ export function AdminApproval() {
       {tabActiva === 'pendientes' && (
         <div className="bg-white border border-[#e2e8f0] rounded-xl p-3 flex items-center justify-between shadow-sm">
           <div className="flex items-center gap-2">
-            <span className="text-[#0284c7] font-bold">ℹ️</span>
+            <span className="text-[#0284c7] font-bold"><Icon name="info" size="1.1em" /></span>
             <p className="text-[11px] text-[#475569]">Hay <span className="font-bold text-[#071d37]">{pendientes.length} solicitudes</span> que requieren dictamen para habilitar sus convocatorias de voluntariado matutino.</p>
           </div>
           <span className="text-[11px] text-[#64748b] hidden sm:block">Tiempo promedio de respuesta: 4.2 h</span>
@@ -234,7 +235,7 @@ export function AdminApproval() {
         <div className="flex flex-col gap-4">
           {pendientes.length === 0 ? (
             <div className="text-center py-12 bg-white rounded-3xl border border-[#e2e8f0] p-6 shadow-sm">
-              <p className="text-sm font-bold text-[#059669]">🎉 ¡Excelente! No hay solicitudes pendientes por aprobar en la base de datos.</p>
+              <p className="text-sm font-bold text-[#059669]"><Icon name="celebracion" size="1.1em" /> ¡Excelente! No hay solicitudes pendientes por aprobar en la base de datos.</p>
             </div>
           ) : (
             pendientes.map((fund, idx) => (
@@ -274,16 +275,16 @@ export function AdminApproval() {
 
                     <div className="flex flex-wrap gap-2 items-center">
                       <span className="bg-[#eef6ff] text-[#0284c7] border border-[#bae6fd] text-[10px] font-bold px-2.5 py-1 rounded-lg flex items-center gap-1">
-                        ✓ RUT 2025
+                        <Icon name="check" size="1.1em" /> RUT 2025
                       </span>
                       <span className="bg-[#eef6ff] text-[#0284c7] border border-[#bae6fd] text-[10px] font-bold px-2.5 py-1 rounded-lg flex items-center gap-1">
-                        ✓ {idx % 2 === 0 ? 'Estados Financieros' : 'Cámara de Comercio'}
+                        <Icon name="check" size="1.1em" /> {idx % 2 === 0 ? 'Estados Financieros' : 'Cámara de Comercio'}
                       </span>
                       <span className="bg-[#eef6ff] text-[#0284c7] border border-[#bae6fd] text-[10px] font-bold px-2.5 py-1 rounded-lg flex items-center gap-1">
-                        ✓ {idx % 2 === 0 ? 'Antecedentes Representante' : 'Personería Jurídica'}
+                        <Icon name="check" size="1.1em" /> {idx % 2 === 0 ? 'Antecedentes Representante' : 'Personería Jurídica'}
                       </span>
                       <span className="text-[10px] text-[#94a3b8] flex items-center gap-1 mt-1 sm:mt-0 sm:ml-2 w-full sm:w-auto">
-                        📄 Archivos PDF Adjuntos
+                        <Icon name="documento" size="1.1em" /> Archivos PDF Adjuntos
                       </span>
                     </div>
                   </div>
@@ -291,7 +292,7 @@ export function AdminApproval() {
 
                 <div className="flex flex-col sm:flex-row items-center gap-3 shrink-0 border-t md:border-t-0 md:border-l border-[#e2e8f0] pt-4 md:pt-0 md:pl-6">
                    <button className="bg-[#e2e8f0] text-[#334155] px-5 py-2.5 rounded-xl text-xs font-bold hover:bg-[#cbd5e1] transition w-full sm:w-auto flex items-center justify-center gap-2 cursor-pointer">
-                     <span>👁️</span> Inspeccionar
+                     <span><Icon name="ver" size="1.1em" /></span> Inspeccionar
                    </button>
                    <button 
                      onClick={() => handleRechazar(fund.id)}
@@ -309,7 +310,7 @@ export function AdminApproval() {
                        <span>Cargando...</span>
                      ) : (
                        <>
-                         <span>✓</span> Aprobar Fundación
+                         <span><Icon name="check" size="1.1em" /></span> Aprobar Fundación
                        </>
                      )}
                    </button>
@@ -352,7 +353,7 @@ export function AdminApproval() {
                   <div>
                     <div className="flex items-center gap-2">
                       <h4 className="text-[13px] font-extrabold text-[#071d37]">{fund.nombre_legal}</h4>
-                      <span className="bg-[#bbf7d0] text-[#166534] text-[9px] font-bold px-1.5 py-0.5 rounded-full flex items-center gap-0.5">✓ Aprobada</span>
+                      <span className="bg-[#bbf7d0] text-[#166534] text-[9px] font-bold px-1.5 py-0.5 rounded-full flex items-center gap-0.5"><Icon name="check" size="1.1em" /> Aprobada</span>
                     </div>
                     <p className="text-[11px] text-[#64748b] mt-0.5">
                       NIT: {fund.nit} • {fund.ciudad || fund.ubicacion || 'Colombia'}

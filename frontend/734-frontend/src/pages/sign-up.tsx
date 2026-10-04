@@ -1,15 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
-import EdificionIcon from '../assets/icons/EdificionIconWhite.svg'
-import ManoIcon3 from '../assets/icons/ManoIcon3.svg'
-import CheckIcon from '../assets/icons/CheckIcon.svg'
-import ArrowRightIcon from '../assets/icons/ArrowRightIcon.svg'
-import GarantiaIcon from '../assets/icons/GarantiaIcon.svg'
-import CheckVerifyIcon from '../assets/icons/CheckVerifyIcon.svg'
-import SeguimientoIcon from '../assets/icons/SeguimientoIcon.svg'
-import ManoIcon4 from '../assets/icons/ManoIcon4.svg'
-import HojaIcon from '../assets/icons/HojaIcon.svg'
+import { Icon } from '../components/Icon';
 
 export function SignUp() {
 	const navigate = useNavigate();
@@ -91,7 +83,7 @@ export function SignUp() {
                 email_institucional: formData.email,
                 ubicacion: formData.ubicacion,
                 estado: 'pendiente',
-                fecha_solicitud: new Date().toISOString() // 👈 Asegura la fecha y hora exacta
+                fecha_solicitud: new Date().toISOString() // <Icon name="anterior" size="1.1em" /> Asegura la fecha y hora exacta
             }]);
 		} else {
 			await supabase.from('voluntarios').insert([{
@@ -145,12 +137,12 @@ export function SignUp() {
 									>
                                         <div className="flex justify-between">
                                             <div className={`rounded-lg h-[48px] p-3 ${activeRole === 'fundacion' ? 'bg-[#006194]' : 'bg-[#e2e8f0]'}`}>
-                                                <img src={EdificionIcon} alt="Fundación" />                                        
+                                                <Icon name="fundacion" size={24} />                                        
                                             </div>
 											{activeRole === 'fundacion' && (
 												<div className="flex h-[24px] w-[24px] items-center justify-center rounded-full bg-[#006194]">
 													<div className="flex h-[8px] w-[11px] items-center justify-center">
-														<img height="8" width="11" src={CheckIcon} alt="Check" />
+														<Icon name="check" size={11} strokeWidth={3} />
 													</div>
 												</div>
 											)}
@@ -160,7 +152,7 @@ export function SignUp() {
 											<div className="mt-1 text-xs text-[#64748b]">Publica necesidades de tu comunidad y gestiona institucionalmente.</div>
 											<div className="mt-3 flex items-center gap-1">
                                                 <span className="text-xs text-[#0b76a8] font-bold">Gestion institucional & NIT</span>
-                                                <img src={ArrowRightIcon} alt="Flecha" className="h-2 w-2 object-contain" />
+                                                <Icon name="derecha" size={12} className="text-[#006194]" />
                                             </div>
 										</div>
 									</button>
@@ -173,12 +165,12 @@ export function SignUp() {
 									>
                                         <div className="flex justify-between">
                                             <div className={`rounded-lg h-[48px] p-3 ${activeRole === 'voluntario' ? 'bg-[#006194]' : 'bg-[#e2e8f0]'}`}>
-                                                <img src={ManoIcon3} alt="Voluntario" />                                        
+                                                <Icon name="voluntario" size={24} className="text-[#006194]" />                                        
                                             </div>
 											{activeRole === 'voluntario' && (
 												<div className="flex h-[24px] w-[24px] items-center justify-center rounded-full bg-[#006194]">
 													<div className="flex h-[8px] w-[11px] items-center justify-center">
-														<img height="8" width="11" src={CheckIcon} alt="Check" />
+														<Icon name="check" size={11} strokeWidth={3} />
 													</div>
 												</div>
 											)}
@@ -188,7 +180,7 @@ export function SignUp() {
 											<div className="mt-1 text-xs text-[#64748b]">Ofrece tus talentos, tiempo, horas de voluntariado y apoya causas verificadas.</div>
                                             <div className="mt-3 flex items-center gap-1">
                                                 <span className="text-xs text-[#0b76a8] font-bold">Perfil personal e impacto</span>
-                                                <img src={ArrowRightIcon} alt="Flecha" className="h-2 w-2 object-contain" />
+                                                <Icon name="derecha" size={12} className="text-[#006194]" />
                                             </div>
 										</div>
 									</button>
@@ -280,7 +272,7 @@ export function SignUp() {
 												<div className="mt-2 flex flex-wrap gap-2">
 													{areas.map((a) => (
 														<button key={a} type="button" className="flex items-center gap-2 rounded-full bg-[#eef6ff] px-3 py-1 text-xs font-bold text-[#005684]">
-															<span className="text-[11px]">🔹</span>
+															<span className="text-[11px]"><Icon name="punto" size="1.1em" filled /></span>
 															{a}
 														</button>
 													))}
@@ -291,7 +283,7 @@ export function SignUp() {
 												<label className="text-xs font-bold text-[#475569]">Copia digital de Personería Jurídica / RUT / Cámara de Comercio</label>
 												<div className="mt-3 rounded-xl border-2 border-dashed border-[#e6eef6] bg-[#eef8ff] p-8 text-center">
 													<div className="mx-auto max-w-[520px]">
-														<div className="mb-3 text-4xl">☁️</div>
+														<div className="mb-3 text-4xl"><Icon name="nube" size="1.1em" /></div>
 														<p className="mb-2 text-sm text-[#64748b]">Haz clic para adjuntar certificado o arrastra y suelta el documento oficial aquí</p>
 														<p className="text-xs text-[#9aa6b2]">PDF, JPG (Max 15MB)</p>
 														<div className="mt-4 flex items-center justify-center gap-3">
@@ -322,7 +314,7 @@ export function SignUp() {
 							<div className="rounded-3xl bg-[#DCE9FF] p-6 shadow-sm border border-transparent w-full max-w-[360px]">
 								<div className="flex items-start gap-3">
 									<div className="h-10 w-10 rounded-full bg-white flex items-center justify-center text-[#007bb9] shadow-sm">
-                                        <img src={GarantiaIcon} height={16} width={16} alt="Garantía" />
+                                        <Icon name="seguridad" size={16} className="text-[#006194]" />
                                     </div>
 									<div>
 										<div className="text-xs font-bold uppercase text-[#94a3b8]">GARANTÍA 7:34 AM</div>
@@ -335,7 +327,7 @@ export function SignUp() {
 										<div className="flex items-start gap-3">
                                             <div className="h-9 w-9 rounded-full bg-[#e8fff0] flex items-center justify-center text-[#047857]">
                                                 <div className="h-7 w-18 rounded-full bg-[#eef6ff] flex items-center justify-center text-[#005684]">
-                                                    <img height="16" width="16" src={CheckVerifyIcon} alt="Check" />
+                                                    <Icon name="completado" size={16} className="text-[#006194]" />
                                                 </div>
                                             </div>
 											<div>
@@ -349,7 +341,7 @@ export function SignUp() {
 										<div className="flex items-start gap-3">
 											<div className="h-9 w-9 rounded-full bg-[#e8fff0] flex items-center justify-center text-[#047857]">
                                                 <div className="h-7 w-18 rounded-full bg-[#eef6ff] flex items-center justify-center text-[#005684]">
-                                                    <img height="16" width="16" src={SeguimientoIcon} alt="Seguimiento" />
+                                                    <Icon name="trayectoria" size={16} className="text-[#006947]" />
                                                 </div>
                                             </div>
 											<div>
@@ -363,7 +355,7 @@ export function SignUp() {
 										<div className="flex items-start gap-3">
 											<div className="h-9 w-9 rounded-full bg-[#f3f2ff] flex items-center justify-center text-[#553c9a]">
                                                 <div className="h-7 w-18 rounded-full bg-[#eef6ff] flex items-center justify-center text-[#005684]">
-                                                <img height="16" width="16" src={ManoIcon4} alt="Mano" />
+                                                <Icon name="donar" size={16} className="text-[#5C647A]" />
                                             </div>
                                             </div>
 											<div>
@@ -380,7 +372,7 @@ export function SignUp() {
 												<p className="mt-1 text-2xl font-extrabold text-[#9ef0c9]">96.4%<span className="ml-2 text-xs text-[#94a3b8] block">Recursos en territorio</span></p>
 											</div>
 											<div className="h-10 w-10 rounded-full bg-[#0f3f4f33] flex items-center justify-center text-[#9ef0c9]">
-                                                <img src={HojaIcon} alt="Hoja" />
+                                                <Icon name="formulario" size={16} className="text-[#6FFBBE]" />
                                             </div>
 										</div>
 									</div>
