@@ -20,6 +20,7 @@ import { AdminVolunteers } from './pages/admin-volunteers';
 import { AccountNotifications } from './pages/account-notifications';
 import { ForgotPassword } from './pages/ForgotPassword';
 import { ResetPassword } from './pages/ResetPassword';
+import { ManageNeeds } from './pages/manage-needs';
 
 function ProtectedRoute({ children, requiredRole }: { children: React.ReactNode; requiredRole?: string }) {
   const [authStatus, setAuthStatus] = useState<{ loading: boolean; session: boolean; role?: string }>({
@@ -98,6 +99,7 @@ function App() {
           <Route path="ajustes" element={<AccountSettings />} />
           <Route path="voluntario/editar/:id" element={<EditVolunteerProfile />} />
           <Route path="fundacion/editar/:id" element={<EditFoundationProfile />} />
+          <Route path="fundacion/necesidades/:id" element={<ManageNeeds />} />
           <Route path="admin-dashboard" element={<AdminDashboard />} />
           <Route path="admin-aprobaciones" element={<AdminApproval />} />
           <Route path="admin-fundaciones" element={<AdminFoundations />} />

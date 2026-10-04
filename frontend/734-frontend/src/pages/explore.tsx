@@ -10,7 +10,16 @@ export function Explore() {
   const query = searchParams.get('q') || '';
   
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'fundaciones' | 'voluntarios'>('fundaciones');
+  const tabUrl = searchParams.get('tab');
+  const [activeTab, setActiveTab] = useState<'fundaciones' | 'voluntarios'>(
+    tabUrl === 'voluntarios' ? 'voluntarios' : 'fundaciones'
+  );
+  // Si cambia ?tab= estando ya en esta página (p. ej. desde el footer), se sincroniza la pestaña
+  const [tabUrlPrevia, setTabUrlPrevia] = useState(tabUrl);
+  if (tabUrl !== tabUrlPrevia) {
+    setTabUrlPrevia(tabUrl);
+    if (tabUrl === 'voluntarios' || tabUrl === 'fundaciones') setActiveTab(tabUrl);
+  }
   
   const [fundaciones, setFundaciones] = useState<any[]>([]);
   const [voluntarios, setVoluntarios] = useState<any[]>([]);

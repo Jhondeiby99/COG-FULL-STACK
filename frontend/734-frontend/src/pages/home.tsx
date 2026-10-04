@@ -334,7 +334,7 @@ export function Home() {
           
           {/* SECCIÓN NECESIDADES */}
           {(activeTab === 'all' || activeTab === 'needs') && (
-            <section className="flex flex-col gap-6">
+            <section id="necesidades" className="scroll-mt-24 flex flex-col gap-6">
               <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
                 <div>
                   <span className="inline-block bg-red-100 text-red-700 text-[10px] font-bold px-2.5 py-1 rounded-md mb-2 tracking-widest uppercase">🔴 Llamados urgentes</span>
@@ -419,7 +419,7 @@ export function Home() {
 
           {/* SECCIÓN VOLUNTARIOS */}
           {(activeTab === 'all' || activeTab === 'volunteers') && (
-            <section className="flex flex-col gap-6 pt-8 border-t border-gray-100">
+            <section id="voluntarios" className="scroll-mt-24 flex flex-col gap-6 pt-8 border-t border-gray-100">
               <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
                 <div>
                   <span className="inline-block bg-emerald-100 text-emerald-700 text-[10px] font-bold px-2.5 py-1 rounded-md mb-2 tracking-widest uppercase">🟢 Talento & Solidaridad</span>

@@ -212,7 +212,7 @@ export function DashboardLayout() {
       )}
 
       {/* SIDEBAR RESPONSIVE */}
-      <aside className={`fixed inset-y-0 left-0 z-50 w-72 bg-[#EFF4FF] border-r border-[#e2e8f0] flex flex-col justify-between p-6 shrink-0 h-screen overflow-y-auto transform transition-transform duration-300 lg:sticky lg:top-0 lg:translate-x-0 ${isMobileMenuOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full'}`}>
+      <aside className={`print:hidden fixed inset-y-0 left-0 z-50 w-72 bg-[#EFF4FF] border-r border-[#e2e8f0] flex flex-col justify-between p-6 shrink-0 h-screen overflow-y-auto transform transition-transform duration-300 lg:sticky lg:top-0 lg:translate-x-0 ${isMobileMenuOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full'}`}>
         <div className="flex flex-col gap-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2.5">
@@ -255,6 +255,7 @@ export function DashboardLayout() {
               {rol === 'fundacion' && (
                 <nav className="flex flex-col gap-1">
                   <Link to={`/dashboard/fundacion/editar/${profileData?.id ?? ''}`} className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition ${isActive('/fundacion/editar') ? 'bg-[#005684] text-white shadow-sm' : 'text-[#64748b] hover:bg-gray-50 font-semibold'}`}><span>🏢</span> Editar Perfil Fundación</Link>
+                  <Link to={`/dashboard/fundacion/necesidades/${profileData?.id ?? ''}`} className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition ${isActive('/fundacion/necesidades') ? 'bg-[#005684] text-white shadow-sm' : 'text-[#64748b] hover:bg-gray-50 font-semibold'}`}><span>📋</span> Gestionar Necesidades</Link>
                 </nav>
               )}
             </div>
@@ -288,7 +289,7 @@ export function DashboardLayout() {
       </aside>
 
       <div className="flex-1 flex flex-col min-h-screen relative w-full lg:w-[calc(100%-18rem)]">
-        <header className="bg-[#EFF4FF] border-b border-[#e2e8f0] px-4 sm:px-8 py-4 flex flex-wrap items-center justify-between gap-3 sticky top-0 z-30">
+        <header className="print:hidden bg-[#EFF4FF] border-b border-[#e2e8f0] px-4 sm:px-8 py-4 flex flex-wrap items-center justify-between gap-3 sticky top-0 z-30">
           <div className="flex items-center gap-2">
             <button
               onClick={() => setIsMobileMenuOpen(true)}
