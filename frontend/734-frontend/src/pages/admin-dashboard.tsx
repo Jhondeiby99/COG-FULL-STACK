@@ -83,9 +83,6 @@ export function AdminDashboard() {
   const [resenas, setResenas] = useState<ResenaDash[]>([]);
 
   const [paginaActual, setPaginaActual] = useState(1);
-  const [confirmarAprobar, setConfirmarAprobar] = useState<Fundacion | null>(null);
-  const [processingId, setProcessingId] = useState<string | null>(null);
-  const [modal, setModal] = useState<{ title: string; message: string; isError: boolean } | null>(null);
   const [puntoActivo, setPuntoActivo] = useState<number | null>(null);
 
   // No hace setState antes del primer await: el indicador de carga lo maneja quien la invoca
@@ -252,31 +249,6 @@ export function AdminDashboard() {
   }, [necesidades, periodo, desde]);
 
   // ===== Acciones =====
-  const aprobarFundacion = async () => {
-    if (!confirmarAprobar) return;
-    const fund = confirmarAprobar;
-    setProcessingId(fund.id);
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      const { data, error } = await supabase
-        .from('fundaciones')
-        .update({ estado: 'aprobada', fecha_aprobacion: new Date().toISOString(), aprobado_por: session?.user?.id || null })
-        .eq('id', fund.id)
-        .select('id');
-      if (error) throw error;
-      if (!data || data.length === 0) throw new Error('No tienes permisos para aprobar esta fundación.');
-      setConfirmarAprobar(null);
-      setModal({ title: 'Fundación aprobada', message: `${fund.nombre_legal} ya está activa en la plataforma.`, isError: false });
-      await cargarDatosDashboard();
-    } catch (e) {
-      const err = e as { message?: string };
-      setConfirmarAprobar(null);
-      setModal({ title: 'No se pudo aprobar', message: err.message || 'Error de conexión.', isError: true });
-    } finally {
-      setProcessingId(null);
-    }
-  };
-
   const exportarCSV = () => {
     const celda = (v: string | number | null | undefined) => `"${String(v ?? '').replace(/"/g, '""')}"`;
     const filas: (string | number | null)[][] = [
@@ -621,14 +593,13 @@ export function AdminDashboard() {
                         </span>
                       </td>
                       <td className="py-4 text-right">
-                        <button
-                          type="button"
-                          onClick={() => setConfirmarAprobar(item)}
-                          disabled={processingId === item.id}
-                          className="bg-[#059669] hover:bg-[#047857] text-white text-[11px] font-bold px-4 py-2 rounded-xl shadow-sm transition inline-flex items-center gap-1 cursor-pointer disabled:opacity-50 print:hidden"
+                        <Link
+                          to="/dashboard/admin-aprobaciones"
+                          title="La aprobación requiere verificar los 3 documentos legales"
+                          className="bg-[#005684] hover:bg-[#00456a] text-white text-[11px] font-bold px-4 py-2 rounded-xl shadow-sm transition inline-flex items-center gap-1 print:hidden"
                         >
-                          {processingId === item.id ? 'Aprobando...' : <><Icon name="check" size={13} /> Aprobar</>}
-                        </button>
+                          <Icon name="auditoria" size={13} /> Revisar
+                        </Link>
                       </td>
                     </tr>
                   ))}
@@ -740,40 +711,6 @@ export function AdminDashboard() {
           </section>
         </div>
       </div>
-
-      {/* Confirmar aprobación */}
-      {confirmarAprobar && (
-        <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-xl flex flex-col items-center text-center">
-            <span className="text-4xl mb-3"><Icon name="seguridad" size="1.1em" /></span>
-            <h3 className="text-lg font-bold text-[#071d37] mb-2">Aprobar fundación</h3>
-            <p className="text-xs text-[#64748b] mb-6">
-              <span className="font-bold text-[#071d37]">{confirmarAprobar.nombre_legal}</span> quedará activa y visible públicamente en la plataforma. ¿Deseas continuar?
-            </p>
-            <div className="flex w-full gap-3">
-              <button type="button" onClick={() => setConfirmarAprobar(null)} disabled={!!processingId} className="flex-1 bg-gray-100 text-[#334155] py-2.5 rounded-xl text-xs font-bold hover:bg-gray-200 transition cursor-pointer">
-                Cancelar
-              </button>
-              <button type="button" onClick={aprobarFundacion} disabled={!!processingId} className="flex-1 bg-[#059669] text-white py-2.5 rounded-xl text-xs font-bold hover:bg-[#047857] transition cursor-pointer disabled:opacity-60">
-                {processingId ? 'Aprobando...' : 'Sí, aprobar'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {modal && (
-        <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-xl flex flex-col items-center text-center">
-            <span className="text-4xl mb-3"><Icon name={modal.isError ? 'advertencia' : 'completado'} size={40} className={modal.isError ? 'text-[#dc2626]' : 'text-[#059669]'} /></span>
-            <h3 className="text-lg font-bold text-[#071d37] mb-2">{modal.title}</h3>
-            <p className="text-xs text-[#64748b] mb-6">{modal.message}</p>
-            <button type="button" onClick={() => setModal(null)} className="w-full bg-[#005684] text-white py-2.5 rounded-xl text-xs font-bold hover:bg-[#00456a] transition cursor-pointer">
-              Entendido
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

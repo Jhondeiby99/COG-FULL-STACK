@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { NeedFormModal } from '../components/NeedFormModal';
+import { DocumentosFundacion } from '../components/DocumentosFundacion';
 import {
   type Necesidad,
   porcentajeRecaudo,
@@ -1230,6 +1231,16 @@ export function EditFoundationProfile() {
               {activeTab === 'documentos' && (
                 <>
                   <section className="bg-white rounded-3xl p-6 border border-[#e2e8f0] shadow-sm mb-6">
+                    <h3 className="text-[11px] font-bold text-[#005684] uppercase tracking-wider flex items-center gap-2 mb-2">
+                      <Icon name="documento" size={16} /> Documentos legales
+                    </h3>
+                    <p className="text-xs text-[#64748b] mb-4">
+                      Son obligatorios para la aprobación. Se guardan al instante, no necesitas pulsar “Guardar cambios”.
+                    </p>
+                    {(foundationId || id) && <DocumentosFundacion fundacionId={foundationId || id} />}
+                  </section>
+
+                  <section className="bg-white rounded-3xl p-6 border border-[#e2e8f0] shadow-sm mb-6">
                     <h3 className="text-[11px] font-bold text-[#005684] uppercase tracking-wider flex items-center gap-2 mb-5">
                       <span className="text-base"><Icon name="legal" size="1.1em" /></span> Datos Legales y Registro
                     </h3>
@@ -1264,18 +1275,6 @@ export function EditFoundationProfile() {
                           <input type="text" value={anoFundacion} onChange={(e) => { setAnoFundacion(e.target.value); }} placeholder="Ej: 2018" className="w-full bg-[#f8fafc] border border-[#e2e8f0] focus:border-[#005684] rounded-xl px-4 py-2.5 text-xs font-semibold text-[#071d37] outline-none transition" />
                         </div>
                       </div>
-                    </div>
-                  </section>
-
-                  <section className="bg-white rounded-3xl p-6 border border-[#e2e8f0] shadow-sm">
-                    <h3 className="text-[11px] font-bold text-[#005684] uppercase tracking-wider flex items-center gap-2 mb-4">
-                      <span className="text-base"><Icon name="carpeta" size="1.1em" /></span> Archivos Adjuntos Oficiales
-                    </h3>
-                    <div className="border-2 border-dashed border-[#e2e8f0] rounded-2xl p-8 flex flex-col items-center justify-center text-center bg-[#f8fafc]">
-                        <span className="text-3xl mb-2 text-gray-400"><Icon name="documento" size="1.1em" /></span>
-                        <p className="text-xs font-bold text-[#071d37]">Sube tu RUT Actualizado y Cámara de Comercio</p>
-                        <p className="text-[10px] text-[#64748b] mt-1 mb-4">Formatos PDF aceptados, máximo 5MB por archivo.</p>
-                        <button className="bg-white border border-[#e2e8f0] text-[#005684] px-4 py-2 rounded-xl text-xs font-bold hover:bg-gray-50 transition cursor-pointer shadow-sm">Examinar Archivos</button>
                     </div>
                   </section>
                 </>

@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { DialogModal } from '../components/DialogModal';
+import { DocumentosFundacion } from '../components/DocumentosFundacion';
+import { VERIFICACION_REPRESENTANTE } from '../lib/documentos';
 
 import { Icon } from '../components/Icon';
 interface Fundacion {
@@ -12,16 +14,19 @@ interface Fundacion {
   ubicacion?: string | null;
   area_enfoque?: string | null;
   fecha_solicitud?: string | null;
-  coordinador?: string | null;
   estado?: string | null;
   fecha_aprobacion?: string | null;
   aprobado_por_nombre?: string | null;
   documentos_lista?: string[] | null;
+  representante_legal?: string | null;
 }
 
 export function AdminApproval() {
   const [aviso, setAviso] = useState<{ title: string; message: string } | null>(null);
   const [rechazoPendiente, setRechazoPendiente] = useState<string | null>(null);
+  const [inspeccion, setInspeccion] = useState<Fundacion | null>(null);
+  // Documentos verificados por fundación pendiente (se necesitan los 3 para aprobar)
+  const [verificados, setVerificados] = useState<Record<string, number>>({});
   const [tabActiva, setTabActiva] = useState<'pendientes' | 'aprobadas'>('pendientes');
   const [pendientes, setPendientes] = useState<Fundacion[]>([]);
   const [aprobadas, setAprobadas] = useState<Fundacion[]>([]);
@@ -57,6 +62,18 @@ export function AdminApproval() {
         (admins || []).forEach(a => nombres.set(a.id, a.nombre_completo));
       }
 
+      const idsPendientes = (dbPendientes || []).map(f => f.id);
+      const conteo: Record<string, number> = {};
+      if (idsPendientes.length) {
+        const { data: docs } = await supabase
+          .from('documentos_fundacion')
+          .select('fundacion_id')
+          .in('fundacion_id', idsPendientes)
+          .eq('estado_revision', 'verificado');
+        (docs || []).forEach(d => { conteo[d.fundacion_id] = (conteo[d.fundacion_id] || 0) + 1; });
+      }
+      setVerificados(conteo);
+
       setPendientes(dbPendientes || []);
       setAprobadas((dbAprobadas || []).map(f => ({ ...f, aprobado_por_nombre: f.aprobado_por ? nombres.get(f.aprobado_por) || null : null })));
     } catch (error) {
@@ -82,8 +99,9 @@ export function AdminApproval() {
         .eq('id', id);
 
       if (error) {
-        setAviso({ title: 'No se pudo aprobar', message: 'Error al aprobar la fundación: ' + error.message });
+        setAviso({ title: 'No se pudo aprobar', message: error.message });
       } else {
+        setInspeccion(null);
         await cargarDatos();
       }
     } catch (err) {
@@ -169,6 +187,75 @@ export function AdminApproval() {
         />
       )}
       {aviso && <DialogModal title={aviso.title} message={aviso.message} onClose={() => setAviso(null)} />}
+
+      {/* Inspección de la solicitud: documentos legales reales y vista previa del perfil */}
+      {inspeccion && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4 bg-black/50 backdrop-blur-sm" role="dialog" aria-modal="true">
+          <div className="bg-white w-full sm:max-w-xl rounded-t-3xl sm:rounded-3xl shadow-2xl border border-[#e2e8f0] flex flex-col max-h-[92vh]">
+            <div className="flex items-start justify-between gap-3 px-6 pt-6 pb-3">
+              <div className="min-w-0">
+                <span className="text-[10px] font-bold text-[#0284c7] uppercase tracking-wide">Revisión de solicitud</span>
+                <h3 className="text-lg font-extrabold text-[#071d37] leading-tight truncate">{inspeccion.nombre_legal}</h3>
+                <p className="text-[11px] text-[#64748b]">NIT {inspeccion.nit} · {inspeccion.representante_legal || 'Sin representante registrado'}</p>
+              </div>
+              <button type="button" onClick={() => setInspeccion(null)} aria-label="Cerrar" className="text-gray-400 hover:text-gray-600 w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition cursor-pointer shrink-0">
+                <Icon name="cerrar" size={18} />
+              </button>
+            </div>
+            <div className="px-6 pb-4 overflow-y-auto flex flex-col gap-4">
+              {/* Datos declarados en la plataforma: deben coincidir con los documentos */}
+              <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded-xl p-3">
+                <p className="text-[10px] font-extrabold text-[#94a3b8] uppercase tracking-wider mb-2">Datos a cruzar con los documentos</p>
+                <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1.5 text-[11px]">
+                  <div><dt className="text-[#94a3b8]">Razón social</dt><dd className="font-bold text-[#071d37]">{inspeccion.nombre_legal}</dd></div>
+                  <div><dt className="text-[#94a3b8]">NIT</dt><dd className="font-bold text-[#071d37]">{inspeccion.nit || '—'}</dd></div>
+                  <div><dt className="text-[#94a3b8]">Representante legal</dt><dd className="font-bold text-[#071d37]">{inspeccion.representante_legal || '—'}</dd></div>
+                  <div><dt className="text-[#94a3b8]">Ciudad</dt><dd className="font-bold text-[#071d37]">{inspeccion.ciudad || inspeccion.ubicacion || '—'}</dd></div>
+                </dl>
+              </div>
+
+              <DocumentosFundacion
+                fundacionId={inspeccion.id}
+                editable={false}
+                revision
+                onCambio={(docs) => setVerificados(prev => ({ ...prev, [inspeccion.id]: docs.filter(d => d.estado_revision === 'verificado').length }))}
+              />
+
+              <div className="border border-dashed border-[#e2e8f0] rounded-xl p-3">
+                <p className="text-[10px] font-extrabold text-[#94a3b8] uppercase tracking-wider mb-1.5">Recomendado: representante legal</p>
+                <p className="text-[11px] text-[#64748b] mb-2">Consulta con su cédula antes de aprobar.</p>
+                <div className="flex flex-col sm:flex-row gap-x-4 gap-y-1">
+                  {VERIFICACION_REPRESENTANTE.map(e => (
+                    <a key={e.url} href={e.url} target="_blank" rel="noopener noreferrer" className="text-[11px] font-bold text-[#0284c7] hover:underline inline-flex items-center gap-1">
+                      {e.texto} <Icon name="externo" size={12} />
+                    </a>
+                  ))}
+                </div>
+              </div>
+            </div>
+            <div className="flex flex-col-reverse sm:flex-row sm:justify-between gap-2 px-6 py-5 border-t border-[#f1f5f9]">
+              <Link to={`/fundacion/${inspeccion.id}`} className="bg-white border border-[#e2e8f0] text-[#071d37] px-4 py-2.5 rounded-xl text-xs font-bold hover:bg-gray-50 transition text-center inline-flex items-center justify-center gap-1.5">
+                <Icon name="externo" size={14} /> Vista previa del perfil
+              </Link>
+              {inspeccion.estado === 'aprobada' ? (
+                <button type="button" onClick={() => setInspeccion(null)} className="bg-[#005684] text-white px-6 py-2.5 rounded-xl text-xs font-bold hover:bg-[#00456a] transition cursor-pointer">
+                  Cerrar
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => handleAprobar(inspeccion.id)}
+                  disabled={(verificados[inspeccion.id] || 0) < 3 || processingId === inspeccion.id}
+                  className="bg-[#059669] text-white px-6 py-2.5 rounded-xl text-xs font-bold hover:bg-[#047857] transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center gap-1.5"
+                >
+                  <Icon name="check" size={14} />
+                  {processingId === inspeccion.id ? 'Aprobando...' : (verificados[inspeccion.id] || 0) < 3 ? `Aprobar (${verificados[inspeccion.id] || 0}/3 verificados)` : 'Aprobar fundación'}
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       
       {/* CABECERA PRINCIPAL SUPERIOR */}
@@ -263,7 +350,7 @@ export function AdminApproval() {
                     <div className="flex flex-wrap items-center gap-2 mb-1">
                       <h3 className="text-[15px] font-extrabold text-[#071d37]">{fund.nombre_legal}</h3>
                       <span className="bg-[#f1f5f9] text-[#475569] text-[9px] font-bold px-2 py-0.5 rounded-md">
-                        {fund.area_enfoque || 'Comedores e Infancia'}
+                        {fund.area_enfoque || 'Área sin definir'}
                       </span>
                     </div>
                     
@@ -277,30 +364,28 @@ export function AdminApproval() {
                     <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-[#475569] mb-3">
                       <span><span className="font-semibold">NIT:</span> {fund.nit}</span>
                       <span className="text-gray-300 hidden sm:inline">•</span>
-                      <span>{fund.ciudad || fund.ubicacion || 'Bogotá D.C.'}</span>
+                      <span>{fund.ciudad || fund.ubicacion || 'Ciudad sin registrar'}</span>
                       <span className="text-gray-300 hidden sm:inline">•</span>
-                      <span><span className="font-semibold">Coord:</span> {fund.coordinador || 'Dra. Patricia Alarcón'}</span>
+                      <span><span className="font-semibold">Representante:</span> {fund.representante_legal || 'Sin registrar'}</span>
                     </div>
 
                     <div className="flex flex-wrap gap-2 items-center">
-                      <span className="bg-[#eef6ff] text-[#0284c7] border border-[#bae6fd] text-[10px] font-bold px-2.5 py-1 rounded-lg flex items-center gap-1">
-                        <Icon name="check" size="1.1em" /> RUT 2025
-                      </span>
-                      <span className="bg-[#eef6ff] text-[#0284c7] border border-[#bae6fd] text-[10px] font-bold px-2.5 py-1 rounded-lg flex items-center gap-1">
-                        <Icon name="check" size="1.1em" /> {idx % 2 === 0 ? 'Estados Financieros' : 'Cámara de Comercio'}
-                      </span>
-                      <span className="bg-[#eef6ff] text-[#0284c7] border border-[#bae6fd] text-[10px] font-bold px-2.5 py-1 rounded-lg flex items-center gap-1">
-                        <Icon name="check" size="1.1em" /> {idx % 2 === 0 ? 'Antecedentes Representante' : 'Personería Jurídica'}
-                      </span>
-                      <span className="text-[10px] text-[#94a3b8] flex items-center gap-1 mt-1 sm:mt-0 sm:ml-2 w-full sm:w-auto">
-                        <Icon name="documento" size="1.1em" /> Archivos PDF Adjuntos
-                      </span>
+                      {(fund.documentos_lista || []).map(doc => (
+                        <span key={doc} className="bg-[#eef6ff] text-[#0284c7] border border-[#bae6fd] text-[10px] font-bold px-2.5 py-1 rounded-lg flex items-center gap-1">
+                          <Icon name="check" size="1.1em" /> {doc}
+                        </span>
+                      ))}
+                      {(fund.documentos_lista || []).length < 3 && (
+                        <span className="bg-[#fffbeb] text-[#b45309] border border-[#fde68a] text-[10px] font-bold px-2.5 py-1 rounded-lg flex items-center gap-1">
+                          <Icon name="advertencia" size="1.1em" /> {3 - (fund.documentos_lista || []).length} documento{3 - (fund.documentos_lista || []).length === 1 ? '' : 's'} pendiente{3 - (fund.documentos_lista || []).length === 1 ? '' : 's'}
+                        </span>
+                      )}
                     </div>
                   </div>
                 </div>
 
                 <div className="flex flex-col sm:flex-row items-center gap-3 shrink-0 border-t md:border-t-0 md:border-l border-[#e2e8f0] pt-4 md:pt-0 md:pl-6">
-                   <button className="bg-[#e2e8f0] text-[#334155] px-5 py-2.5 rounded-xl text-xs font-bold hover:bg-[#cbd5e1] transition w-full sm:w-auto flex items-center justify-center gap-2 cursor-pointer">
+                   <button onClick={() => setInspeccion(fund)} className="bg-[#e2e8f0] text-[#334155] px-5 py-2.5 rounded-xl text-xs font-bold hover:bg-[#cbd5e1] transition w-full sm:w-auto flex items-center justify-center gap-2 cursor-pointer">
                      <span><Icon name="ver" size="1.1em" /></span> Inspeccionar
                    </button>
                    <button 
@@ -310,19 +395,23 @@ export function AdminApproval() {
                    >
                      Rechazar
                    </button>
-                   <button 
-                     onClick={() => handleAprobar(fund.id)}
-                     disabled={processingId === fund.id}
-                     className="bg-[#005684] text-white px-5 py-2.5 rounded-xl text-xs font-bold hover:bg-[#00456a] transition shadow-sm w-full sm:w-auto flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
-                   >
-                     {processingId === fund.id ? (
-                       <span>Cargando...</span>
-                     ) : (
-                       <>
-                         <span><Icon name="check" size="1.1em" /></span> Aprobar Fundación
-                       </>
-                     )}
-                   </button>
+                   {(verificados[fund.id] || 0) >= 3 ? (
+                     <button
+                       onClick={() => handleAprobar(fund.id)}
+                       disabled={processingId === fund.id}
+                       className="bg-[#005684] text-white px-5 py-2.5 rounded-xl text-xs font-bold hover:bg-[#00456a] transition shadow-sm w-full sm:w-auto flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                     >
+                       {processingId === fund.id ? 'Aprobando...' : <><Icon name="check" size="1.1em" /> Aprobar Fundación</>}
+                     </button>
+                   ) : (
+                     <button
+                       onClick={() => setInspeccion(fund)}
+                       title="Se necesitan los 3 documentos verificados para aprobar"
+                       className="bg-[#fffbeb] text-[#b45309] border border-[#fde68a] px-5 py-2.5 rounded-xl text-xs font-bold hover:bg-[#fef3c7] transition w-full sm:w-auto flex items-center justify-center gap-2 cursor-pointer"
+                     >
+                       <Icon name="auditoria" size="1.1em" /> Verificar documentos ({verificados[fund.id] || 0}/3)
+                     </button>
+                   )}
                 </div>
 
               </div>

@@ -2,6 +2,9 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { Icon } from '../components/Icon';
+import { DocumentosFundacion } from '../components/DocumentosFundacion';
+import { subirDocumento } from '../lib/documentos';
+import type { TipoDocumento } from '../lib/documentos';
 
 export function SignUp() {
 	const navigate = useNavigate();
@@ -12,6 +15,8 @@ export function SignUp() {
 	// Estado para enviar a Supabase
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState<string | null>(null);
+	// Documentos legales elegidos antes de crear la cuenta; se suben al terminar el registro
+	const [documentos, setDocumentos] = useState<Partial<Record<TipoDocumento, File>>>({});
 	
 	const [formData, setFormData] = useState({
 		nombreLegal: '',
@@ -83,8 +88,15 @@ export function SignUp() {
                 email_institucional: formData.email,
                 ubicacion: formData.ubicacion,
                 estado: 'pendiente',
-                fecha_solicitud: new Date().toISOString() // <Icon name="anterior" size="1.1em" /> Asegura la fecha y hora exacta
+                fecha_solicitud: new Date().toISOString() // Fecha y hora exacta de la solicitud
             }]);
+
+            // Subir los documentos legales elegidos (si alguno falla, puede completarlo luego desde su perfil)
+            if (authData.session) {
+                await Promise.allSettled(
+                    (Object.entries(documentos) as [TipoDocumento, File][]).map(([tipo, archivo]) => subirDocumento(userId, tipo, archivo))
+                );
+            }
 		} else {
 			await supabase.from('voluntarios').insert([{
 				id: userId,
@@ -280,18 +292,9 @@ export function SignUp() {
 											</div>
 
 											<div>
-												<label className="text-xs font-bold text-[#475569]">Copia digital de Personería Jurídica / RUT / Cámara de Comercio</label>
-												<div className="mt-3 rounded-xl border-2 border-dashed border-[#e6eef6] bg-[#eef8ff] p-8 text-center">
-													<div className="mx-auto max-w-[520px]">
-														<div className="mb-3 text-4xl"><Icon name="nube" size="1.1em" /></div>
-														<p className="mb-2 text-sm text-[#64748b]">Haz clic para adjuntar certificado o arrastra y suelta el documento oficial aquí</p>
-														<p className="text-xs text-[#9aa6b2]">PDF, JPG (Max 15MB)</p>
-														<div className="mt-4 flex items-center justify-center gap-3">
-															<button type="button" className="inline-flex items-center justify-center rounded-lg bg-[#005684] px-4 py-2 text-sm font-bold text-white">Adjuntar documento</button>
-															<span className="rounded-full bg-[#e6ffef] px-2 py-1 text-xs font-bold text-[#047857]">Encriptado y verificado en 24h</span>
-														</div>
-													</div>
-												</div>
+												<label className="text-xs font-bold text-[#475569]">Documentos legales (RUT, Cámara de Comercio y Personería jurídica)</label>
+												<p className="text-[11px] text-[#94a3b8] mt-1 mb-3">Son necesarios para aprobar tu fundación. Si aún no los tienes a mano, podrás subirlos después desde tu perfil.</p>
+												<DocumentosFundacion onSeleccion={setDocumentos} />
 											</div>
 										</>
 									)}
