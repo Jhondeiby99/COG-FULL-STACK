@@ -207,7 +207,7 @@ export function FoundationProfile() {
   const heroImage =
     fundacion.foto_portada_url ||
     fundacion.portada_url ||
-    'https://images.unsplash.com/photo-1593113563332-f36e4b9317b6?auto=format&fit=crop&w=1920&q=80';
+    'https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?auto=format&fit=crop&w=1920&q=80';
 
   const necesidadesResueltas = necesidades.filter(n => n.completada).length;
   const ESTADO_TEXTO: Record<string, string> = {

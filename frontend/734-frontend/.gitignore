@@ -29,3 +29,6 @@ dist-ssr
 gitinore
 node_modules/
 **/node_modules/
+
+# Configuración local de Claude Code
+.claude/
