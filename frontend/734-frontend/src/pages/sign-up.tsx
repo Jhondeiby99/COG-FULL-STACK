@@ -334,8 +334,8 @@ export function SignUp() {
                                                 </div>
                                             </div>
 											<div>
-												<p className="font-bold text-sm text-[#0b2a3a]">Comunidad 100% verificada</p>
-												<p className="mt-1 text-xs text-[#64748b]">Validamos la personería jurídica de cada fundación y la idoneidad ciudadana de cada voluntario.</p>
+												<p className="font-bold text-sm text-[#0b2a3a]">Fundaciones verificadas</p>
+												<p className="mt-1 text-xs text-[#64748b]">Revisamos el RUT, la Cámara de Comercio y la personería jurídica de cada fundación antes de aprobarla.</p>
 											</div>
 										</div>
 									</div>
