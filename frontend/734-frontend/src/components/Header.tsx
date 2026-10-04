@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import type { Notificacion } from '../hooks/useNotifications';
 import { supabase } from '../lib/supabase';
 import * as Icons from "../assets/icons/index.ts";
 import { RealtimeChannel } from '@supabase/supabase-js';
@@ -28,6 +29,17 @@ export function Header({ onSearchChange, onFilterClick, searchPlaceholder = "Cau
   // Hook de Notificaciones
   const { notificaciones, unreadCount, marcarComoLeidas } = useNotifications(user?.id, { limit: 5 });
   const [showNotifs, setShowNotifs] = useState(false);
+
+  // Al pulsar un aviso de la campana: se marca como leído y se abre su destino
+  const abrirNotificacionCampana = (n: Notificacion) => {
+    setShowNotifs(false);
+    if (!n.leido) marcarComoLeidas([n.id]);
+    if (n.enlace) {
+      navigate(n.enlace);
+    } else {
+      navigate('/dashboard/admin-notificaciones', { state: { abrirNotificacionId: n.id } });
+    }
+  };
   
   // Refs separados para clics fuera
   const notifRefDesktop = useRef<HTMLDivElement>(null);
@@ -240,14 +252,14 @@ export function Header({ onSearchChange, onFilterClick, searchPlaceholder = "Cau
             )}
             
             <button 
-  onClick={() => { 
-    setShowDropdown(false); 
-    navigate(`/explorar?q=${encodeURIComponent(internalSearch)}`); 
-  }} 
-  className="w-full text-center py-3 bg-gray-50 hover:bg-gray-100 text-xs font-bold text-[#005684] transition mt-1 border-t border-gray-100"
->
-  Ver todos los resultados →
-</button>
+              onClick={() => { 
+                setShowDropdown(false); 
+                navigate(`/explorar?q=${encodeURIComponent(internalSearch)}`); 
+              }} 
+              className="w-full text-center py-3 bg-gray-50 hover:bg-gray-100 text-xs font-bold text-[#005684] transition mt-1 border-t border-gray-100"
+            >
+              Ver todos los resultados →
+            </button>
           </div>
         )}
       </div>
@@ -310,10 +322,10 @@ export function Header({ onSearchChange, onFilterClick, searchPlaceholder = "Cau
                             <div className="p-4 text-center text-xs text-gray-500">Estás al día.</div>
                           ) : (
                             notificaciones.map((n) => (
-                              <div key={n.id} className={`p-3 border-b border-gray-100 flex flex-col gap-1 hover:bg-gray-50 transition ${!n.leido ? 'bg-[#f0f9ff]' : ''}`}>
+                              <button type="button" key={n.id} onClick={() => abrirNotificacionCampana(n)} className={`w-full text-left cursor-pointer p-3 border-b border-gray-100 flex flex-col gap-1 hover:bg-gray-50 transition ${!n.leido ? 'bg-[#f0f9ff]' : ''}`}>
                                 <span className="text-xs font-bold text-[#071d37]">{n.titulo}</span>
                                 <span className="text-[11px] text-gray-500 line-clamp-2">{n.descripcion}</span>
-                              </div>
+                              </button>
                             ))
                           )}
                         </div>
@@ -324,7 +336,9 @@ export function Header({ onSearchChange, onFilterClick, searchPlaceholder = "Cau
 
                   <Link to={getDashboardPath()} className="rounded-lg bg-[#005684] px-3 py-1.5 text-xs font-bold text-white transition hover:bg-[#00456a] shadow-sm">Mi Panel</Link>
                   <button onClick={handleLogout} type="button" className="rounded-lg bg-red-50 px-3 py-1.5 text-xs font-bold text-red-600 border border-red-200 transition hover:bg-red-100 cursor-pointer" title="Cerrar sesión">Salir</button>
-                  <div className="avatar-circle small overflow-hidden border border-gray-200 shadow-sm"><img src={getAvatar()} className="icon-person" alt="Avatar" /></div>
+                  <div className="h-8 w-8 sm:h-9 sm:w-9 rounded-full bg-[#0f2a3f] text-white flex items-center justify-center font-bold text-xs uppercase overflow-hidden shrink-0">
+                {profileData?.avatar ? <img src={profileData.avatar} alt="Perfil" className="w-full h-full object-cover" /> : profileData?.name ? profileData.name.substring(0, 2) : 'US'}
+              </div>
                 </div>
               ) : (
                 <>
@@ -378,10 +392,10 @@ export function Header({ onSearchChange, onFilterClick, searchPlaceholder = "Cau
                             <div className="p-4 text-center text-[11px] text-gray-500">Estás al día.</div>
                           ) : (
                             notificaciones.map((n) => (
-                              <div key={n.id} className={`p-3 border-b border-gray-100 flex flex-col gap-1 hover:bg-gray-50 transition ${!n.leido ? 'bg-[#f0f9ff]' : ''}`}>
+                              <button type="button" key={n.id} onClick={() => abrirNotificacionCampana(n)} className={`w-full text-left cursor-pointer p-3 border-b border-gray-100 flex flex-col gap-1 hover:bg-gray-50 transition ${!n.leido ? 'bg-[#f0f9ff]' : ''}`}>
                                 <span className="text-[11px] font-bold text-[#071d37]">{n.titulo}</span>
                                 <span className="text-[10px] text-gray-500 line-clamp-2">{n.descripcion}</span>
-                              </div>
+                              </button>
                             ))
                           )}
                         </div>

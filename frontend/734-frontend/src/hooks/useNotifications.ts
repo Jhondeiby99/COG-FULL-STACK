@@ -14,7 +14,9 @@ export interface Notificacion {
   accion_texto?: string;
   leido: boolean;
   created_at: string;
-  mensaje_contacto_id?: string; // <--- Agregar este campo
+  mensaje_contacto_id?: string;
+  tipo?: string | null; // 'mensaje' | 'aprobacion' | 'emergencia' | 'sistema'
+  enlace?: string | null; // ruta interna a la que lleva la notificación
 }
 
 interface UseNotificationsOptions {

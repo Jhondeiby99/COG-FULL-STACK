@@ -1,4 +1,5 @@
 import { useNavigate, Outlet, Link, useLocation } from 'react-router-dom';
+import type { Notificacion } from '../hooks/useNotifications';
 import { supabase } from '../lib/supabase';
 import * as Icons from "../assets/icons/index.ts";
 import { useState, useEffect, useRef } from 'react';
@@ -26,6 +27,17 @@ export function DashboardLayout() {
   // Hook de Notificaciones (Límite de 5 para el dropdown)
   const { notificaciones, unreadCount, marcarComoLeidas } = useNotifications(profileData?.id, { limit: 5 });
   const [showNotifs, setShowNotifs] = useState(false);
+
+  // Al pulsar un aviso de la campana: se marca como leído y se abre su destino
+  const abrirNotificacionCampana = (n: Notificacion) => {
+    setShowNotifs(false);
+    if (!n.leido) marcarComoLeidas([n.id]);
+    if (n.enlace) {
+      navigate(n.enlace);
+    } else {
+      navigate('/dashboard/admin-notificaciones', { state: { abrirNotificacionId: n.id } });
+    }
+  };
   const notifRef = useRef<HTMLDivElement>(null);
 
   // Cierra el menú móvil al cambiar de ruta
@@ -335,10 +347,10 @@ export function DashboardLayout() {
                       <div className="p-4 text-center text-xs text-gray-500">No hay notificaciones.</div>
                     ) : (
                       notificaciones.map((n) => (
-                        <div key={n.id} className={`p-3 border-b border-gray-100 flex flex-col gap-1 hover:bg-gray-50 transition ${!n.leido ? 'bg-[#f0f9ff]' : ''}`}>
+                        <button type="button" key={n.id} onClick={() => abrirNotificacionCampana(n)} className={`w-full text-left cursor-pointer p-3 border-b border-gray-100 flex flex-col gap-1 hover:bg-gray-50 transition ${!n.leido ? 'bg-[#f0f9ff]' : ''}`}>
                           <span className="text-xs font-bold text-[#071d37]">{n.titulo}</span>
                           <span className="text-[11px] text-gray-500 line-clamp-2">{n.descripcion}</span>
-                        </div>
+                        </button>
                       ))
                     )}
                   </div>

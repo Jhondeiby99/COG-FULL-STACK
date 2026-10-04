@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useNotifications } from '../hooks/useNotifications';
 import type { Notificacion } from '../hooks/useNotifications';
@@ -10,10 +11,33 @@ interface MensajeContactoDetalle {
   tipo_consulta?: string;
   mensaje: string;
   created_at: string;
+  remitente_id?: string | null;
+  remitente_rol?: string | null;
 }
 
+const ETIQUETA_TIPO: Record<string, string> = {
+  mensaje: 'Mensaje de Contacto',
+  aprobacion: 'Solicitud de Registro',
+  emergencia: 'Aviso de Emergencia Cívica',
+  sistema: 'Aviso del Sistema',
+};
+
+const MAX_TITULO_AVISO = 80;
+const MAX_MENSAJE_AVISO = 500;
+
 export function AccountNotifications() {
+  const navigate = useNavigate();
+  const location = useLocation();
   const [userId, setUserId] = useState<string | null>(null);
+  const [rol, setRol] = useState<string | null>(null);
+
+  // Aviso masivo (solo administradores)
+  const [avisoTitulo, setAvisoTitulo] = useState('');
+  const [avisoMensaje, setAvisoMensaje] = useState('');
+  const [destinatariosAviso, setDestinatariosAviso] = useState<number | null>(null);
+  const [confirmarAviso, setConfirmarAviso] = useState(false);
+  const [enviandoAviso, setEnviandoAviso] = useState(false);
+  const [resultadoModal, setResultadoModal] = useState<{ title: string; message: string; isError: boolean } | null>(null);
   
   // Estado para la notificación seleccionada y el detalle del mensaje
   const [notificacionModal, setNotificacionModal] = useState<Notificacion | null>(null);
@@ -53,13 +77,22 @@ export function AccountNotifications() {
 
   // Abrir modal y consultar tabla mensajes_contacto
   const abrirNotificacion = async (notif: Notificacion) => {
-    setNotificacionModal(notif);
-    setDetalleMensaje(null);
-
     // Marcar como leída si no lo estaba
     if (!notif.leido) {
       marcarComoLeidas([notif.id]);
     }
+
+    // Notificaciones con destino propio (p. ej. solicitudes de registro) llevan directo a su pantalla
+    if (notif.enlace) {
+      navigate(notif.enlace);
+      return;
+    }
+
+    setNotificacionModal(notif);
+    setDetalleMensaje(null);
+
+    // Avisos que no provienen de un mensaje de contacto solo muestran su descripción
+    if (notif.tipo && notif.tipo !== 'mensaje') return;
 
     // Si la notificación tiene un ID de mensaje vinculado
     const mensajeId = notif.mensaje_contacto_id;
@@ -103,6 +136,16 @@ export function AccountNotifications() {
     }
   };
 
+  // Abrir automáticamente la notificación pulsada desde la campana
+  useEffect(() => {
+    const abrirId = (location.state as { abrirNotificacionId?: string } | null)?.abrirNotificacionId;
+    if (!abrirId || loadingNotifs) return;
+    const notif = notificaciones.find(n => n.id === abrirId);
+    navigate(location.pathname, { replace: true, state: null });
+    if (notif) abrirNotificacion(notif);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.state, loadingNotifs, notificaciones]);
+
   const cerrarModal = () => {
     setNotificacionModal(null);
     setDetalleMensaje(null);
@@ -116,11 +159,16 @@ export function AccountNotifications() {
 
       const { data: perfil } = await supabase
         .from('perfiles')
-        .select('alertas_correo, alertas_push, alertas_emergencia')
+        .select('rol, alertas_correo, alertas_push, alertas_emergencia')
         .eq('id', user.id)
         .single();
 
       if (perfil) {
+        setRol(perfil.rol);
+        if (perfil.rol === 'administrador') {
+          const { data: total } = await supabase.rpc('contar_destinatarios_aviso');
+          setDestinatariosAviso(typeof total === 'number' ? total : 0);
+        }
         setAlertasCorreo(perfil.alertas_correo ?? true);
         setAlertasPush(perfil.alertas_push ?? true);
         setAlertasEmergencia(perfil.alertas_emergencia ?? true);
@@ -151,6 +199,53 @@ export function AccountNotifications() {
       setSavingPrefs(false);
     }
   };
+
+  const rutaPerfilRemitente = (detalle: MensajeContactoDetalle | null) => {
+    if (!detalle?.remitente_id) return null;
+    if (detalle.remitente_rol === 'voluntario') return `/voluntario/${detalle.remitente_id}`;
+    if (detalle.remitente_rol === 'fundacion') return `/fundacion/${detalle.remitente_id}`;
+    return null;
+  };
+
+  const solicitarEnvioAviso = () => {
+    if (!avisoTitulo.trim() || !avisoMensaje.trim()) {
+      setResultadoModal({ title: 'Faltan datos', message: 'Escribe el título y el mensaje del aviso antes de enviarlo.', isError: true });
+      return;
+    }
+    if (!destinatariosAviso) {
+      setResultadoModal({ title: 'Sin destinatarios', message: 'No hay voluntarios activos con los Avisos de Emergencia Cívica habilitados.', isError: true });
+      return;
+    }
+    setConfirmarAviso(true);
+  };
+
+  const enviarAvisoMasivo = async () => {
+    setEnviandoAviso(true);
+    try {
+      const { data, error } = await supabase.rpc('enviar_aviso_masivo', {
+        p_titulo: avisoTitulo.trim(),
+        p_mensaje: avisoMensaje.trim(),
+      });
+      if (error) throw error;
+      setConfirmarAviso(false);
+      setAvisoTitulo('');
+      setAvisoMensaje('');
+      setResultadoModal({
+        title: 'Aviso enviado',
+        message: `El aviso llegó a ${data ?? 0} voluntario${data === 1 ? '' : 's'} activo${data === 1 ? '' : 's'}.`,
+        isError: false,
+      });
+    } catch (e) {
+      const err = e as { message?: string };
+      setConfirmarAviso(false);
+      setResultadoModal({ title: 'No se pudo enviar el aviso', message: err.message || 'Error de conexión. Intenta de nuevo.', isError: true });
+    } finally {
+      setEnviandoAviso(false);
+    }
+  };
+
+  const esAdmin = rol === 'administrador';
+  const rutaRemitente = rutaPerfilRemitente(detalleMensaje);
 
   if (loadingNotifs) {
     return (
@@ -268,12 +363,62 @@ export function AccountNotifications() {
         </div>
 
         {/* Panel Lateral de Preferencias */}
-        <div className="w-full lg:w-[380px] shrink-0">
+        <div className="w-full lg:w-[380px] shrink-0 flex flex-col">
+          {esAdmin && (
+            <div className="mb-8">
+              <h2 className="text-lg font-bold text-[#071d37] flex items-center gap-2 mb-6">
+                <span className="text-[#dc2626]">📢</span> Aviso Masivo a Voluntarios
+              </h2>
+              <div className="bg-white rounded-3xl p-6 sm:p-8 border border-[#e2e8f0] shadow-sm flex flex-col gap-4">
+                <p className="text-[13px] text-[#64748b] leading-relaxed">
+                  Llega a todos los voluntarios activos que tienen habilitados los <span className="font-bold text-[#071d37]">Avisos de Emergencia Cívica</span>.
+                </p>
+                <div className="bg-[#fef2f2] border border-[#fecaca] rounded-2xl px-4 py-3 flex items-center justify-between gap-3">
+                  <span className="text-[12px] font-semibold text-[#991b1b]">Destinatarios actuales</span>
+                  <span className="text-[15px] font-extrabold text-[#dc2626]">{destinatariosAviso ?? '…'}</span>
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-bold text-[#071d37]">Título del aviso</label>
+                  <input
+                    type="text"
+                    value={avisoTitulo}
+                    maxLength={MAX_TITULO_AVISO}
+                    onChange={(e) => setAvisoTitulo(e.target.value)}
+                    placeholder="Ej: Brigada urgente en Cali"
+                    className="w-full bg-[#f8fafc] border border-[#e2e8f0] rounded-xl px-4 py-2.5 text-sm text-[#071d37] focus:outline-none focus:border-[#005684] focus:ring-1 focus:ring-[#005684]"
+                  />
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-bold text-[#071d37]">Mensaje</label>
+                    <span className="text-[10px] text-[#94a3b8]">{avisoMensaje.length}/{MAX_MENSAJE_AVISO}</span>
+                  </div>
+                  <textarea
+                    value={avisoMensaje}
+                    maxLength={MAX_MENSAJE_AVISO}
+                    onChange={(e) => setAvisoMensaje(e.target.value)}
+                    rows={4}
+                    placeholder="Describe la emergencia, el lugar y cómo pueden ayudar."
+                    className="w-full bg-[#f8fafc] border border-[#e2e8f0] rounded-xl px-4 py-2.5 text-sm text-[#071d37] resize-none focus:outline-none focus:border-[#005684] focus:ring-1 focus:ring-[#005684]"
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={solicitarEnvioAviso}
+                  disabled={enviandoAviso || !avisoTitulo.trim() || !avisoMensaje.trim()}
+                  className="w-full bg-[#dc2626] text-white px-5 py-3.5 rounded-xl text-xs font-bold hover:bg-[#b91c1c] transition shadow-sm flex justify-center items-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <span>🚨</span> Enviar aviso masivo
+                </button>
+              </div>
+            </div>
+          )}
+
           <h2 className="text-lg font-bold text-[#071d37] flex items-center gap-2 mb-6">
             <span className="text-[#005684]">🎛️</span> Canales y Preferencias
           </h2>
 
-          <div className="bg-white rounded-3xl p-6 sm:p-8 border border-[#e2e8f0] shadow-sm flex flex-col gap-6 sticky top-24">
+          <div className={`bg-white rounded-3xl p-6 sm:p-8 border border-[#e2e8f0] shadow-sm flex flex-col gap-6 ${esAdmin ? '' : 'lg:sticky lg:top-24'}`}>
             <p className="text-[13px] text-[#64748b] leading-relaxed">
               Ajusta la forma en que el sistema despacha recordatorios y avisos críticos.
             </p>
@@ -368,7 +513,7 @@ export function AccountNotifications() {
               </div>
               <div>
                 <span className="text-[11px] font-bold text-[#0284c7] uppercase tracking-wide">
-                  Mensaje de Contacto
+                  {ETIQUETA_TIPO[notificacionModal.tipo || 'mensaje'] || 'Notificación'}
                 </span>
                 <h3 className="text-lg font-extrabold text-[#071d37] leading-tight">
                   {notificacionModal.titulo || 'Nuevo mensaje'}
@@ -418,6 +563,24 @@ export function AccountNotifications() {
                   </div>
                 </div>
 
+                {rutaRemitente ? (
+                  <button
+                    type="button"
+                    onClick={() => navigate(rutaRemitente)}
+                    className="bg-[#f0f9ff] border border-[#bae6fd] text-[#0284c7] rounded-2xl px-4 py-3 text-xs font-bold hover:bg-[#e0f2fe] transition flex items-center justify-between gap-3 cursor-pointer text-left"
+                  >
+                    <span className="flex items-center gap-2">
+                      <span>{detalleMensaje.remitente_rol === 'fundacion' ? '🏛️' : '🙋'}</span>
+                      Ver perfil {detalleMensaje.remitente_rol === 'fundacion' ? 'de la fundación' : 'del voluntario'} remitente
+                    </span>
+                    <span>➔</span>
+                  </button>
+                ) : (
+                  <p className="text-[11px] text-[#94a3b8] leading-relaxed">
+                    El remitente no había iniciado sesión al enviar el mensaje, por eso no tiene un perfil vinculado.
+                  </p>
+                )}
+
                 <div className="text-[11px] text-[#64748b] font-medium flex justify-between items-center border-t border-[#f1f5f9] pt-3">
                   <span>Recibido: {new Date(detalleMensaje.created_at).toLocaleString('es-ES', { dateStyle: 'medium', timeStyle: 'short' })}</span>
                 </div>
@@ -430,11 +593,11 @@ export function AccountNotifications() {
               </div>
             )}
 
-            <div className="flex justify-end gap-3 pt-2">
+            <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 pt-2">
               {detalleMensaje?.email_remitente && (
                 <a 
                   href={`mailto:${detalleMensaje.email_remitente}?subject=Re: ${encodeURIComponent(detalleMensaje.tipo_consulta || 'Consulta')}`}
-                  className="bg-[#e0f2fe] text-[#0284c7] px-4 py-2.5 rounded-xl text-xs font-bold hover:bg-[#bae6fd] transition flex items-center gap-2"
+                  className="bg-[#e0f2fe] text-[#0284c7] px-4 py-2.5 rounded-xl text-xs font-bold hover:bg-[#bae6fd] transition flex items-center justify-center gap-2"
                 >
                   ✉️ Responder por email
                 </a>
@@ -448,6 +611,63 @@ export function AccountNotifications() {
               </button>
             </div>
 
+          </div>
+        </div>
+      )}
+
+      {/* Confirmación de aviso masivo */}
+      {confirmarAviso && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-2xl border border-[#e2e8f0] flex flex-col gap-4">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl shrink-0 bg-red-100 text-red-600">🚨</div>
+              <div>
+                <span className="text-[11px] font-bold text-[#dc2626] uppercase tracking-wide">Confirmar envío</span>
+                <h3 className="text-lg font-extrabold text-[#071d37] leading-tight">{avisoTitulo.trim()}</h3>
+              </div>
+            </div>
+            <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded-2xl p-4 max-h-[30vh] overflow-y-auto">
+              <p className="text-xs text-[#334155] leading-relaxed whitespace-pre-wrap break-words">{avisoMensaje.trim()}</p>
+            </div>
+            <p className="text-xs text-[#64748b]">
+              Se enviará a <span className="font-bold text-[#071d37]">{destinatariosAviso}</span> voluntario{destinatariosAviso === 1 ? '' : 's'}. Esta acción no se puede deshacer.
+            </p>
+            <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 pt-1">
+              <button
+                type="button"
+                onClick={() => setConfirmarAviso(false)}
+                disabled={enviandoAviso}
+                className="bg-gray-100 text-[#334155] px-5 py-2.5 rounded-xl text-xs font-bold hover:bg-gray-200 transition cursor-pointer disabled:opacity-50"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={enviarAvisoMasivo}
+                disabled={enviandoAviso}
+                className="bg-[#dc2626] text-white px-5 py-2.5 rounded-xl text-xs font-bold hover:bg-[#b91c1c] transition shadow-sm cursor-pointer disabled:opacity-60"
+              >
+                {enviandoAviso ? 'Enviando...' : 'Sí, enviar aviso'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Resultado / errores */}
+      {resultadoModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-xl flex flex-col items-center text-center">
+            <span className="text-4xl mb-3">{resultadoModal.isError ? '⚠️' : '✅'}</span>
+            <h3 className="text-lg font-bold text-[#071d37] mb-2">{resultadoModal.title}</h3>
+            <p className="text-xs text-[#64748b] mb-6">{resultadoModal.message}</p>
+            <button
+              type="button"
+              onClick={() => setResultadoModal(null)}
+              className="w-full bg-[#005684] text-white py-2.5 rounded-xl text-xs font-bold hover:bg-[#00456a] transition cursor-pointer"
+            >
+              Entendido
+            </button>
           </div>
         </div>
       )}

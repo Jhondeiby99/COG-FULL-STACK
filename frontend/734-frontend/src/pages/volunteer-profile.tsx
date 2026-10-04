@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { Header } from '../components/Header.tsx';
 import { Footer } from '../components/Footer.tsx';
+import { RatingForm } from '../components/RatingForm';
 import * as Icons from "../assets/icons/index.ts";
 
 export function VolunteerProfile() {
@@ -74,8 +75,18 @@ export function VolunteerProfile() {
   }, [id]);
 
   // Cálculo dinámico de promedio de estrellas
+  const recargarOpiniones = async () => {
+    if (!voluntario?.id) return;
+    const { data } = await supabase
+      .from('resenas')
+      .select('*')
+      .eq('voluntario_id', voluntario.id)
+      .order('created_at', { ascending: false });
+    if (data) setOpiniones(data);
+  };
+
   const avgRating = useMemo(() => {
-    if (!opiniones || opiniones.length === 0) return '5.0';
+    if (!opiniones || opiniones.length === 0) return '—';
     const sum = opiniones.reduce((acc, curr) => acc + (curr.rating || 5), 0);
     return (sum / opiniones.length).toFixed(1);
   }, [opiniones]);
@@ -471,18 +482,19 @@ const handleContactSubmit = async (e: React.FormEvent) => {
                     <span className="text-xl">⭐</span>
                     <div>
                       <h2 className="m-0 text-xl font-extrabold text-[#0f2a3f]">Calificaciones y Opiniones</h2>
-                      <p className="text-[13px] font-medium text-[#64748b] mt-0.5">Evaluaciones de directores y coordinadores de fundaciones aliadas.</p>
+                      <p className="text-[13px] font-medium text-[#64748b] mt-0.5">Evaluaciones de fundaciones y usuarios registrados en la plataforma.</p>
                     </div>
                   </div>
                   <div className="text-right">
                     <div className="text-3xl font-black text-[#0f2a3f]">
                       {avgRating} <span className="text-[#f59e0b] text-2xl">★</span>
                     </div>
-                    <p className="text-[11px] font-bold text-[#64748b]">Basado en {opiniones.length} reseñas</p>
+                    <p className="text-[11px] font-bold text-[#64748b]">Basado en {opiniones.length} reseña{opiniones.length === 1 ? '' : 's'}</p>
                   </div>
                 </div>
 
                 <div className="flex flex-col gap-5">
+                  {voluntario?.id && <RatingForm voluntarioId={voluntario.id} onChange={recargarOpiniones} />}
                   {opiniones.length === 0 ? (
                     <p className="text-sm text-gray-500">Este voluntario aún no ha recibido reseñas.</p>
                   ) : (

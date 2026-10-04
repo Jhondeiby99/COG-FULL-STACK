@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { Header } from '../components/Header.tsx';
 import { Footer } from '../components/Footer.tsx';
+import { RatingForm } from '../components/RatingForm';
 import * as Icons from "../assets/icons/index.ts";
 
 const PRIORITY_STYLES = {
@@ -92,8 +93,18 @@ export function FoundationProfile() {
   }, [id]);
 
   // Cálculo dinámico de promedio de estrellas
+  const recargarResenas = async () => {
+    if (!fundacion?.id) return;
+    const { data } = await supabase
+      .from('resenas')
+      .select('*')
+      .eq('fundacion_id', fundacion.id)
+      .order('created_at', { ascending: false });
+    if (data) setResenas(data);
+  };
+
   const avgRating = useMemo(() => {
-    if (!resenas || resenas.length === 0) return '5.0';
+    if (!resenas || resenas.length === 0) return '—';
     const sum = resenas.reduce((acc, curr) => acc + (curr.rating || 5), 0);
     return (sum / resenas.length).toFixed(1);
   }, [resenas]);
@@ -276,7 +287,7 @@ export function FoundationProfile() {
             {/* Estadísticas Reales */}
             <div style={{ marginBottom: '2.5rem' }} className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
               <Stat label="Trayectoria" value={fundacion.anos_operacion?.toString() || "0"} unit="años continuos" hint="Operación certificada" icon={Icons.TrayectoriaIcon} />
-              <Stat label="Población Activa" value={fundacion.familias_acompanadas?.toString() || "0"} unit="beneficiarios" hint="En territorio" hintColor="text-[#10b981]" icon={Icons.PersonsIcon} />
+              <Stat label="Población Activa" value={fundacion.cantidad_beneficiarios?.toString() || fundacion.familias_acompanadas?.toString() || "0"} unit="beneficiarios" hint="En territorio" hintColor="text-[#10b981]" icon={Icons.PersonsIcon} />
               <Stat label="Reputación Social" value={avgRating} unit="⭐⭐⭐⭐⭐" hint={`${resenas.length} opiniones auditadas`} icon={Icons.StarIcon} />
               <Stat label="Efectividad" value={fundacion.necesidades_resueltas?.toString() || "0"} unit="necesidades resueltas" hint="100% rendición verificada" hintColor="text-[#005684] font-bold" icon={Icons.CheckVerifyIcon} />
             </div>
@@ -379,6 +390,7 @@ export function FoundationProfile() {
                     </div>
                   </div>
                   <div className="!flex !flex-col !gap-6">
+                    {fundacion?.id && <RatingForm fundacionId={fundacion.id} onChange={recargarResenas} />}
                     {resenas.length === 0 ? (
                        <p className="text-sm text-gray-500">Aún no hay reseñas registradas para esta fundación.</p>
                     ) : (
@@ -670,14 +682,19 @@ function TransparencyRing({ value }: { value: number }) {
 }
 
 function NeedCard({ need, onSupport }: { need: any; onSupport: (msg: string) => void }) {
+  const isResolved = need.estado === 'resuelta' || need.estado === 'completada';
   const style = PRIORITY_STYLES[need.prioridad as keyof typeof PRIORITY_STYLES] || PRIORITY_STYLES.media;
   
   return (
     <article className="relative overflow-hidden rounded-xl border border-[#e2e8f0] bg-white p-5 shadow-sm transition hover:shadow-md">
-      <span className={`absolute inset-x-0 top-0 h-1.5 ${style.dot}`} />
+      <span className={`absolute inset-x-0 top-0 h-1.5 ${isResolved ? 'bg-[#10b981]' : style.dot}`} />
       <div className="mb-3 mt-1 flex items-center justify-between gap-2">
-        <span className={`rounded-full px-3 py-1 text-[11px] font-bold uppercase tracking-wide ${style.className}`}>{style.label}</span>
-        <span className="text-xs font-semibold text-[#94a3b8]">⏱️ Reciente</span>
+        <span className={`rounded-full px-3 py-1 text-[11px] font-bold uppercase tracking-wide ${isResolved ? 'bg-[#dcfce7] text-[#166534]' : style.className}`}>
+          {isResolved ? 'Necesidad Resuelta' : style.label}
+        </span>
+        <span className="text-xs font-semibold text-[#94a3b8]">
+          {isResolved ? '✅ Completada' : '⏱️ Reciente'}
+        </span>
       </div>
       <h3 className="m-0 text-base font-extrabold text-[#0f2a3f] leading-snug">{need.titulo}</h3>
       <p className="mt-2 mb-4 text-sm leading-relaxed text-[#4a5568]">{need.descripcion}</p>
@@ -685,10 +702,10 @@ function NeedCard({ need, onSupport }: { need: any; onSupport: (msg: string) => 
       <div className="rounded-xl bg-[#f8fafc] border border-[#f1f5f9] p-4">
         <div className="mb-2.5 flex justify-between text-xs font-bold text-[#475569]">
           <span>Categoría: <span className="text-[#005684]">{need.categoria || 'General'}</span></span>
-          <span>Recaudado: {need.porcentaje_recaudado || 0}%</span>
+          <span>Recaudado: {isResolved ? 100 : (need.porcentaje_recaudado || 0)}%</span>
         </div>
         <div className="h-2 overflow-hidden rounded-full bg-[#e2e8f0]">
-          <div className={`h-full rounded-full ${style.bar}`} style={{ width: `${Math.min(need.porcentaje_recaudado || 0, 100)}%` }} />
+          <div className={`h-full rounded-full ${isResolved ? 'bg-[#10b981]' : style.bar}`} style={{ width: `${isResolved ? 100 : Math.min(need.porcentaje_recaudado || 0, 100)}%` }} />
         </div>
         <p className="mt-2 mb-0 text-right text-xs font-semibold text-[#64748b]">{need.meta_texto || 'Sin meta especificada'}</p>
       </div>
@@ -697,13 +714,15 @@ function NeedCard({ need, onSupport }: { need: any; onSupport: (msg: string) => 
         <span className="flex items-center gap-1.5 text-xs font-extrabold text-[#047857]">
           <img src={Icons.IconVerify} alt="Verificado" className="size-3.5" /> Verificada
         </span>
-        <button
-          type="button"
-          onClick={() => onSupport(`Deseo apoyar la necesidad: "${need.titulo}"`)}
-          className="rounded-full bg-[#005684] px-5 py-2 text-xs font-bold text-white shadow-sm transition hover:bg-[#00456a]"
-        >
-          Apoyar esta necesidad →
-        </button>
+        {!isResolved && (
+          <button
+            type="button"
+            onClick={() => onSupport(`Deseo apoyar la necesidad: "${need.titulo}"`)}
+            className="rounded-full bg-[#005684] px-5 py-2 text-xs font-bold text-white shadow-sm transition hover:bg-[#00456a]"
+          >
+            Apoyar esta necesidad →
+          </button>
+        )}
       </div>
     </article>
   );
