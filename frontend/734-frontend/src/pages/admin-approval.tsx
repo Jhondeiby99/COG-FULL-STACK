@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { DialogModal } from '../components/DialogModal';
 
@@ -48,8 +49,16 @@ export function AdminApproval() {
           .order('fecha_aprobacion', { ascending: false })
       ]);
 
+      // Nombre real del administrador que aprobó cada fundación
+      const idsAprobadores = [...new Set((dbAprobadas || []).map(f => f.aprobado_por).filter(Boolean))];
+      const nombres = new Map<string, string>();
+      if (idsAprobadores.length) {
+        const { data: admins } = await supabase.from('administradores').select('id, nombre_completo').in('id', idsAprobadores);
+        (admins || []).forEach(a => nombres.set(a.id, a.nombre_completo));
+      }
+
       setPendientes(dbPendientes || []);
-      setAprobadas(dbAprobadas || []);
+      setAprobadas((dbAprobadas || []).map(f => ({ ...f, aprobado_por_nombre: f.aprobado_por ? nombres.get(f.aprobado_por) || null : null })));
     } catch (error) {
       console.error('Error al cargar fundaciones:', error);
     } finally {
@@ -363,12 +372,15 @@ export function AdminApproval() {
 
                <div className="flex items-center justify-between sm:justify-end gap-6 w-full sm:w-auto">
                   <div className="text-left sm:text-right">
-                    <p className="text-[10px] font-semibold text-[#071d37]">Aprobado por {fund.aprobado_por_nombre || 'Elena R.'}</p>
-                    <p className="text-[10px] text-[#64748b]">{formatFecha(fund.fecha_aprobacion, 'Hoy')}</p>
+                    <p className="text-[10px] font-semibold text-[#071d37]">Aprobado por {fund.aprobado_por_nombre || 'un administrador'}</p>
+                    <p className="text-[10px] text-[#64748b]">{formatFecha(fund.fecha_aprobacion, 'Fecha no registrada')}</p>
                   </div>
-                  <button className="bg-[#f1f5f9] text-[#475569] px-4 py-1.5 rounded-lg text-[11px] font-bold hover:bg-[#e2e8f0] transition cursor-pointer shrink-0">
-                    Ver Ficha
-                  </button>
+                  <Link
+                    to={`/fundacion/${fund.id}`}
+                    className="bg-[#f1f5f9] text-[#475569] px-4 py-1.5 rounded-lg text-[11px] font-bold hover:bg-[#e2e8f0] transition shrink-0 inline-flex items-center gap-1"
+                  >
+                    Ver Ficha <Icon name="externo" size={12} />
+                  </Link>
                </div>
 
             </div>
