@@ -100,11 +100,11 @@ function App() {
           <Route path="voluntario/editar/:id" element={<EditVolunteerProfile />} />
           <Route path="fundacion/editar/:id" element={<EditFoundationProfile />} />
           <Route path="fundacion/necesidades/:id" element={<ManageNeeds />} />
-          <Route path="admin-dashboard" element={<AdminDashboard />} />
-          <Route path="admin-aprobaciones" element={<AdminApproval />} />
-          <Route path="admin-fundaciones" element={<AdminFoundations />} />
-          <Route path="admin-voluntarios" element={<AdminVolunteers />} />
-          <Route path="admin-necesidades" element={<ManageNeeds global />} />
+          <Route path="admin-dashboard" element={<ProtectedRoute requiredRole="administrador"><AdminDashboard /></ProtectedRoute>} />
+          <Route path="admin-aprobaciones" element={<ProtectedRoute requiredRole="administrador"><AdminApproval /></ProtectedRoute>} />
+          <Route path="admin-fundaciones" element={<ProtectedRoute requiredRole="administrador"><AdminFoundations /></ProtectedRoute>} />
+          <Route path="admin-voluntarios" element={<ProtectedRoute requiredRole="administrador"><AdminVolunteers /></ProtectedRoute>} />
+          <Route path="admin-necesidades" element={<ProtectedRoute requiredRole="administrador"><ManageNeeds global /></ProtectedRoute>} />
           <Route path="admin-notificaciones" element={<AccountNotifications />} />
         </Route>
 
