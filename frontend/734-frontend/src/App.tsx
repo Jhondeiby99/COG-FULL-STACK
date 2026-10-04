@@ -104,6 +104,7 @@ function App() {
           <Route path="admin-aprobaciones" element={<AdminApproval />} />
           <Route path="admin-fundaciones" element={<AdminFoundations />} />
           <Route path="admin-voluntarios" element={<AdminVolunteers />} />
+          <Route path="admin-necesidades" element={<ManageNeeds global />} />
           <Route path="admin-notificaciones" element={<AccountNotifications />} />
         </Route>
 

@@ -527,9 +527,14 @@ export function AdminDashboard() {
                 <strong>Lectura operativa:</strong> {m.necAbiertas} necesidad{m.necAbiertas === 1 ? '' : 'es'} abierta{m.necAbiertas === 1 ? '' : 's'} y una tasa de cumplimiento histórica del <strong>{m.tasaCumplimiento}%</strong>.
               </span>
             </p>
-            <button type="button" onClick={exportarCSV} className="text-[11px] font-bold text-[#005684] hover:underline cursor-pointer shrink-0 text-left print:hidden">
-              Descargar informe detallado →
-            </button>
+            <div className="flex flex-wrap gap-x-4 gap-y-1 shrink-0 print:hidden">
+              <Link to="/dashboard/admin-necesidades" className="text-[11px] font-bold text-[#005684] hover:underline">
+                Gestionar necesidades →
+              </Link>
+              <button type="button" onClick={exportarCSV} className="text-[11px] font-bold text-[#005684] hover:underline cursor-pointer text-left">
+                Descargar informe →
+              </button>
+            </div>
           </div>
         </section>
 

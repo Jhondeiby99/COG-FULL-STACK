@@ -1,11 +1,13 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
+import { NeedFormModal } from '../components/NeedFormModal';
 import {
   type Necesidad,
   porcentajeRecaudo,
   marcarNecesidadResuelta,
   sincronizarNecesidadesResueltas,
+  PRIORIDAD_ESTILOS,
 } from '../lib/necesidades';
 
 interface CanalRecaudo {
@@ -206,7 +208,7 @@ export function EditFoundationProfile() {
   const [confirmando, setConfirmando] = useState(false);
 
   const [canalModal, setCanalModal] = useState({ isOpen: false, isEdit: false, editIndex: -1, tipo: '', detalles: '', titular_nota: '' });
-  const [necesidadModal, setNecesidadModal] = useState({ isOpen: false, titulo: '', meta_texto: '' });
+  const [necesidadModalAbierto, setNecesidadModalAbierto] = useState(false);
 
   const mostrarToast = (msg: string) => {
     setToastMessage(msg);
@@ -725,41 +727,10 @@ export function EditFoundationProfile() {
   };
 
   // ==================== NECESIDADES ====================
-  const saveNecesidadFromModal = async () => {
-    const targetId = foundationId || id;
-    if (!targetId) {
-      setAlertModal({ isOpen: true, title: 'Error', message: 'No hay una fundación vinculada para crear necesidades.', isError: true });
-      return;
-    }
-
-    if (!necesidadModal.titulo.trim()) {
-      setAlertModal({ isOpen: true, title: 'Atención', message: 'El título de la necesidad es obligatorio.', isError: true });
-      return;
-    }
-
-    try {
-      const nueva = {
-        fundacion_id: targetId,
-        titulo: necesidadModal.titulo.trim(),
-        meta_texto: necesidadModal.meta_texto.trim(),
-        porcentaje_recaudado: 0,
-        completada: false
-      };
-
-      const { data, error } = await supabase
-        .from('necesidades')
-        .insert([nueva])
-        .select();
-
-      if (error) throw error;
-      if (data && data.length > 0) {
-        setNecesidades(prev => [data[0], ...prev]);
-        mostrarToast('¡Necesidad añadida correctamente!');
-      }
-      setNecesidadModal({ isOpen: false, titulo: '', meta_texto: '' });
-    } catch (err: any) {
-      setAlertModal({ isOpen: true, title: 'Error', message: 'Error al guardar la necesidad: ' + err.message, isError: true });
-    }
+  const handleNecesidadCreada = (nueva: Necesidad) => {
+    setNecesidadModalAbierto(false);
+    setNecesidades(prev => [nueva, ...prev]);
+    mostrarToast('¡Necesidad publicada en tu perfil!');
   };
 
   const handleDeleteNecesidad = (nec: Necesidad) => {
@@ -1358,7 +1329,7 @@ export function EditFoundationProfile() {
                     <h3 className="text-[11px] font-bold text-[#005684] uppercase tracking-wider flex items-center gap-2">
                         <span className="text-base">📋</span> Necesidades
                     </h3>
-                    <button onClick={() => setNecesidadModal({ isOpen: true, titulo: '', meta_texto: '' })} className="text-[10px] font-bold text-[#005684] hover:bg-[#eef6ff] px-2 py-1 rounded-lg transition flex items-center gap-1 cursor-pointer">
+                    <button onClick={() => setNecesidadModalAbierto(true)} className="text-[10px] font-bold text-[#005684] hover:bg-[#eef6ff] px-2 py-1 rounded-lg transition flex items-center gap-1 cursor-pointer">
                       <span>+</span> Añadir
                     </button>
                   </div>
@@ -1373,22 +1344,28 @@ export function EditFoundationProfile() {
                       necesidades.slice(0, 5).map((nec) => {
                         const pct = porcentajeRecaudo(nec);
                         const isCompleted = !!nec.completada;
+                        const estiloPrioridad = PRIORIDAD_ESTILOS[nec.prioridad || 'media'];
                         return (
                           <div key={nec.id} className={`p-3 rounded-xl flex flex-col gap-2 ${isCompleted ? 'bg-white border border-[#e2e8f0] opacity-70' : 'bg-[#f8fafc] border border-[#e2e8f0]'}`}>
                             <div className="flex justify-between items-start gap-2">
                               <div className="flex-1 min-w-0">
                                 <p className={`text-[11px] font-bold flex items-center gap-1 ${isCompleted ? 'text-[#64748b] line-through' : 'text-[#071d37]'}`}>
-                                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${isCompleted ? 'bg-[#10b981]' : nec.prioridad === 'alta' ? 'bg-red-500' : nec.prioridad === 'baja' ? 'bg-[#047857]' : 'bg-[#0ea5e9]'}`}></span>
+                                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${isCompleted ? 'bg-[#10b981]' : estiloPrioridad.barra}`}></span>
                                   <span className="truncate">{nec.titulo}</span>
                                 </p>
-                                <p className="text-[9px] text-[#64748b] mt-0.5">{nec.meta_texto || 'Sin especificación'}</p>
+                                <div className="flex flex-wrap items-center gap-1.5 mt-1">
+                                  {!isCompleted && (
+                                    <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded-full border ${estiloPrioridad.chip}`}>{estiloPrioridad.label}</span>
+                                  )}
+                                  <span className="text-[9px] text-[#64748b] truncate">{nec.meta_texto || 'Sin meta especificada'}</span>
+                                </div>
                               </div>
                               <button onClick={() => handleDeleteNecesidad(nec)} title="Eliminar necesidad" className="text-[#94a3b8] hover:text-red-500 text-xs cursor-pointer">🗑️</button>
                             </div>
 
                             <div className="flex items-center gap-2 mt-1">
                               <div className="flex-1 bg-gray-200 h-1.5 rounded-full overflow-hidden">
-                                <div className={`h-full rounded-full ${isCompleted ? 'bg-[#10b981]' : 'bg-[#0ea5e9]'}`} style={{ width: `${pct}%` }}></div>
+                                <div className={`h-full rounded-full ${isCompleted ? 'bg-[#10b981]' : estiloPrioridad.barra}`} style={{ width: `${pct}%` }}></div>
                               </div>
                               <span className="text-[9px] font-bold text-[#475569] w-8 text-right">{pct}%</span>
                             </div>
@@ -1530,27 +1507,13 @@ export function EditFoundationProfile() {
           </div>
         )}
 
-        {/* MODAL: Crear Necesidad */}
-        {necesidadModal.isOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-            <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-xl">
-              <h3 className="text-lg font-bold text-[#071d37] mb-4">Añadir Necesidad</h3>
-              <div className="flex flex-col gap-4">
-                <div>
-                  <label className="text-[10px] font-extrabold text-[#94a3b8] uppercase block mb-1">Título de la necesidad *</label>
-                  <input type="text" value={necesidadModal.titulo} onChange={e => setNecesidadModal({...necesidadModal, titulo: e.target.value})} placeholder="Ej: Donación de Alimentos" className="w-full bg-[#f8fafc] border border-[#e2e8f0] focus:border-[#005684] rounded-xl px-3 py-2 text-xs font-semibold outline-none" />
-                </div>
-                <div>
-                  <label className="text-[10px] font-extrabold text-[#94a3b8] uppercase block mb-1">Meta o Descripción Breve</label>
-                  <input type="text" value={necesidadModal.meta_texto} onChange={e => setNecesidadModal({...necesidadModal, meta_texto: e.target.value})} placeholder="Ej: Meta: $4.500.000 COP" className="w-full bg-[#f8fafc] border border-[#e2e8f0] focus:border-[#005684] rounded-xl px-3 py-2 text-xs font-semibold outline-none" />
-                </div>
-              </div>
-              <div className="flex gap-3 w-full mt-6">
-                <button onClick={() => setNecesidadModal({ ...necesidadModal, isOpen: false })} className="flex-1 bg-gray-100 text-gray-700 py-2.5 rounded-xl text-xs font-bold hover:bg-gray-200 transition">Cancelar</button>
-                <button onClick={saveNecesidadFromModal} className="flex-1 bg-[#005684] text-white py-2.5 rounded-xl text-xs font-bold hover:bg-[#00456a] transition">Publicar Necesidad</button>
-              </div>
-            </div>
-          </div>
+        {/* MODAL: Crear Necesidad (mismo formulario que Gestionar necesidades) */}
+        {necesidadModalAbierto && (foundationId || id) && (
+          <NeedFormModal
+            fundacionId={(foundationId || id) as string}
+            onClose={() => setNecesidadModalAbierto(false)}
+            onSaved={handleNecesidadCreada}
+          />
         )}
     </div>
   );

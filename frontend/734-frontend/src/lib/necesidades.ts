@@ -16,6 +16,15 @@ export interface Necesidad {
   created_at?: string | null;
 }
 
+// Opciones y estilos compartidos por los formularios y tarjetas de necesidades
+export const CATEGORIAS_NECESIDAD = ['Alimentos', 'Salud', 'Educación', 'Vivienda', 'Ropa y abrigo', 'Logística', 'Voluntariado', 'Dinero', 'Otro'];
+
+export const PRIORIDAD_ESTILOS: Record<PrioridadNecesidad, { label: string; chip: string; barra: string }> = {
+  alta: { label: 'Prioridad alta', chip: 'bg-[#fef2f2] text-[#b91c1c] border-[#fecaca]', barra: 'bg-[#ef4444]' },
+  media: { label: 'Prioridad media', chip: 'bg-[#fffbeb] text-[#b45309] border-[#fde68a]', barra: 'bg-[#f59e0b]' },
+  baja: { label: 'Prioridad baja', chip: 'bg-[#eff6ff] text-[#1d4ed8] border-[#bfdbfe]', barra: 'bg-[#3b82f6]' },
+};
+
 // Porcentaje de recaudo normalizado: entero entre 0 y 100. Una necesidad resuelta siempre es 100%.
 export function porcentajeRecaudo(nec: Pick<Necesidad, 'porcentaje_recaudado' | 'completada'>): number {
   if (nec.completada) return 100;

@@ -240,6 +240,7 @@ export function DashboardLayout() {
                 <Link to="/dashboard/admin-aprobaciones" className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition ${isActive('/admin-aprobaciones') ? 'bg-[#005684] text-white shadow-sm' : 'text-[#64748b] hover:bg-gray-50'}`}><span>🗂️</span> Aprobaciones</Link>
                 <Link to="/dashboard/admin-fundaciones" className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition ${isActive('/admin-fundaciones') ? 'bg-[#005684] text-white shadow-sm' : 'text-[#64748b] hover:bg-gray-50'}`}><span>🗂️</span> Fundaciones</Link>
                 <Link to="/dashboard/admin-voluntarios" className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition ${isActive('/admin-voluntarios') ? 'bg-[#005684] text-white shadow-sm' : 'text-[#64748b] hover:bg-gray-50'}`}><span>👥</span> Voluntarios</Link>
+                <Link to="/dashboard/admin-necesidades" className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition ${isActive('/admin-necesidades') || (rol === 'administrador' && isActive('/fundacion/necesidades')) ? 'bg-[#005684] text-white shadow-sm' : 'text-[#64748b] hover:bg-gray-50'}`}><span>📋</span> Necesidades</Link>
               </nav>
             </div>
           )}

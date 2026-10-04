@@ -427,6 +427,12 @@ export function AdminFoundations() {
                             <><span className="text-[#ef4444] text-lg leading-none">●</span> Inactivar Fundación</>
                           )}
                         </button>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); setMenuAbiertoId(null); navigate(`/dashboard/fundacion/necesidades/${fund.id}`); }}
+                          className="w-full text-left px-4 py-3 text-xs font-bold transition hover:bg-gray-50 flex items-center gap-2 text-[#475569] border-t border-[#f1f5f9]"
+                        >
+                          <span>📋</span> Gestionar necesidades
+                        </button>
                       </div>
                     )}
                   </div>
