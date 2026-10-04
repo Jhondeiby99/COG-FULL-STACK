@@ -666,23 +666,8 @@ function SidebarCard({ title, children }: any) {
   );
 }
 
-function TransparencyRing({ value }: { value: number }) {
-  const radius = 32;
-  const circumference = 2 * Math.PI * radius;
-  const offset = circumference - (value / 100) * circumference;
-  return (
-    <div className="relative size-[80px] shrink-0">
-      <svg viewBox="0 0 80 80" className="size-[80px] -rotate-90 drop-shadow-sm">
-        <circle cx="40" cy="40" r={radius} fill="none" stroke="#e2e8f0" strokeWidth="8" />
-        <circle cx="40" cy="40" r={radius} fill="none" stroke="#005684" strokeWidth="8" strokeLinecap="round" strokeDasharray={circumference} strokeDashoffset={offset} className="transition-all duration-1000 ease-out" />
-      </svg>
-      <span className="absolute inset-0 flex items-center justify-center text-[15px] font-black text-[#0f2a3f]">{value}%</span>
-    </div>
-  );
-}
-
 function NeedCard({ need, onSupport }: { need: any; onSupport: (msg: string) => void }) {
-  const isResolved = need.estado === 'resuelta' || need.estado === 'completada';
+  const isResolved = need.completada === true;
   const style = PRIORITY_STYLES[need.prioridad as keyof typeof PRIORITY_STYLES] || PRIORITY_STYLES.media;
   
   return (
