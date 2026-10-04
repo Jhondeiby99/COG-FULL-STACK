@@ -21,6 +21,7 @@ export function VolunteerProfile() {
   const [modalMode, setModalMode] = useState<'contacto' | 'invitacion'>('contacto');
   const [contactForm, setContactForm] = useState({ nombre: '', email: '', mensaje: '' });
   const [contactStatus, setContactStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+  const [contactError, setContactError] = useState<string | null>(null);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -181,6 +182,8 @@ const handleContactSubmit = async (e: React.FormEvent) => {
     }, 2000);
   } catch (err) {
     console.error('Error al enviar mensaje:', err);
+    const e = err as { code?: string; message?: string };
+    setContactError(e.code === 'P0001' && e.message ? e.message : null);
     setContactStatus('error');
   }
 };
@@ -706,7 +709,7 @@ const handleContactSubmit = async (e: React.FormEvent) => {
               )}
               {contactStatus === 'error' && (
                 <p className="text-xs font-bold text-red-600 text-center">
-                  Ocurrió un error al enviar la solicitud.
+                  {contactError || 'Ocurrió un error al enviar la solicitud.'}
                 </p>
               )}
 

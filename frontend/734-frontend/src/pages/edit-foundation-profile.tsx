@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { NeedFormModal } from '../components/NeedFormModal';
+import { subirImagen, eliminarImagen } from '../lib/imagenes';
 import { DocumentosFundacion } from '../components/DocumentosFundacion';
 import {
   type Necesidad,
@@ -111,35 +112,6 @@ const numeroATexto = (valor: number | string | null | undefined) =>
 
 // Solo dígitos, sin puntos, comas ni signos
 const soloDigitos = (valor: string, maxLength: number) => valor.replace(/\D/g, '').slice(0, maxLength);
-
-// Redimensiona y comprime la imagen en el navegador para no guardar archivos pesados en la BD
-function comprimirImagen(file: File, maxLado: number, calidad = 0.85): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onerror = () => reject(new Error('No se pudo leer el archivo.'));
-    reader.onload = () => {
-      const img = new Image();
-      img.onerror = () => reject(new Error('El archivo no es una imagen válida.'));
-      img.onload = () => {
-        const escala = Math.min(1, maxLado / Math.max(img.width, img.height));
-        const canvas = document.createElement('canvas');
-        canvas.width = Math.round(img.width * escala);
-        canvas.height = Math.round(img.height * escala);
-        const ctx = canvas.getContext('2d');
-        if (!ctx) {
-          resolve(reader.result as string);
-          return;
-        }
-        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-        // PNG conserva transparencia (logos); el resto se convierte a JPEG
-        const tipo = file.type === 'image/png' ? 'image/png' : 'image/jpeg';
-        resolve(canvas.toDataURL(tipo, calidad));
-      };
-      img.src = reader.result as string;
-    };
-    reader.readAsDataURL(file);
-  });
-}
 
 export function EditFoundationProfile() {
   const navigate = useNavigate();
@@ -498,11 +470,13 @@ export function EditFoundationProfile() {
     e.target.value = '';
     if (!file || !validarArchivoImagen(file)) return;
 
+    const duenoId = foundationId || id;
+    if (!duenoId) return;
     setProcesandoImagen(type);
     try {
       const imagen = type === 'portada'
-        ? await comprimirImagen(file, 1920, 0.85)
-        : await comprimirImagen(file, 600, 0.9);
+        ? await subirImagen(duenoId, 'portada', file, 1920, 0.85)
+        : await subirImagen(duenoId, 'logo', file, 600, 0.9);
       if (type === 'portada') {
         setPortadaUrl(imagen);
       } else {
@@ -540,7 +514,7 @@ export function EditFoundationProfile() {
     try {
       const filas = await Promise.all(aSubir.map(async (file) => ({
         fundacion_id: targetId,
-        imagen_url: await comprimirImagen(file, 1600, 0.82),
+        imagen_url: await subirImagen(targetId, 'galeria', file, 1600, 0.82),
         alt_texto: `Actividad de ${sigla || razonSocial || 'la fundación'}`,
       })));
 
@@ -574,6 +548,7 @@ export function EditFoundationProfile() {
           return;
         }
         setGaleria(prev => prev.filter(f => f.id !== foto.id));
+        await eliminarImagen(foto.imagen_url);
         mostrarToast('Fotografía eliminada.');
       },
     });

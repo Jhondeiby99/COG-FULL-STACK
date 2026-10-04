@@ -1,26 +1,28 @@
-import { useEffect, useState } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { supabase } from './lib/supabase';
 import { Home } from './pages/home';
-import { Login } from './pages/login';
-import { FoundationProfile } from './pages/foundation-profile';
-import { SignUp } from './pages/sign-up';
-import { VolunteerProfile } from './pages/volunteer-profile';
-import { Explore } from './pages/explore'; // <-- IMPORTACIÓN NUEVA
 import './styles/global.css';
 import './index.css';
-import { AccountSettings } from './pages/account-settings';
-import { DashboardLayout } from './components/DashboardLayout';
-import { EditVolunteerProfile } from './pages/edit-volunteer-profile';
-import { EditFoundationProfile } from './pages/edit-foundation-profile';
-import { AdminDashboard } from './pages/admin-dashboard';
-import { AdminApproval } from './pages/admin-approval';
-import { AdminFoundations } from './pages/admin-foundations';
-import { AdminVolunteers } from './pages/admin-volunteers';
-import { AccountNotifications } from './pages/account-notifications';
-import { ForgotPassword } from './pages/ForgotPassword';
-import { ResetPassword } from './pages/ResetPassword';
-import { ManageNeeds } from './pages/manage-needs';
+
+// Cada pantalla se descarga solo cuando se visita (el inicio se carga de inmediato)
+const Login = lazy(() => import('./pages/login').then(m => ({ default: m.Login })));
+const FoundationProfile = lazy(() => import('./pages/foundation-profile').then(m => ({ default: m.FoundationProfile })));
+const SignUp = lazy(() => import('./pages/sign-up').then(m => ({ default: m.SignUp })));
+const VolunteerProfile = lazy(() => import('./pages/volunteer-profile').then(m => ({ default: m.VolunteerProfile })));
+const Explore = lazy(() => import('./pages/explore').then(m => ({ default: m.Explore })));
+const AccountSettings = lazy(() => import('./pages/account-settings').then(m => ({ default: m.AccountSettings })));
+const DashboardLayout = lazy(() => import('./components/DashboardLayout').then(m => ({ default: m.DashboardLayout })));
+const EditVolunteerProfile = lazy(() => import('./pages/edit-volunteer-profile').then(m => ({ default: m.EditVolunteerProfile })));
+const EditFoundationProfile = lazy(() => import('./pages/edit-foundation-profile').then(m => ({ default: m.EditFoundationProfile })));
+const AdminDashboard = lazy(() => import('./pages/admin-dashboard').then(m => ({ default: m.AdminDashboard })));
+const AdminApproval = lazy(() => import('./pages/admin-approval').then(m => ({ default: m.AdminApproval })));
+const AdminFoundations = lazy(() => import('./pages/admin-foundations').then(m => ({ default: m.AdminFoundations })));
+const AdminVolunteers = lazy(() => import('./pages/admin-volunteers').then(m => ({ default: m.AdminVolunteers })));
+const AccountNotifications = lazy(() => import('./pages/account-notifications').then(m => ({ default: m.AccountNotifications })));
+const ForgotPassword = lazy(() => import('./pages/ForgotPassword').then(m => ({ default: m.ForgotPassword })));
+const ResetPassword = lazy(() => import('./pages/ResetPassword').then(m => ({ default: m.ResetPassword })));
+const ManageNeeds = lazy(() => import('./pages/manage-needs').then(m => ({ default: m.ManageNeeds })));
 
 function ProtectedRoute({ children, requiredRole }: { children: React.ReactNode; requiredRole?: string }) {
   const [authStatus, setAuthStatus] = useState<{ loading: boolean; session: boolean; role?: string }>({
@@ -80,9 +82,18 @@ function ProtectedRoute({ children, requiredRole }: { children: React.ReactNode;
   return <>{children}</>;
 }
 
+function CargandoPantalla() {
+  return (
+    <div className="min-h-svh flex items-center justify-center bg-[#f8fafc]">
+      <div className="w-8 h-8 border-[3px] border-[#005684] border-t-transparent rounded-full animate-spin" aria-label="Cargando" />
+    </div>
+  );
+}
+
 function App() {
   return (
     <BrowserRouter basename={import.meta.env.BASE_URL}>
+      <Suspense fallback={<CargandoPantalla />}>
       <Routes>
         {/* RUTAS PÚBLICAS */}
         <Route path="/" element={<Home />} />
@@ -110,6 +121,7 @@ function App() {
 
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
+      </Suspense>
     </BrowserRouter>
   );
 }

@@ -45,6 +45,7 @@ export function FoundationProfile() {
   // Estados interactivos
   const [formData, setFormData] = useState({ nombre: '', email: '', tipo: 'donaciones', mensaje: '' });
   const [msgStatus, setMsgStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+  const [msgError, setMsgError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
@@ -167,6 +168,7 @@ export function FoundationProfile() {
     }]);
 
     if (error) {
+      setMsgError(error.code === 'P0001' ? error.message : null);
       setMsgStatus('error');
     } else {
       setMsgStatus('success');
@@ -519,7 +521,7 @@ export function FoundationProfile() {
                     )}
                     {msgStatus === 'error' && (
                       <p className="text-xs font-bold text-red-600 text-center">
-                        Hubo un error al enviar el mensaje.
+                        {msgError || 'Hubo un error al enviar el mensaje.'}
                       </p>
                     )}
 

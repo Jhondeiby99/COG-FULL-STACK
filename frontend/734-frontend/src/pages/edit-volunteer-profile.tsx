@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { DialogModal } from '../components/DialogModal';
+import { subirImagen } from '../lib/imagenes';
 
 import { Icon } from '../components/Icon';
 import { iconoDesdeEmoji } from '../lib/iconos';
@@ -338,16 +339,28 @@ export function EditVolunteerProfile() {
     markUnsaved();
   };
 
-  const handleAvatarUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
+  const [subiendoAvatar, setSubiendoAvatar] = useState(false);
 
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setAvatarUrl(reader.result as string);
+  // La foto se sube comprimida a Storage; en el perfil solo se guarda su URL
+  const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    const duenoId = volunteerId || id;
+    if (!file || !duenoId) return;
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+      setAviso({ title: 'Formato no válido', message: `"${file.name}" no es una imagen. Usa JPG, PNG o WEBP.` });
+      return;
+    }
+    setSubiendoAvatar(true);
+    try {
+      setAvatarUrl(await subirImagen(duenoId, 'avatar', file, 600, 0.88));
       markUnsaved();
-    };
-    reader.readAsDataURL(file);
+    } catch (err) {
+      const e = err as { message?: string };
+      setAviso({ title: 'No se pudo subir la foto', message: e.message || 'Intenta con otra imagen.' });
+    } finally {
+      setSubiendoAvatar(false);
+    }
   };
 
   const handleCertUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -607,20 +620,26 @@ export function EditVolunteerProfile() {
                       ) : (
                         <span className="text-3xl text-slate-400"><Icon name="usuario" size="1.1em" /></span>
                       )}
+                      {subiendoAvatar && (
+                        <div className="absolute inset-0 bg-white/70 flex items-center justify-center text-[#005684]">
+                          <Icon name="cargando" size={22} className="animate-spin" />
+                        </div>
+                      )}
                     </div>
                     {/* INPUT OCULTO DE FOTO */}
                     <input 
                       type="file" 
-                      accept="image/*" 
+                      accept="image/png,image/jpeg,image/webp"
                       ref={avatarInputRef} 
                       className="hidden" 
                       onChange={handleAvatarUpload} 
                     />
-                    <button 
+                    <button
                       onClick={() => avatarInputRef.current?.click()}
-                      className="text-[10px] font-bold text-[#005684] hover:underline cursor-pointer"
+                      disabled={subiendoAvatar}
+                      className="text-[10px] font-bold text-[#005684] hover:underline cursor-pointer disabled:opacity-50"
                     >
-                      Cambiar Foto
+                      {subiendoAvatar ? 'Subiendo...' : 'Cambiar Foto'}
                     </button>
                   </div>
                   

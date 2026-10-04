@@ -4,6 +4,8 @@ import { supabase } from '../lib/supabase';
 
 import { Icon } from '../components/Icon';
 interface FundacionDB {
+  familias_acompanadas?: number | null;
+  telefono_whatsapp?: string | null;
   id: string;
   nombre_legal?: string | null;
   nit: string;
@@ -14,13 +16,7 @@ interface FundacionDB {
   area_enfoque?: string | null;
   estado?: string | null;
   fecha_solicitud?: string | null;
-  coordinador?: string | null;
   telefono?: string | null;
-  beneficiarios_mes?: number | null;
-  demandas_activas?: number | null;
-  metric_label?: string | null;
-  metric_value?: string | null;
-  metric_sub?: string | null;
   logo_url?: string | null;
 }
 
@@ -28,7 +24,7 @@ interface FundacionVista {
   id: string;
   idIniciales: string;
   name: string;
-  status: 'Activa' | 'En Revisión' | 'Inactiva';
+  status: 'Activa' | 'En Revisión' | 'Inactiva' | 'Rechazada';
   nit: string;
   location: string;
   category: string;
@@ -43,48 +39,10 @@ interface FundacionVista {
   deptoRaw: string;
 }
 
-const FALLBACK_FUNDACIONES: FundacionVista[] = [
-  { 
-    id: '1',
-    idIniciales: 'HE', 
-    name: 'Fundación Huellas de Esperanza', 
-    status: 'Activa', 
-    nit: '900.824.112-4', 
-    location: 'Bogotá D.C., Cundinamarca', 
-    category: 'Nutrición Infantil', 
-    metricLabel: 'Beneficiarios', 
-    metricValue: '450', 
-    metricSub: 'niños/mes', 
-    demands: 3, 
-    contact: '+57 (1) 682-9011', 
-    avatarBg: 'bg-[#e0f2fe]', 
-    avatarText: 'text-[#0284c7]',
-    causaRaw: 'Nutrición Infantil',
-    deptoRaw: 'Cundinamarca'
-  },
-  { 
-    id: '2',
-    idIniciales: 'SC', 
-    name: 'Fundación Semillas del Chocó', 
-    status: 'Activa', 
-    nit: '818.004.992-1', 
-    location: 'Quibdó, Chocó', 
-    category: 'Agua Potable & Infancia', 
-    metricLabel: 'Beneficiarios', 
-    metricValue: '280', 
-    metricSub: 'niños directos', 
-    demands: 2, 
-    contact: '+57 (4) 671-4490', 
-    avatarBg: 'bg-[#dcfce7]', 
-    avatarText: 'text-[#166534]',
-    causaRaw: 'Agua Potable & Infancia',
-    deptoRaw: 'Chocó'
-  }
-];
-
 export function AdminFoundations() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
+  const [errorCarga, setErrorCarga] = useState<string | null>(null);
   const [fundaciones, setFundaciones] = useState<FundacionVista[]>([]);
   
   // Filtros y Búsqueda
@@ -113,22 +71,27 @@ export function AdminFoundations() {
   const cargarFundaciones = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase
-        .from('fundaciones')
-        .select('*');
+      const [{ data, error }, { data: necesidades }] = await Promise.all([
+        supabase.from('fundaciones').select('*'),
+        supabase.from('necesidades').select('fundacion_id').eq('completada', false),
+      ]);
 
       if (error) throw error;
+      // Necesidades abiertas reales por fundación
+      const abiertas: Record<string, number> = {};
+      (necesidades || []).forEach(n => { abiertas[n.fundacion_id] = (abiertas[n.fundacion_id] || 0) + 1; });
 
       if (data && data.length > 0) {
         const formateadas: FundacionVista[] = data.map((item: FundacionDB, idx: number) => {
           const iniciales = getInitials(item.nombre_legal || 'Fundación');
           const estadoBd = item.estado?.toLowerCase() || 'activa';
           
-          let statusLabel: 'Activa' | 'En Revisión' | 'Inactiva' = 'Activa';
+          let statusLabel: FundacionVista['status'] = 'Activa';
           if (estadoBd === 'inactiva' || estadoBd === 'inactivo') statusLabel = 'Inactiva';
           else if (estadoBd === 'pendiente' || estadoBd === 'en revisión') statusLabel = 'En Revisión';
+          else if (estadoBd === 'rechazada') statusLabel = 'Rechazada';
 
-          const avatarStyles = statusLabel === 'Inactiva'
+          const avatarStyles = statusLabel === 'Inactiva' || statusLabel === 'Rechazada'
             ? { bg: 'bg-[#f1f5f9]', text: 'text-[#64748b]' }
             : statusLabel === 'En Revisión'
             ? { bg: 'bg-[#fee2e2]', text: 'text-[#991b1b]' }
@@ -146,11 +109,11 @@ export function AdminFoundations() {
               ? `${item.ciudad}${item.departamento || item.ubicacion ? `, ${item.departamento || item.ubicacion}` : ''}`
               : item.ubicacion || 'Colombia',
             category: item.area_enfoque || 'Atención Social',
-            metricLabel: item.metric_label || 'Beneficiarios',
-            metricValue: item.metric_value || (item.beneficiarios_mes ? item.beneficiarios_mes.toLocaleString('es-CO') : '350'),
-            metricSub: item.metric_sub || 'personas/mes',
-            demands: item.demandas_activas ?? 1,
-            contact: item.telefono || item.coordinador || '+57 (601) 000-0000',
+            metricLabel: 'Familias',
+            metricValue: (item.familias_acompanadas ?? 0).toLocaleString('es-CO'),
+            metricSub: 'acompañadas',
+            demands: abiertas[item.id] || 0,
+            contact: item.telefono || item.telefono_whatsapp || 'Sin teléfono',
             avatarBg: avatarStyles.bg,
             avatarText: avatarStyles.text,
             causaRaw: item.area_enfoque || 'General',
@@ -160,11 +123,13 @@ export function AdminFoundations() {
 
         setFundaciones(formateadas);
       } else {
-        setFundaciones(FALLBACK_FUNDACIONES);
+        setFundaciones([]);
       }
+      setErrorCarga(null);
     } catch (err) {
       console.error('Error al conectar con la tabla fundaciones:', err);
-      setFundaciones(FALLBACK_FUNDACIONES);
+      setFundaciones([]);
+      setErrorCarga('No se pudieron cargar las fundaciones. Revisa tu conexión e intenta de nuevo.');
     } finally {
       setLoading(false);
     }
@@ -346,7 +311,13 @@ export function AdminFoundations() {
 
       {/* LISTADO */}
       <div className="flex flex-col gap-4 w-full min-w-0">
-        {fundacionesPaginadas.length === 0 ? (
+        {errorCarga ? (
+          <div className="bg-white rounded-2xl border border-[#fecaca] p-8 text-center flex flex-col items-center gap-3">
+            <Icon name="advertencia" size={32} className="text-[#dc2626]" />
+            <p className="text-sm font-bold text-[#071d37]">{errorCarga}</p>
+            <button type="button" onClick={cargarFundaciones} className="bg-[#005684] text-white px-5 py-2 rounded-xl text-xs font-bold hover:bg-[#00456a] transition cursor-pointer">Reintentar</button>
+          </div>
+        ) : fundacionesPaginadas.length === 0 ? (
           <div className="bg-white rounded-3xl p-12 text-center border border-[#e2e8f0] shadow-sm">
             <p className="text-sm font-bold text-[#64748b]">No se encontraron fundaciones con los criterios seleccionados.</p>
           </div>
@@ -361,7 +332,7 @@ export function AdminFoundations() {
                 <div className="flex flex-col min-w-0 flex-1">
                   <div className="flex items-center gap-2 sm:gap-3 mb-1">
                     <h3 className={`text-[14px] sm:text-[15px] font-extrabold truncate ${fund.status === 'Inactiva' ? 'text-gray-500 line-through' : 'text-[#071d37]'}`}>{fund.name}</h3>
-                    <span className={`shrink-0 text-[9px] sm:text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 ${fund.status === 'Activa' ? 'bg-[#dcfce7] text-[#166534]' : fund.status === 'En Revisión' ? 'bg-[#fee2e2] text-[#991b1b]' : 'bg-gray-200 text-gray-700'}`}>
+                    <span className={`shrink-0 text-[9px] sm:text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 ${fund.status === 'Activa' ? 'bg-[#dcfce7] text-[#166534]' : fund.status === 'En Revisión' ? 'bg-[#fffbeb] text-[#b45309]' : fund.status === 'Rechazada' ? 'bg-[#fee2e2] text-[#991b1b]' : 'bg-gray-200 text-gray-700'}`}>
                       <span className="w-1.5 h-1.5 rounded-full bg-current"></span> {fund.status}
                     </span>
                   </div>
@@ -386,7 +357,7 @@ export function AdminFoundations() {
                 <div className="flex flex-col min-w-[80px]">
                   <span className="text-[10px] text-[#64748b] font-semibold mb-1">Demandas</span>
                   <span className="inline-flex items-center justify-center px-2 py-1 rounded-lg text-[10px] sm:text-[11px] font-bold w-fit bg-[#e0f2fe] text-[#0284c7]">
-                      {fund.demands} activas
+                      {fund.demands} abierta{fund.demands === 1 ? '' : 's'}
                   </span>
                 </div>
 
@@ -418,16 +389,26 @@ export function AdminFoundations() {
                         <div className="px-4 py-2 text-[10px] font-bold text-[#94a3b8] uppercase tracking-wider bg-[#f8fafc] border-b border-[#e2e8f0]">
                           Opciones Institucionales
                         </div>
-                        <button 
-                          onClick={(e) => { e.stopPropagation(); handleToggleInactivar(fund); }}
-                          className="w-full text-left px-4 py-3 text-xs font-bold transition hover:bg-gray-50 flex items-center gap-2 text-[#475569]"
-                        >
-                          {fund.status === 'Inactiva' ? (
-                            <><span className="text-[#10b981] text-lg leading-none">●</span> Activar Fundación</>
-                          ) : (
-                            <><span className="text-[#ef4444] text-lg leading-none">●</span> Inactivar Fundación</>
-                          )}
-                        </button>
+                        {fund.status === 'Activa' || fund.status === 'Inactiva' ? (
+                          <button
+                            onClick={(e) => { e.stopPropagation(); handleToggleInactivar(fund); }}
+                            className="w-full text-left px-4 py-3 text-xs font-bold transition hover:bg-gray-50 flex items-center gap-2 text-[#475569]"
+                          >
+                            {fund.status === 'Inactiva' ? (
+                              <><span className="text-[#10b981] text-lg leading-none">●</span> Activar Fundación</>
+                            ) : (
+                              <><span className="text-[#ef4444] text-lg leading-none">●</span> Inactivar Fundación</>
+                            )}
+                          </button>
+                        ) : (
+                          // Las pendientes y rechazadas se gestionan desde la revisión de documentos
+                          <button
+                            onClick={(e) => { e.stopPropagation(); setMenuAbiertoId(null); navigate('/dashboard/admin-aprobaciones'); }}
+                            className="w-full text-left px-4 py-3 text-xs font-bold transition hover:bg-gray-50 flex items-center gap-2 text-[#475569]"
+                          >
+                            <Icon name="auditoria" size="1.1em" /> Revisar solicitud
+                          </button>
+                        )}
                         <button
                           onClick={(e) => { e.stopPropagation(); setMenuAbiertoId(null); navigate(`/dashboard/fundacion/necesidades/${fund.id}`); }}
                           className="w-full text-left px-4 py-3 text-xs font-bold transition hover:bg-gray-50 flex items-center gap-2 text-[#475569] border-t border-[#f1f5f9]"

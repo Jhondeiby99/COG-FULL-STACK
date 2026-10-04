@@ -21,62 +21,12 @@ export interface Voluntario {
   dotColor?: string;
 }
 
-const MOCK_VOLUNTARIOS: Voluntario[] = [
-  {
-    id: '1',
-    name: 'Dra. Camila Restrepo Uribe',
-    avatar: 'https://i.pravatar.cc/150?img=47',
-    specialty: 'Médica Pediatra',
-    certification: 'ReTHUS Activo',
-    location: 'Medellín, Antioquia',
-    hours: '142 h donadas en campo',
-    activity: 'Última guardia: Ayer',
-    status: 'Disponible (Con Franjas)',
-    disponibilidad_activa: true,
-    franjas_horarias: { manana: { lun: true, mar: true } },
-    statusBg: 'bg-[#dcfce7]',
-    statusText: 'text-[#166534]',
-    dotColor: 'bg-[#16a34a]'
-  },
-  {
-    id: '2',
-    name: 'Ing. Mateo Restrepo Gómez',
-    avatar: 'https://i.pravatar.cc/150?img=11',
-    specialty: 'Ingeniería Estructural',
-    certification: 'Matrícula COPNIA',
-    location: 'Bogotá D.C.',
-    hours: '88 h donadas en campo',
-    activity: 'Módulo Hábitat',
-    status: 'Disponible (Con Franjas)',
-    disponibilidad_activa: true,
-    franjas_horarias: { tarde: { sab: true, dom: true } },
-    statusBg: 'bg-[#e0e7ff]',
-    statusText: 'text-[#3730a3]',
-    dotColor: 'bg-[#4f46e5]'
-  },
-  {
-    id: '3',
-    name: 'Julián Osorio Morales',
-    avatar: 'https://i.pravatar.cc/150?img=12',
-    specialty: 'Logística & Paramédico',
-    certification: 'Acreditación APH',
-    location: 'Cali, Valle',
-    hours: '210 h donadas en campo',
-    activity: 'Asignado a: Misión Cordillera',
-    status: 'Inactivo',
-    disponibilidad_activa: false,
-    franjas_horarias: null,
-    statusBg: 'bg-[#f1f5f9]',
-    statusText: 'text-[#64748b]',
-    dotColor: 'bg-[#94a3b8]'
-  }
-];
-
 export function AdminVolunteers() {
   const [aviso, setAviso] = useState<{ title: string; message: string } | null>(null);
   const navigate = useNavigate();
   const [voluntarios, setVoluntarios] = useState<Voluntario[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  const [errorCarga, setErrorCarga] = useState<string | null>(null);
   
   // Filtros y Búsqueda
   const [busqueda, setBusqueda] = useState<string>('');
@@ -126,9 +76,9 @@ export function AdminVolunteers() {
         .from('voluntarios')
         .select('*');
 
-      if (error || !data || data.length === 0) {
-        setVoluntarios(MOCK_VOLUNTARIOS);
-      } else {
+      if (error) throw error;
+      setErrorCarga(null);
+      {
         const mapeados: Voluntario[] = data.map((vol: any, idx: number) => {
           const activa = vol.disponibilidad_activa ?? true;
           const franjas = vol.franjas_horarias;
@@ -137,9 +87,9 @@ export function AdminVolunteers() {
           return {
             id: vol.id || String(idx + 1),
             name: vol.nombre_completo || `Voluntario ${idx + 1}`,
-            avatar: vol.avatar_url || `https://i.pravatar.cc/150?img=${(idx % 50) + 1}`,
-            specialty: vol.profesion || 'Atención Social',
-            certification: 'Verificado Plataforma',
+            avatar: vol.avatar_url || '',
+            specialty: vol.profesion || 'Sin profesión registrada',
+            certification: vol.is_verified ? 'Verificado en plataforma' : 'Pendiente de verificación',
             location: vol.ciudad_base || vol.ubicacion || 'Colombia',
             hours: `${vol.horas_totales_donadas || 0} h donadas`,
             activity: activa ? 'Disponible para misión' : 'Perfil Inactivo',
@@ -152,7 +102,8 @@ export function AdminVolunteers() {
       }
     } catch (err) {
       console.error('Error al conectar con Supabase:', err);
-      setVoluntarios(MOCK_VOLUNTARIOS);
+      setVoluntarios([]);
+      setErrorCarga('No se pudieron cargar los voluntarios. Revisa tu conexión e intenta de nuevo.');
     } finally {
       setLoading(false);
     }
@@ -342,7 +293,13 @@ export function AdminVolunteers() {
 
       {/* LISTADO DE VOLUNTARIOS */}
       <div className="flex flex-col gap-4 w-full min-w-0">
-        {voluntariosPaginados.length === 0 ? (
+        {errorCarga ? (
+          <div className="bg-white rounded-2xl border border-[#fecaca] p-8 text-center flex flex-col items-center gap-3">
+            <Icon name="advertencia" size={32} className="text-[#dc2626]" />
+            <p className="text-sm font-bold text-[#071d37]">{errorCarga}</p>
+            <button type="button" onClick={cargarVoluntarios} className="bg-[#005684] text-white px-5 py-2 rounded-xl text-xs font-bold hover:bg-[#00456a] transition cursor-pointer">Reintentar</button>
+          </div>
+        ) : voluntariosPaginados.length === 0 ? (
           <div className="bg-white rounded-3xl p-8 border border-[#e2e8f0] text-center text-xs text-[#64748b]">
             No se encontraron voluntarios que coincidan con la búsqueda o filtro seleccionado.
           </div>
@@ -353,7 +310,13 @@ export function AdminVolunteers() {
               {/* Info Principal */}
               <div className="flex items-start gap-4 flex-1 min-w-0">
                 <div className="relative shrink-0 mt-1">
-                  <img src={vol.avatar} alt={vol.name} className="w-12 h-12 sm:w-14 sm:h-14 rounded-full object-cover border border-[#e2e8f0]" />
+                  {vol.avatar ? (
+                    <img src={vol.avatar} alt={vol.name} className="w-12 h-12 sm:w-14 sm:h-14 rounded-full object-cover border border-[#e2e8f0]" />
+                  ) : (
+                    <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full border border-[#e2e8f0] bg-[#eef6ff] text-[#005684] font-bold text-sm flex items-center justify-center shrink-0">
+                      {vol.name.split(' ').filter(Boolean).slice(0, 2).map(p => p[0]).join('').toUpperCase()}
+                    </div>
+                  )}
                   {vol.disponibilidad_activa && (
                     <div className="absolute -bottom-1 -right-1 bg-white rounded-full p-0.5">
                       <span className="bg-[#10b981] text-white text-[8px] w-4 h-4 flex items-center justify-center rounded-full font-bold"><Icon name="check" size="1.1em" /></span>
