@@ -20,6 +20,8 @@ export function FoundationProfile() {
   const { id } = useParams<{ id: string }>();
   const [priorityFilter, setPriorityFilter] = useState<PriorityFilter>('todas');
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  // Quién mira el perfil: la propia fundación o un administrador pueden ver perfiles no aprobados
+  const [puedeVistaPrevia, setPuedeVistaPrevia] = useState(false);
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setIsAuthenticated(!!session);
@@ -63,6 +65,21 @@ export function FoundationProfile() {
 
       if (fundData) {
         setFundacion(fundData);
+
+        if (fundData.estado !== 'aprobada') {
+          const { data: { session } } = await supabase.auth.getSession();
+          const uid = session?.user?.id;
+          let permitido = uid === fundData.id;
+          if (uid && !permitido) {
+            const { data: perfil } = await supabase.from('perfiles').select('rol').eq('id', uid).maybeSingle();
+            permitido = perfil?.rol === 'administrador';
+          }
+          setPuedeVistaPrevia(permitido);
+          if (!permitido) {
+            setLoading(false);
+            return;
+          }
+        }
 
         // 2. Necesidades asociadas
         const { data: reqData } = await supabase
@@ -166,7 +183,8 @@ export function FoundationProfile() {
     );
   }
 
-  if (!fundacion) {
+  // Las fundaciones no aprobadas no son públicas: solo su dueña y los administradores las ven
+  if (!fundacion || (fundacion.estado !== 'aprobada' && !puedeVistaPrevia)) {
     return (
       <div className="min-h-svh flex flex-col items-center justify-center bg-[#f8fafc] gap-4">
         <h2 className="text-xl font-bold text-[#071d37]">Fundación no encontrada</h2>
@@ -191,6 +209,13 @@ export function FoundationProfile() {
     fundacion.portada_url ||
     'https://images.unsplash.com/photo-1593113563332-f36e4b9317b6?auto=format&fit=crop&w=1920&q=80';
 
+  const necesidadesResueltas = necesidades.filter(n => n.completada).length;
+  const ESTADO_TEXTO: Record<string, string> = {
+    pendiente: 'pendiente de aprobación',
+    rechazada: 'rechazada',
+    inactiva: 'inactiva',
+  };
+
   const emailContacto = fundacion.email_contacto || fundacion.email_institucional || 'No registrado';
 
   // GENERAR MAPA DINÁMICO
@@ -201,6 +226,13 @@ export function FoundationProfile() {
   return (
     <div className="flex min-h-svh w-full flex-col bg-[#f8fafc] text-left text-[15px] leading-normal text-[#2d3748] font-sans">
       <Header />
+
+      {fundacion.estado !== 'aprobada' && (
+        <div className="bg-[#fffbeb] border-b border-[#fde68a] px-4 py-3 text-center text-xs text-[#92400e]">
+          <Icon name="advertencia" size={14} className="mr-1.5" />
+          <span className="font-bold">Vista previa:</span> esta fundación está {ESTADO_TEXTO[fundacion.estado] || fundacion.estado} y su perfil no es visible para el público.
+        </div>
+      )}
 
       <main className="flex-1 pb-12">
         {/* Hero Banner */}
@@ -291,7 +323,7 @@ export function FoundationProfile() {
               <Stat label="Trayectoria" value={fundacion.anos_operacion?.toString() || "0"} unit="años continuos" hint="Operación certificada" icon="trayectoria" />
               <Stat label="Población Activa" value={fundacion.cantidad_beneficiarios?.toString() || fundacion.familias_acompanadas?.toString() || "0"} unit="beneficiarios" hint="En territorio" hintColor="text-[#10b981]" icon="beneficiarios" iconClass="text-[#006947]" />
               <Stat label="Reputación Social" value={avgRating} unit="de 5" hint={`${resenas.length} opiniones auditadas`} icon="calificacion" iconClass="text-[#EAB308]" filled />
-              <Stat label="Efectividad" value={fundacion.necesidades_resueltas?.toString() || "0"} unit="necesidades resueltas" hint="100% rendición verificada" hintColor="text-[#005684] font-bold" icon="completado" />
+              <Stat label="Efectividad" value={necesidadesResueltas.toString()} unit="necesidades resueltas" hint={necesidades.length ? `de ${necesidades.length} publicadas` : 'Aún sin necesidades publicadas'} hintColor="text-[#005684] font-bold" icon="completado" />
             </div>
 
             <div className="mt-8 grid gap-8 lg:grid-cols-[minmax(0,1fr)_340px]">
