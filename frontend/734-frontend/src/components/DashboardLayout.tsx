@@ -40,10 +40,12 @@ export function DashboardLayout() {
   };
   const notifRef = useRef<HTMLDivElement>(null);
 
-  // Cierra el menú móvil al cambiar de ruta
-  useEffect(() => {
+  // Cierra el menú móvil al cambiar de ruta (ajuste de estado durante el render, sin efecto)
+  const [rutaPrevia, setRutaPrevia] = useState(location.pathname);
+  if (location.pathname !== rutaPrevia) {
+    setRutaPrevia(location.pathname);
     setIsMobileMenuOpen(false);
-  }, [location.pathname]);
+  }
 
   // 1. CARGA INICIAL DE SESIÓN Y ROL DEL USUARIO
   useEffect(() => {

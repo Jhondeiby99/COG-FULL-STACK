@@ -8,6 +8,8 @@ import { Icon } from '../components/Icon';
 import { Estrellas } from '../components/Estrellas';
 import type { NombreIcono } from '../lib/iconos';
 
+import type { FundacionRow, NecesidadRow, GaleriaRow, ResenaRow } from '../lib/database.types';
+import type { ReactNode } from 'react';
 const PRIORITY_STYLES = {
   alta: { label: 'Alta Prioridad', className: 'bg-[#fee2e2] text-[#991b1b]', bar: 'bg-[#e53e3e]', dot: 'bg-[#e53e3e]' },
   media: { label: 'Media Prioridad', className: 'bg-[#e0e7ff] text-[#3730a3]', bar: 'bg-[#553c9a]', dot: 'bg-[#3182ce]' },
@@ -36,10 +38,10 @@ export function FoundationProfile() {
     return () => subscription.unsubscribe();
   }, []);
   // Estados de datos Supabase
-  const [fundacion, setFundacion] = useState<any>(null);
-  const [necesidades, setNecesidades] = useState<any[]>([]);
-  const [galeria, setGaleria] = useState<any[]>([]);
-  const [resenas, setResenas] = useState<any[]>([]);
+  const [fundacion, setFundacion] = useState<FundacionRow | null>(null);
+  const [necesidades, setNecesidades] = useState<NecesidadRow[]>([]);
+  const [galeria, setGaleria] = useState<GaleriaRow[]>([]);
+  const [resenas, setResenas] = useState<ResenaRow[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Estados interactivos
@@ -232,7 +234,7 @@ export function FoundationProfile() {
       {fundacion.estado !== 'aprobada' && (
         <div className="bg-[#fffbeb] border-b border-[#fde68a] px-4 py-3 text-center text-xs text-[#92400e]">
           <Icon name="advertencia" size={14} className="mr-1.5" />
-          <span className="font-bold">Vista previa:</span> esta fundación está {ESTADO_TEXTO[fundacion.estado] || fundacion.estado} y su perfil no es visible para el público.
+          <span className="font-bold">Vista previa:</span> esta fundación está {(fundacion.estado && ESTADO_TEXTO[fundacion.estado]) || fundacion.estado} y su perfil no es visible para el público.
         </div>
       )}
 
@@ -326,7 +328,7 @@ export function FoundationProfile() {
             {/* Estadísticas Reales */}
             <div style={{ marginBottom: '2.5rem' }} className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
               <Stat label="Trayectoria" value={fundacion.anos_operacion?.toString() || "0"} unit="años continuos" hint={fundacion.ano_fundacion ? `Desde ${fundacion.ano_fundacion}` : "Años de trabajo"} icon="trayectoria" />
-              <Stat label="Población Activa" value={fundacion.cantidad_beneficiarios?.toString() || fundacion.familias_acompanadas?.toString() || "0"} unit="beneficiarios" hint="En territorio" hintColor="text-[#10b981]" icon="beneficiarios" iconClass="text-[#006947]" />
+              <Stat label="Población Activa" value={fundacion.familias_acompanadas?.toString() || "0"} unit="beneficiarios" hint="En territorio" hintColor="text-[#10b981]" icon="beneficiarios" iconClass="text-[#006947]" />
               <Stat label="Reputación Social" value={avgRating} unit="de 5" hint={`${resenas.length} opiniones de la comunidad`} icon="calificacion" iconClass="text-[#EAB308]" filled />
               <Stat label="Efectividad" value={necesidadesResueltas.toString()} unit="necesidades resueltas" hint={necesidades.length ? `de ${necesidades.length} publicadas` : 'Aún sin necesidades publicadas'} hintColor="text-[#005684] font-bold" icon="completado" />
             </div>
@@ -694,7 +696,7 @@ function InfoChip({ icon, title, value }: { icon: NombreIcono; title: string; va
   );
 }
 
-function SidebarCard({ title, children }: any) {
+function SidebarCard({ title, children }: { title: string; children: ReactNode }) {
   return (
     <section className="rounded-2xl bg-white p-6 shadow-sm border border-[#e2e8f0]">
       <h3 className="mt-0 mb-4 text-[15px] font-extrabold text-[#0f2a3f] border-b border-[#e2e8f0] pb-3">{title}</h3>
@@ -703,7 +705,7 @@ function SidebarCard({ title, children }: any) {
   );
 }
 
-function NeedCard({ need, onSupport }: { need: any; onSupport: (msg: string) => void }) {
+function NeedCard({ need, onSupport }: { need: NecesidadRow; onSupport: (msg: string) => void }) {
   const isResolved = need.completada === true;
   const style = PRIORITY_STYLES[need.prioridad as keyof typeof PRIORITY_STYLES] || PRIORITY_STYLES.media;
   

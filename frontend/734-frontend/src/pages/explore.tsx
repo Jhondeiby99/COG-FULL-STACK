@@ -5,6 +5,7 @@ import { Header } from '../components/Header';
 import { Footer } from '../components/Footer';
 
 import { Icon } from '../components/Icon';
+import type { FundacionRow, VoluntarioRow } from '../lib/database.types';
 export function Explore() {
   const [searchParams, setSearchParams] = useSearchParams();
   const query = searchParams.get('q') || '';
@@ -21,8 +22,8 @@ export function Explore() {
     if (tabUrl === 'voluntarios' || tabUrl === 'fundaciones') setActiveTab(tabUrl);
   }
   
-  const [fundaciones, setFundaciones] = useState<any[]>([]);
-  const [voluntarios, setVoluntarios] = useState<any[]>([]);
+  const [fundaciones, setFundaciones] = useState<FundacionRow[]>([]);
+  const [voluntarios, setVoluntarios] = useState<VoluntarioRow[]>([]);
 
   // Búsqueda global en Supabase cada vez que cambia el parámetro "q"
   useEffect(() => {

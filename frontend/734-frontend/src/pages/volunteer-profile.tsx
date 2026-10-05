@@ -8,12 +8,13 @@ import { RatingForm } from '../components/RatingForm';
 import { Icon } from '../components/Icon';
 import { iconoDesdeEmoji } from '../lib/iconos';
 import { Estrellas } from '../components/Estrellas';
+import type { VoluntarioRow, HistorialVoluntariadoRow, ResenaRow, CertificacionVoluntario, FranjasHorarias } from '../lib/database.types';
 export function VolunteerProfile() {
   const { id } = useParams<{ id: string }>();
-  const [voluntario, setVoluntario] = useState<any>(null);
-  const [historial, setHistorial] = useState<any[]>([]);
-  const [opiniones, setOpiniones] = useState<any[]>([]);
-  const [masVoluntarios, setMasVoluntarios] = useState<any[]>([]);
+  const [voluntario, setVoluntario] = useState<VoluntarioRow | null>(null);
+  const [historial, setHistorial] = useState<HistorialVoluntariadoRow[]>([]);
+  const [opiniones, setOpiniones] = useState<ResenaRow[]>([]);
+  const [masVoluntarios, setMasVoluntarios] = useState<VoluntarioRow[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Estados interactivos para Modal de Contacto / Invitación
@@ -96,10 +97,8 @@ export function VolunteerProfile() {
 
   // NUEVO: Totalizador de horas
   const totalHorasDonadas = useMemo(() => {
-    if (voluntario?.horas_totales_donadas) return voluntario.horas_totales_donadas;
-    if (historial.length === 0) return 0;
-    return historial.reduce((acc, curr) => acc + (curr.horas_invertidas || 0), 0) || 0;
-  }, [voluntario, historial]);
+    return voluntario?.horas_totales_donadas || 0;
+  }, [voluntario]);
 
   // Manejo del Modal
   const openModal = (mode: 'contacto' | 'invitacion', initialMsg: string = '') => {
@@ -238,11 +237,10 @@ const handleContactSubmit = async (e: React.FormEvent) => {
   // Normalización de datos con fallbacks
   const ubicacionTexto = voluntario.ubicacion || voluntario.ciudad_base || 'Ubicación no especificada';
   const dispViajeTexto = voluntario.disponibilidad_viaje || (voluntario.disponibilidad_viajar ? 'Dispuesta a viajar (Nivel Nacional)' : 'Disponibilidad Local');
-  const habilidadesLista = voluntario.habilidades || voluntario.competencias || [];
+  const habilidadesLista = voluntario.habilidades || [];
   // Formateador dinámico de franjas horarias a lista visual
-  const formatFranjas = (franjas: any) => {
+  const formatFranjas = (franjas: FranjasHorarias | null) => {
     if (!franjas) return [];
-    if (Array.isArray(franjas)) return franjas;
 
     const result: { dia: string; horas: string }[] = [];
     const diasMap: Record<string, string> = { 
@@ -262,7 +260,7 @@ const handleContactSubmit = async (e: React.FormEvent) => {
     return result;
   };
 
-  const horariosLista = formatFranjas(voluntario.franjas_horarias || voluntario.bloques_libres);
+  const horariosLista = formatFranjas(voluntario.franjas_horarias as FranjasHorarias | null);
 
   return (
     <div className="flex min-h-svh w-full flex-col bg-[#f4f7fb] text-left text-[15px] leading-normal text-[#2d3748] font-sans">
@@ -388,12 +386,12 @@ const handleContactSubmit = async (e: React.FormEvent) => {
 
                 {voluntario.servicios_ofrecidos && Array.isArray(voluntario.servicios_ofrecidos) && voluntario.servicios_ofrecidos.length > 0 && (
                   <>
-                    <p className="text-[14px] font-bold text-[#0f2a3f] mb-4">Certificaciones y documentos validados de apoyo:</p>
+                    <p className="text-[14px] font-bold text-[#0f2a3f] mb-4">Certificaciones y documentos registrados:</p>
                     <div className="grid md:grid-cols-2 gap-4">
-                      {voluntario.servicios_ofrecidos.map((servicio: any, i: number) => (
+                      {(voluntario.servicios_ofrecidos as unknown as CertificacionVoluntario[]).map((servicio, i: number) => (
                         <div key={i} className="bg-[#f8fafc] p-4 rounded-xl border border-[#e2e8f0]">
                           <h3 className="text-sm font-bold text-[#005684] flex items-center gap-2 mb-1">
-                            <span className="text-lg"><Icon name={iconoDesdeEmoji(servicio.icono, 'documento')} size="1.1em" /></span> {servicio.titulo || servicio}
+                            <span className="text-lg"><Icon name={iconoDesdeEmoji(servicio.icono, 'documento')} size="1.1em" /></span> {servicio.titulo || 'Certificación'}
                           </h3>
                           {servicio.descripcion && <p className="text-[12px] text-[#64748b] leading-tight mb-2">{servicio.descripcion}</p>}
                           
@@ -401,7 +399,7 @@ const handleContactSubmit = async (e: React.FormEvent) => {
                           {servicio.archivo_url && (
                             <button 
                               type="button"
-                              onClick={() => handleViewDocument(servicio.archivo_url)} 
+                              onClick={() => handleViewDocument(servicio.archivo_url ?? '')} 
                               className="inline-flex items-center gap-1.5 mt-2 bg-[#eef6ff] text-[#0284c7] border border-[#bae6fd] px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-[#e0f2fe] transition cursor-pointer"
                             >
                               <span><Icon name="ver" size="1.1em" /></span> Ver documento adjunto
@@ -422,9 +420,9 @@ const handleContactSubmit = async (e: React.FormEvent) => {
                 </div>
                 <div className="flex flex-wrap gap-2.5">
                   {habilidadesLista.length > 0 ? (
-                    habilidadesLista.map((habilidad: any, idx: number) => (
+                    habilidadesLista.map((habilidad, idx: number) => (
                       <span key={idx} className="rounded-full border border-[#cbd5e1] bg-[#f8fafc] px-4 py-2 text-xs font-bold text-[#005684] shadow-sm">
-                        <span className="text-[#94a3b8] mr-1">●</span> {typeof habilidad === 'string' ? habilidad : habilidad.nombre || 'Especialidad'}
+                        <span className="text-[#94a3b8] mr-1">●</span> {habilidad}
                       </span>
                     ))
                   ) : (
@@ -572,7 +570,7 @@ const handleContactSubmit = async (e: React.FormEvent) => {
                 <h3 className="text-[15px] font-extrabold text-[#0f2a3f] mb-2"><Icon name="calendario" size="1.1em" /> Bloques y Franjas Disponibles</h3>
                 <div className="flex flex-col gap-2">
                   {horariosLista.length > 0 ? (
-                    horariosLista.map((item: any, i: number) => (
+                    horariosLista.map((item, i: number) => (
                     <div key={i} className="flex items-center justify-between p-3 bg-[#f8fafc] rounded-lg border border-[#e2e8f0]">
                       <span className="text-xs font-bold text-[#0f2a3f]">● {item.dia}</span>
                       <span className="text-xs font-bold text-[#0284c7]">{item.horas}</span>

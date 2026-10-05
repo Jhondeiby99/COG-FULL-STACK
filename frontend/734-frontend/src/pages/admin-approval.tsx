@@ -37,7 +37,7 @@ export function AdminApproval() {
     cargarDatos();
   }, []);
 
-  const cargarDatos = async () => {
+  async function cargarDatos() {
     setLoading(true);
     try {
       // Carga en paralelo de pendientes y aprobadas desde Supabase

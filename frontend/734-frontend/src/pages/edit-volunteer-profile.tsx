@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { DialogModal } from '../components/DialogModal';
@@ -86,7 +86,6 @@ export function EditVolunteerProfile() {
   const [ciudadBase, setCiudadBase] = useState('');
   const [radio, setRadio] = useState(35);
   const [viajar, setViajar] = useState(true);
-  const [tiempoDisponible, setTiempoDisponible] = useState('0 hrs/semana');
   const [modalidadApoyo, setModalidadApoyo] = useState('Presencial');
   const [horasObjetivoMensual, setHorasObjetivoMensual] = useState(16);
   const [horasTotalesDonadas, setHorasTotalesDonadas] = useState(0);
@@ -128,10 +127,11 @@ export function EditVolunteerProfile() {
 
   useEffect(() => {
     cargarDatosVoluntario();
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- debe ejecutarse solo al montar o al cambiar el id, no en cada render
   }, [id]);
 
-  // NUEVO: Efecto que calcula automáticamente las horas semanales basándose en las franjas
-  useEffect(() => {
+  // Horas semanales calculadas a partir de las franjas marcadas (valor derivado, no estado)
+  const tiempoDisponible = useMemo(() => {
     let totalHoras = 0;
     const dias = ['lun', 'mar', 'mie', 'jue', 'vie', 'sab', 'dom'];
     
@@ -141,14 +141,10 @@ export function EditVolunteerProfile() {
       if (horarios.noche?.[dia]) totalHoras += 3.5;  // 18:30 a 22:00 = 3.5h
     });
 
-    if (totalHoras > 0) {
-      setTiempoDisponible(`${totalHoras} hrs/semana`);
-    } else {
-      setTiempoDisponible('0 hrs/semana');
-    }
+    return `${totalHoras} hrs/semana`;
   }, [horarios]);
 
-  const cargarDatosVoluntario = async () => {
+  async function cargarDatosVoluntario() {
     setLoading(true);
     try {
       let targetId = id;
@@ -192,7 +188,7 @@ export function EditVolunteerProfile() {
         if (vol.habilidades && Array.isArray(vol.habilidades)) {
           setHabilidades(vol.habilidades);
         } else if (vol.competencias && Array.isArray(vol.competencias)) {
-          const extraidas = vol.competencias.map((c: any) => typeof c === 'string' ? c : (c.titulo || c.nombre || ''));
+          const extraidas = vol.competencias.map((c: string | { titulo?: string; nombre?: string }) => typeof c === 'string' ? c : (c.titulo || c.nombre || ''));
           setHabilidades(extraidas.filter((s: string) => s.trim() !== ''));
         } else {
           setHabilidades([]);
@@ -207,10 +203,6 @@ export function EditVolunteerProfile() {
           setHorarios(defaultHorarios);
         }
 
-        // Si ya traía un tiempo disponible configurado manualmente que no se pudo sobreescribir, se mantiene temporalmente hasta el cálculo
-        if (vol.tiempo_disponible) {
-           setTiempoDisponible(vol.tiempo_disponible);
-        }
 
         if (vol.servicios_ofrecidos && Array.isArray(vol.servicios_ofrecidos)) {
           setCertificaciones(vol.servicios_ofrecidos);
@@ -298,7 +290,8 @@ export function EditVolunteerProfile() {
       } else {
         mostrarToast('¡Ficha de voluntario actualizada exitosamente!');
       }
-    } catch (err: any) {
+    } catch (e) {
+      const err = e as { message?: string };
       console.error('Error al guardar en Supabase:', err);
       setAviso({ title: 'No se pudieron guardar los cambios', message: err.message || 'Error de conexión. Intenta de nuevo.' });
     } finally {

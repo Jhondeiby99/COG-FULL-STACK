@@ -4,6 +4,8 @@ import { supabase } from '../lib/supabase';
 import { DialogModal } from '../components/DialogModal';
 
 import { Icon } from '../components/Icon';
+import type { VoluntarioRow } from '../lib/database.types';
+import type { FranjasHorarias } from '../lib/database.types';
 export interface Voluntario {
   id: string;
   name: string;
@@ -15,7 +17,7 @@ export interface Voluntario {
   activity: string;
   status: string;
   disponibilidad_activa: boolean;
-  franjas_horarias: any;
+  franjas_horarias: FranjasHorarias | null;
   statusBg?: string;
   statusText?: string;
   dotColor?: string;
@@ -48,9 +50,10 @@ export function AdminVolunteers() {
 
   useEffect(() => {
     cargarVoluntarios();
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- debe ejecutarse solo al montar o al cambiar el id, no en cada render
   }, []);
 
-  const getStatusStyles = (activa: boolean, franjas: any) => {
+  const getStatusStyles = (activa: boolean, franjas: FranjasHorarias | null) => {
     if (!activa) {
       return { status: 'Inactivo', statusBg: 'bg-[#f1f5f9]', statusText: 'text-[#64748b]', dotColor: 'bg-[#94a3b8]' };
     }
@@ -69,7 +72,7 @@ export function AdminVolunteers() {
     return { status: 'Disponible (Sin Franjas)', statusBg: 'bg-[#e0e7ff]', statusText: 'text-[#3730a3]', dotColor: 'bg-[#4f46e5]' };
   };
 
-  const cargarVoluntarios = async () => {
+  async function cargarVoluntarios() {
     setLoading(true);
     try {
       const { data, error } = await supabase
@@ -79,9 +82,9 @@ export function AdminVolunteers() {
       if (error) throw error;
       setErrorCarga(null);
       {
-        const mapeados: Voluntario[] = data.map((vol: any, idx: number) => {
+        const mapeados: Voluntario[] = (data as VoluntarioRow[]).map((vol, idx: number) => {
           const activa = vol.disponibilidad_activa ?? true;
-          const franjas = vol.franjas_horarias;
+          const franjas = vol.franjas_horarias as FranjasHorarias | null;
           const styles = getStatusStyles(activa, franjas);
 
           return {
@@ -128,7 +131,7 @@ export function AdminVolunteers() {
         Object.values(vol.franjas_horarias.tarde || {}).some(Boolean) ||
         Object.values(vol.franjas_horarias.noche || {}).some(Boolean)
       );
-      coincideDisponibilidad = vol.disponibilidad_activa && tiene;
+      coincideDisponibilidad = vol.disponibilidad_activa && !!tiene;
     } else if (filtroDisponibilidad === 'activo_general') {
       coincideDisponibilidad = vol.disponibilidad_activa;
     }

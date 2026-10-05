@@ -6,6 +6,7 @@ import { Header } from '../components/Header.tsx';
 import { Footer } from '../components/Footer.tsx';
 
 import { Icon } from '../components/Icon';
+import type { FundacionRow, VoluntarioRow } from '../lib/database.types';
 // Tipos
 type Fundacion = { id: string; nombre_legal: string; ubicacion: string | null; };
 type Necesidad = { id: string; titulo: string; descripcion: string | null; categoria: string | null; prioridad: 'alta' | 'media' | 'baja'; meta_texto: string | null; porcentaje_recaudado: number | null; completada: boolean | null; fundacion: Fundacion | Fundacion[] | null; };
@@ -26,7 +27,7 @@ export function Home() {
 
   // Estados para el Autocompletado Búsqueda Hero
   const heroSearchRef = useRef<HTMLDivElement>(null);
-  const [heroResults, setHeroResults] = useState({ fundaciones: [] as any[], voluntarios: [] as any[] });
+  const [heroResults, setHeroResults] = useState({ fundaciones: [] as Partial<FundacionRow>[], voluntarios: [] as Partial<VoluntarioRow>[] });
   const [showHeroDropdown, setShowHeroDropdown] = useState(false);
   const [isSearchingHero, setIsSearchingHero] = useState(false);
 
@@ -77,6 +78,7 @@ export function Home() {
   useEffect(() => {
     const query = searchQuery.trim();
     if (query.length < 2) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- carga/sincronización con Supabase al montar o al cambiar el parámetro
       setHeroResults({ fundaciones: [], voluntarios: [] });
       setShowHeroDropdown(false);
       return;

@@ -438,10 +438,10 @@ export function EditFoundationProfile() {
   };
 
   useEffect(() => {
-    if (id) {
-      setFoundationId(id);
-    }
+    // La carga asigna foundationId con el registro real
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- carga/sincronización con Supabase al montar o al cambiar el parámetro
     cargarDatosFundacion();
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- debe ejecutarse solo al montar o al cambiar el id, no en cada render
   }, [id]);
 
   const handleUpdateMap = () => {
@@ -482,7 +482,8 @@ export function EditFoundationProfile() {
       } else {
         setLogoUrl(imagen);
       }
-    } catch (err: any) {
+    } catch (e) {
+      const err = e as { message?: string };
       mostrarError('No se pudo procesar la imagen', err.message || 'Intenta con otro archivo.');
     } finally {
       setProcesandoImagen(null);
@@ -529,7 +530,8 @@ export function EditFoundationProfile() {
       mostrarToast(omitidas > 0
         ? `Se publicaron ${data.length} fotos. ${omitidas} no se subieron por el límite de ${MAX_FOTOS_GALERIA}.`
         : `¡${data.length === 1 ? 'Fotografía publicada' : `${data.length} fotografías publicadas`} en tu perfil!`);
-    } catch (err: any) {
+    } catch (e) {
+      const err = e as { message?: string };
       mostrarError('Error al publicar fotografías', err.message || 'Error de conexión');
     } finally {
       setProcesandoImagen(null);
@@ -634,7 +636,8 @@ export function EditFoundationProfile() {
       setCamposTocados({});
       setIntentoGuardar(false);
       mostrarToast('¡Perfil actualizado con éxito en la base de datos!');
-    } catch (err: any) {
+    } catch (e) {
+      const err = e as { message?: string };
       console.error('Error al guardar en Supabase:', err);
       mostrarError('Error', 'Ocurrió un problema al guardar los cambios: ' + (err.message || 'Error de conexión'));
     } finally {
@@ -723,7 +726,8 @@ export function EditFoundationProfile() {
           setNecesidades(prev => prev.filter(n => n.id !== nec.id));
           if (nec.completada && foundationId) await sincronizarNecesidadesResueltas(foundationId);
           mostrarToast('Necesidad eliminada.');
-        } catch (err: any) {
+        } catch (e) {
+      const err = e as { message?: string };
           mostrarError('Error', 'Error al eliminar: ' + err.message);
         }
       },
@@ -743,7 +747,8 @@ export function EditFoundationProfile() {
           const actualizada = await marcarNecesidadResuelta(nec.id, targetId);
           setNecesidades(prev => prev.map(n => n.id === nec.id ? { ...n, ...actualizada } : n));
           mostrarToast('¡Necesidad marcada como resuelta!');
-        } catch (err: any) {
+        } catch (e) {
+      const err = e as { message?: string };
           mostrarError('Error', 'No se pudo actualizar el estado: ' + err.message);
         }
       },

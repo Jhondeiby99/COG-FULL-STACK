@@ -6,6 +6,8 @@ import { RealtimeChannel } from '@supabase/supabase-js';
 import { useNotifications } from '../hooks/useNotifications';
 
 import { Icon } from './Icon';
+import type { FundacionRow, VoluntarioRow } from '../lib/database.types';
+import type { User } from '@supabase/supabase-js';
 interface HeaderProps {
   onSearchChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onFilterClick?: () => void;
@@ -20,8 +22,8 @@ interface SesionUsuario {
 
 export function Header({ onSearchChange, onFilterClick, searchPlaceholder = "Causas, fundaciones...", searchValue }: HeaderProps) {
   const navigate = useNavigate();
-  const [user, setUser] = useState<any>(null);
-  const [profileData, setProfileData] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null);
+  const [profileData, setProfileData] = useState<{ name: string; avatar: string | null | undefined; rol: string } | null>(null);
   const [loading, setLoading] = useState(true);
 
   const [modalExpulsion, setModalExpulsion] = useState(false);
@@ -48,20 +50,23 @@ export function Header({ onSearchChange, onFilterClick, searchPlaceholder = "Cau
   const searchRefMobile = useRef<HTMLDivElement>(null);
 
   // Estados para el Autocompletado de Búsqueda
-  const [internalSearch, setInternalSearch] = useState('');
-  const [searchResults, setSearchResults] = useState({ fundaciones: [] as any[], voluntarios: [] as any[] });
+  const [internalSearch, setInternalSearch] = useState(searchValue ?? '');
+  const [searchResults, setSearchResults] = useState({ fundaciones: [] as Partial<FundacionRow>[], voluntarios: [] as Partial<VoluntarioRow>[] });
   const [showDropdown, setShowDropdown] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
 
-  // Sincronizar búsqueda externa (ej: desde Home) con interna
-  useEffect(() => {
+  // Sincronizar búsqueda externa (ej: desde Home) con interna (ajuste de estado durante el render)
+  const [searchPrevio, setSearchPrevio] = useState(searchValue);
+  if (searchValue !== searchPrevio) {
+    setSearchPrevio(searchValue);
     if (searchValue !== undefined) setInternalSearch(searchValue);
-  }, [searchValue]);
+  }
 
   // Efecto de Búsqueda a Supabase
   useEffect(() => {
     const query = internalSearch.trim();
     if (query.length < 2) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- carga/sincronización con Supabase al montar o al cambiar el parámetro
       setSearchResults({ fundaciones: [], voluntarios: [] });
       setShowDropdown(false);
       return;
@@ -226,7 +231,7 @@ export function Header({ onSearchChange, onFilterClick, searchPlaceholder = "Cau
                 <span className="bg-gray-50 px-4 py-1.5 text-[10px] font-extrabold text-[#005684] uppercase tracking-widest border-b border-gray-100">Fundaciones</span>
                 {searchResults.fundaciones.map((f) => (
                   <Link key={f.id} to={`/fundacion/${f.id}`} onClick={() => setShowDropdown(false)} className="flex items-center gap-3 px-4 py-3 hover:bg-[#f0f9ff] transition border-b border-gray-50 last:border-0 cursor-pointer">
-                    <img src={getAvatarUrlHelper(f.logo_url)} className="w-10 h-10 rounded-xl object-cover bg-white shadow-sm border border-gray-100" alt="Logo" />
+                    <img src={getAvatarUrlHelper(f.logo_url || '')} className="w-10 h-10 rounded-xl object-cover bg-white shadow-sm border border-gray-100" alt="Logo" />
                     <div className="flex flex-col min-w-0">
                       <span className="text-sm font-bold text-[#071d37] truncate">{f.nombre_legal}</span>
                       <span className="text-[11px] text-gray-500 truncate"><Icon name="ubicacion" className="text-[#006194]" size="1.1em" /> {f.ubicacion || 'Colombia'}</span>
@@ -241,7 +246,7 @@ export function Header({ onSearchChange, onFilterClick, searchPlaceholder = "Cau
                 <span className="bg-emerald-50 px-4 py-1.5 text-[10px] font-extrabold text-emerald-700 uppercase tracking-widest border-y border-emerald-100 mt-1">Voluntarios</span>
                 {searchResults.voluntarios.map((v) => (
                   <Link key={v.id} to={`/voluntario/${v.id}`} onClick={() => setShowDropdown(false)} className="flex items-center gap-3 px-4 py-3 hover:bg-emerald-50 transition border-b border-gray-50 last:border-0 cursor-pointer">
-                    <img src={getAvatarUrlHelper(v.avatar_url)} className="w-10 h-10 rounded-full object-cover bg-white shadow-sm border border-gray-100" alt="Avatar" />
+                    <img src={getAvatarUrlHelper(v.avatar_url || '')} className="w-10 h-10 rounded-full object-cover bg-white shadow-sm border border-gray-100" alt="Avatar" />
                     <div className="flex flex-col min-w-0">
                       <span className="text-sm font-bold text-[#071d37] truncate flex items-center gap-1">{v.nombre_completo} <Icon name="verificado" className="text-[#006194] w-3 h-3" /></span>
                       <span className="text-[11px] text-emerald-600 font-bold truncate">{v.profesion || 'Voluntario Activo'}</span>

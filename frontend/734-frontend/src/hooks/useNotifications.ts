@@ -57,6 +57,7 @@ export function useNotifications(userId?: string | null, options: UseNotificatio
 
   // Suscripci�n Realtime y ciclo de vida
   useEffect(() => {
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- carga/sincronización con Supabase al montar o al cambiar el parámetro
   cargarNotificaciones();
 
   if (!userId) return;

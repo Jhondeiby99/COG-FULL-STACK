@@ -1,16 +1,9 @@
-import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 
 import { Icon } from './Icon';
-interface FooterProps {
-  onSearchChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  onFilterClick?: () => void;
-  searchPlaceholder?: string;
-}
-
 const enlaceClase = 'text-sm text-gray-400 hover:text-white transition-colors py-1 w-fit text-left cursor-pointer';
 
-export function Footer(_props: FooterProps) {
+export function Footer() {
   const navigate = useNavigate();
   const location = useLocation();
 

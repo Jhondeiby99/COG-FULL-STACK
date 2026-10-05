@@ -144,6 +144,7 @@ export function AccountNotifications() {
     if (!abrirId || loadingNotifs) return;
     const notif = notificaciones.find(n => n.id === abrirId);
     navigate(location.pathname, { replace: true, state: null });
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- carga/sincronización con Supabase al montar o al cambiar el parámetro
     if (notif) abrirNotificacion(notif);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.state, loadingNotifs, notificaciones]);

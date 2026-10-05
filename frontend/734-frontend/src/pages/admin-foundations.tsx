@@ -66,9 +66,10 @@ export function AdminFoundations() {
 
   useEffect(() => {
     cargarFundaciones();
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- debe ejecutarse solo al montar o al cambiar el id, no en cada render
   }, []);
 
-  const cargarFundaciones = async () => {
+  async function cargarFundaciones() {
     setLoading(true);
     try {
       const [{ data, error }, { data: necesidades }] = await Promise.all([

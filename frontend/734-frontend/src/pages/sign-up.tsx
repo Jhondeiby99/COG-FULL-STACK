@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase';
 import { Icon } from '../components/Icon';
 import { DocumentosFundacion } from '../components/DocumentosFundacion';
 import { subirDocumento } from '../lib/documentos';
+import { DialogModal } from '../components/DialogModal';
 import type { TipoDocumento } from '../lib/documentos';
 
 export function SignUp() {
@@ -17,6 +18,8 @@ export function SignUp() {
 	const [error, setError] = useState<string | null>(null);
 	// Documentos legales elegidos antes de crear la cuenta; se suben al terminar el registro
 	const [documentos, setDocumentos] = useState<Partial<Record<TipoDocumento, File>>>({});
+	// Correo al que se envió el enlace de confirmación (cuando Supabase lo exige)
+	const [correoPorConfirmar, setCorreoPorConfirmar] = useState<string | null>(null);
 	
 	const [formData, setFormData] = useState({
 		nombreLegal: '',
@@ -52,10 +55,30 @@ export function SignUp() {
 			return;
 		}
 
-		// 1. Crear el usuario en Auth de Supabase
+		// La cuenta se crea con los datos del perfil; la base de datos crea la ficha de fundación o voluntario.
+		// Así funciona igual con la confirmación de correo activada (sin sesión inmediata) o desactivada.
+		const datosPerfil = activeRole === 'fundacion'
+			? {
+				rol: 'fundacion',
+				nombre_legal: formData.nombreLegal.trim(),
+				nit: formData.nit.trim(),
+				representante_legal: formData.representante.trim(),
+				telefono: formData.telefono.trim(),
+				ubicacion: formData.ubicacion.trim(),
+			}
+			: {
+				rol: 'voluntario',
+				nombre_completo: formData.nombreLegal.trim(),
+				ubicacion: formData.ubicacion.trim(),
+			};
+
 		const { data: authData, error: authError } = await supabase.auth.signUp({
-			email: formData.email,
+			email: formData.email.trim(),
 			password: formData.password,
+			options: {
+				data: datosPerfil,
+				emailRedirectTo: `${window.location.origin}${import.meta.env.BASE_URL}login`,
+			},
 		});
 
 		if (authError || !authData.user) {
@@ -64,54 +87,34 @@ export function SignUp() {
 			return;
 		}
 
-		const userId = authData.user.id;
-
-		// 2. Insertar en la tabla perfiles
-		const { error: profileError } = await supabase.from('perfiles').insert([
-			{ id: userId, rol: activeRole }
-		]);
-
-		if (profileError) {
-			setError('Error al asignar el rol en la plataforma.');
+		// Sin sesión = Supabase pide confirmar el correo antes de entrar
+		if (!authData.session) {
 			setLoading(false);
+			setCorreoPorConfirmar(formData.email.trim());
 			return;
 		}
 
-		// 3. Insertar en la tabla específica según el rol
+		// Con sesión inmediata se suben ya los documentos elegidos (si alguno falla, se completa desde el perfil)
 		if (activeRole === 'fundacion') {
-            await supabase.from('fundaciones').insert([{
-                id: userId,
-                nombre_legal: formData.nombreLegal,
-                nit: formData.nit,
-                representante_legal: formData.representante,
-                telefono: formData.telefono,
-                email_institucional: formData.email,
-                ubicacion: formData.ubicacion,
-                estado: 'pendiente',
-                fecha_solicitud: new Date().toISOString() // Fecha y hora exacta de la solicitud
-            }]);
-
-            // Subir los documentos legales elegidos (si alguno falla, puede completarlo luego desde su perfil)
-            if (authData.session) {
-                await Promise.allSettled(
-                    (Object.entries(documentos) as [TipoDocumento, File][]).map(([tipo, archivo]) => subirDocumento(userId, tipo, archivo))
-                );
-            }
-		} else {
-			await supabase.from('voluntarios').insert([{
-				id: userId,
-				nombre_completo: formData.nombreLegal, // Mapeamos el nombre legal al nombre del voluntario
-				ubicacion: formData.ubicacion,
-				is_verified: false
-			}]);
+			await Promise.allSettled(
+				(Object.entries(documentos) as [TipoDocumento, File][]).map(([tipo, archivo]) => subirDocumento(authData.user!.id, tipo, archivo))
+			);
 		}
 
-		// Si todo sale bien, lo mandamos al inicio
 		navigate('/');
 	};
 
 	return (
 		<div className="flex min-h-svh w-full flex-col bg-[#f6f9fb] text-left text-[15px] leading-normal text-[#23343f] font-sans">
+			{correoPorConfirmar && (
+				<DialogModal
+					variant="exito"
+					title="Revisa tu correo"
+					message={`Enviamos un enlace de confirmación a ${correoPorConfirmar}. Ábrelo para activar tu cuenta y luego inicia sesión.${activeRole === 'fundacion' ? '\n\nDespués podrás subir tus documentos legales desde tu perfil, en la pestaña Documentos.' : ''}`}
+					confirmLabel="Ir a iniciar sesión"
+					onClose={() => navigate('/login')}
+				/>
+			)}
 			<main className="flex-1 py-10">
 				<div className="mx-auto w-full max-w-[1240px] px-4">
                     <div>

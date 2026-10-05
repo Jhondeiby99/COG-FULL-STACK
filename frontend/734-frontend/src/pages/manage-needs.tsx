@@ -107,6 +107,7 @@ export function ManageNeeds({ global = false }: { global?: boolean }) {
   }, [id, global]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- carga/sincronización con Supabase al montar o al cambiar el parámetro
     cargar();
   }, [cargar]);
 

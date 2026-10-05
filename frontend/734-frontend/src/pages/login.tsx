@@ -25,7 +25,10 @@ export function Login() {
     });
 
     if (authError || !data.user) {
-      setError('Correo o contraseña incorrectos.');
+      // Supabase distingue la cuenta sin confirmar; el resto se muestra genérico por seguridad
+      setError(authError?.code === 'email_not_confirmed'
+        ? 'Debes confirmar tu correo antes de iniciar sesión. Revisa tu bandeja de entrada (y la carpeta de spam).'
+        : 'Correo o contraseña incorrectos.');
       setLoading(false);
       return;
     }

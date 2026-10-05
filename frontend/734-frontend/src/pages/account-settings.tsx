@@ -13,7 +13,6 @@ interface Sesion {
 
 export function AccountSettings() {
   // const navigate = useNavigate();
-  const [_currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -23,11 +22,7 @@ export function AccountSettings() {
   const [loadingSesiones, setLoadingSesiones] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
 
-  useEffect(() => {
-    cargarDatos();
-  }, []);
-
-  const cargarDatos = async () => {
+  async function cargarDatos() {
     setLoadingSesiones(true);
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
@@ -46,6 +41,11 @@ export function AccountSettings() {
     }
     setLoadingSesiones(false);
   };
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- carga/sincronización con Supabase al montar o al cambiar el parámetro
+    cargarDatos();
+  }, []);
 
   // Cálculo en tiempo real de la fuerza de la contraseña
   const passwordStrength = useMemo(() => {
@@ -90,7 +90,6 @@ export function AccountSettings() {
       setMensaje({ tipo: 'error', texto: error.message });
     } else {
       setMensaje({ tipo: 'success', texto: '¡Contraseña actualizada con éxito bajo normativa FIPS-140!' });
-      setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
     }

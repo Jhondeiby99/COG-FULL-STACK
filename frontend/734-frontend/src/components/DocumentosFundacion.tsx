@@ -63,6 +63,7 @@ export function DocumentosFundacion({ fundacionId, editable = true, revision = f
   }, [fundacionId]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- carga/sincronización con Supabase al montar o al cambiar el parámetro
     recargar();
   }, [recargar]);
 

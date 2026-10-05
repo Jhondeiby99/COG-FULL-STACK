@@ -1,10 +1,11 @@
 import { lazy, Suspense, useEffect, useState } from 'react';
-import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
+import { BrowserRouter, Navigate, Route, Routes, useParams } from 'react-router-dom';
 import { supabase } from './lib/supabase';
 import { Home } from './pages/home';
 import './styles/global.css';
 import './index.css';
 
+import type { Session } from '@supabase/supabase-js';
 // Cada pantalla se descarga solo cuando se visita (el inicio se carga de inmediato)
 const Login = lazy(() => import('./pages/login').then(m => ({ default: m.Login })));
 const FoundationProfile = lazy(() => import('./pages/foundation-profile').then(m => ({ default: m.FoundationProfile })));
@@ -33,7 +34,7 @@ function ProtectedRoute({ children, requiredRole }: { children: React.ReactNode;
   useEffect(() => {
     let isMounted = true;
 
-    async function resolveSession(session: any) {
+    async function resolveSession(session: Session | null) {
       if (!session) {
         if (isMounted) setAuthStatus({ loading: false, session: false });
         return;
@@ -82,6 +83,30 @@ function ProtectedRoute({ children, requiredRole }: { children: React.ReactNode;
   return <>{children}</>;
 }
 
+/** Pantallas de edición: solo la cuenta dueña del :id de la URL o un administrador */
+function SoloDuenoOAdmin({ children }: { children: React.ReactNode }) {
+  const { id } = useParams();
+  const [permitido, setPermitido] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    let activo = true;
+    (async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      const uid = session?.user?.id;
+      let ok = !!uid && uid === id;
+      if (uid && !ok) {
+        const { data: perfil } = await supabase.from('perfiles').select('rol').eq('id', uid).maybeSingle();
+        ok = perfil?.rol === 'administrador';
+      }
+      if (activo) setPermitido(ok);
+    })();
+    return () => { activo = false; };
+  }, [id]);
+
+  if (permitido === null) return <CargandoPantalla />;
+  return permitido ? <>{children}</> : <Navigate to="/" replace />;
+}
+
 function CargandoPantalla() {
   return (
     <div className="min-h-svh flex items-center justify-center bg-[#f8fafc]">
@@ -108,9 +133,9 @@ function App() {
         {/* RUTAS PRIVADAS / DASHBOARD */}
         <Route path="/dashboard" element={<ProtectedRoute><DashboardLayout /></ProtectedRoute>}>
           <Route path="ajustes" element={<AccountSettings />} />
-          <Route path="voluntario/editar/:id" element={<EditVolunteerProfile />} />
-          <Route path="fundacion/editar/:id" element={<EditFoundationProfile />} />
-          <Route path="fundacion/necesidades/:id" element={<ManageNeeds />} />
+          <Route path="voluntario/editar/:id" element={<SoloDuenoOAdmin><EditVolunteerProfile /></SoloDuenoOAdmin>} />
+          <Route path="fundacion/editar/:id" element={<SoloDuenoOAdmin><EditFoundationProfile /></SoloDuenoOAdmin>} />
+          <Route path="fundacion/necesidades/:id" element={<SoloDuenoOAdmin><ManageNeeds /></SoloDuenoOAdmin>} />
           <Route path="admin-dashboard" element={<ProtectedRoute requiredRole="administrador"><AdminDashboard /></ProtectedRoute>} />
           <Route path="admin-aprobaciones" element={<ProtectedRoute requiredRole="administrador"><AdminApproval /></ProtectedRoute>} />
           <Route path="admin-fundaciones" element={<ProtectedRoute requiredRole="administrador"><AdminFoundations /></ProtectedRoute>} />
