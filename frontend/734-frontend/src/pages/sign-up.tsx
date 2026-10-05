@@ -5,6 +5,7 @@ import { Icon } from '../components/Icon';
 import { DocumentosFundacion } from '../components/DocumentosFundacion';
 import { subirDocumento } from '../lib/documentos';
 import { DialogModal } from '../components/DialogModal';
+import { CIUDADES_COLOMBIA } from '../lib/ciudades';
 import type { TipoDocumento } from '../lib/documentos';
 
 export function SignUp() {
@@ -27,6 +28,7 @@ export function SignUp() {
 		representante: '',
 		telefono: '',
 		email: '',
+		ciudad: '',
 		ubicacion: '',
 		password: '',
 		confirmPassword: ''
@@ -64,11 +66,13 @@ export function SignUp() {
 				nit: formData.nit.trim(),
 				representante_legal: formData.representante.trim(),
 				telefono: formData.telefono.trim(),
+				ciudad: formData.ciudad.trim(),
 				ubicacion: formData.ubicacion.trim(),
 			}
 			: {
 				rol: 'voluntario',
 				nombre_completo: formData.nombreLegal.trim(),
+				ciudad: formData.ciudad.trim(),
 				ubicacion: formData.ubicacion.trim(),
 			};
 
@@ -258,9 +262,16 @@ export function SignUp() {
 									</div>
 
 									<div className="grid gap-3 md:grid-cols-2">
-										<div>
+										<div className="md:col-span-2">
 											<label className="text-xs font-bold text-[#475569]">Correo electrónico {activeRole === 'fundacion' ? 'institucional' : ''} <span className="text-red-500">*</span></label>
 											<input type="email" name="email" value={formData.email} onChange={handleChange} required className="mt-1 w-full rounded-xl border border-[#e6eef6] bg-[#fbfdff] px-3.5 py-2 text-sm" placeholder={activeRole === 'fundacion' ? "direccion@miorg.org" : "tucorreo@ejemplo.com"} />
+										</div>
+										<div>
+											<label className="text-xs font-bold text-[#475569]">Ciudad <span className="text-red-500">*</span></label>
+											<input name="ciudad" list="ciudades-colombia" value={formData.ciudad} onChange={handleChange} required autoComplete="address-level2" className="mt-1 w-full rounded-xl border border-[#e6eef6] bg-[#fbfdff] px-3.5 py-2 text-sm" placeholder="Ej. Cali" />
+											<datalist id="ciudades-colombia">
+												{CIUDADES_COLOMBIA.map(c => <option key={c} value={c} />)}
+											</datalist>
 										</div>
 										<div>
 											<label className="text-xs font-bold text-[#475569]">Comuna / Localidad / Sector</label>
