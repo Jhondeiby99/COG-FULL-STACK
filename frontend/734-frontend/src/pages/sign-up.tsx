@@ -396,7 +396,7 @@ export function SignUp() {
 								</div>
                             </div>
                             
-							<div className="rounded-xl bg-white p-5 shadow-sm mt-3 border border-gray-100">
+							{/* <div className="rounded-xl bg-white p-5 shadow-sm mt-3 border border-gray-100">
 								<div className="flex items-center gap-3 mb-3">
 									<img src="https://i.pravatar.cc/40?img=5" alt="Carolina Restrepo" className="h-9 w-9 rounded-full object-cover shadow-sm" />
 									<div className="flex flex-col">											    
@@ -407,7 +407,7 @@ export function SignUp() {
 								<div className="text-[12px] italic text-slate-600 rounded-lg">
 									<p className="m-0 leading-relaxed">"En 7:34 AM encontramos una plataforma seria donde los voluntarios no vienen por foto sino por verdadera vocación de servicio. La transparencia de NIT nos abrió puertas con grandes donantes."</p>
 								</div>
-                            </div>
+                            </div> */}
 						</aside>
 				    </div>
 				</div>
