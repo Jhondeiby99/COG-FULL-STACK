@@ -49,6 +49,46 @@ export function FoundationProfile() {
   const [msgStatus, setMsgStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [msgError, setMsgError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  // Datos del usuario logueado para prellenar el formulario de contacto
+  const [datosRemitente, setDatosRemitente] = useState({ nombre: '', email: '' });
+
+  useEffect(() => {
+    async function autofillUser() {
+      if (!isAuthenticated) {
+        setDatosRemitente({ nombre: '', email: '' });
+        return;
+      }
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      // Intentar obtener datos de la fundación o del voluntario
+      const { data: fund } = await supabase
+        .from('fundaciones')
+        .select('nombre_legal, email_institucional')
+        .eq('id', user.id)
+        .maybeSingle();
+
+      let nombre = fund?.nombre_legal || '';
+      const email = fund?.email_institucional || user.email || '';
+
+      if (!fund) {
+        const { data: vol } = await supabase
+          .from('voluntarios')
+          .select('nombre_completo')
+          .eq('id', user.id)
+          .maybeSingle();
+        nombre = vol?.nombre_completo || '';
+      }
+
+      setDatosRemitente({ nombre, email });
+      setFormData((prev) => ({
+        ...prev,
+        nombre: prev.nombre || nombre,
+        email: prev.email || email,
+      }));
+    }
+    autofillUser();
+  }, [isAuthenticated]);
 
   useEffect(() => {
     async function fetchProfileData() {
@@ -174,7 +214,7 @@ export function FoundationProfile() {
       setMsgStatus('error');
     } else {
       setMsgStatus('success');
-      setFormData({ nombre: '', email: '', tipo: 'donaciones', mensaje: '' });
+      setFormData({ ...datosRemitente, tipo: 'donaciones', mensaje: '' });
       setTimeout(() => setMsgStatus('idle'), 4000);
     }
   };
