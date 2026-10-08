@@ -16,6 +16,8 @@ export function VolunteerProfile() {
   const [opiniones, setOpiniones] = useState<ResenaRow[]>([]);
   const [masVoluntarios, setMasVoluntarios] = useState<VoluntarioRow[]>([]);
   const [loading, setLoading] = useState(true);
+  // Quién mira el perfil: el propio voluntario o un administrador pueden ver perfiles incompletos
+  const [puedeVistaPrevia, setPuedeVistaPrevia] = useState(false);
 
   // Estados interactivos para Modal de Contacto / Invitación
   const [showContactModal, setShowContactModal] = useState(false);
@@ -48,6 +50,21 @@ export function VolunteerProfile() {
       if (volData) {
         setVoluntario(volData);
 
+        if (!volData.is_verified) {
+          const { data: { session } } = await supabase.auth.getSession();
+          const uid = session?.user?.id;
+          let permitido = uid === volData.id;
+          if (uid && !permitido) {
+            const { data: perfil } = await supabase.from('perfiles').select('rol').eq('id', uid).maybeSingle();
+            permitido = perfil?.rol === 'administrador';
+          }
+          setPuedeVistaPrevia(permitido);
+          if (!permitido) {
+            setLoading(false);
+            return;
+          }
+        }
+
         // 2. Traer su Historial
         const { data: histData } = await supabase
           .from('historial_voluntariado')
@@ -68,6 +85,7 @@ export function VolunteerProfile() {
           .from('voluntarios')
           .select('*')
           .neq('id', volData.id)
+          .eq('is_verified', true)
           .limit(3);
         if (otrosData) setMasVoluntarios(otrosData);
       }
@@ -222,6 +240,22 @@ const handleContactSubmit = async (e: React.FormEvent) => {
     );
   }
 
+  // Los perfiles incompletos no son públicos: solo su dueño y los administradores los ven
+  if (voluntario && !voluntario.is_verified && !puedeVistaPrevia) {
+    return (
+      <div className="min-h-svh flex flex-col items-center justify-center bg-[#f4f7fb] gap-4 px-4 text-center">
+        <Icon name="reloj" className="h-10 w-10 text-[#94a3b8]" />
+        <h2 className="text-xl font-bold text-[#0f2a3f]">Perfil en construcción</h2>
+        <p className="text-sm text-gray-500 max-w-md">
+          Este voluntario aún no ha completado su perfil. Estará disponible cuando registre sus datos, habilidades, horarios y ciudad.
+        </p>
+        <Link to="/explorar" className="text-sm font-bold text-[#005684] hover:underline">
+          ← Volver a explorar
+        </Link>
+      </div>
+    );
+  }
+
   if (!voluntario) {
     return (
       <div className="min-h-svh flex flex-col items-center justify-center bg-[#f4f7fb] gap-4">
@@ -265,6 +299,13 @@ const handleContactSubmit = async (e: React.FormEvent) => {
   return (
     <div className="flex min-h-svh w-full flex-col bg-[#f4f7fb] text-left text-[15px] leading-normal text-[#2d3748] font-sans">
       <Header />
+
+      {!voluntario.is_verified && (
+        <div className="bg-[#fffbeb] border-b border-[#fde68a] px-4 py-3 text-center text-xs text-[#92400e]">
+          <Icon name="advertencia" size={14} className="mr-1.5" />
+          <span className="font-bold">Vista previa:</span> este perfil está incompleto y no es visible para el público.
+        </div>
+      )}
 
       <main className="flex-1 pb-12">
         {/* Encabezado Superior */}
