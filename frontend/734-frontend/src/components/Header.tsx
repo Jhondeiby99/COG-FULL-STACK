@@ -76,7 +76,7 @@ export function Header({ onSearchChange, onFilterClick, searchPlaceholder = "Cau
       setIsSearching(true);
       const [fundRes, volRes] = await Promise.all([
         supabase.from('fundaciones').select('id, nombre_legal, logo_url, ubicacion').eq('estado', 'aprobada').ilike('nombre_legal', `%${query}%`).limit(3),
-        supabase.from('voluntarios').select('id, nombre_completo, avatar_url, profesion').eq('is_verified', true).ilike('nombre_completo', `%${query}%`).limit(3)
+        supabase.from('voluntarios').select('id, nombre_completo, avatar_url, profesion').eq('is_verified', true).eq('disponibilidad_activa', true).ilike('nombre_completo', `%${query}%`).limit(3)
       ]);
       setSearchResults({
         fundaciones: fundRes.data || [],

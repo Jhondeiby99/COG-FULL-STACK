@@ -36,7 +36,7 @@ export function Explore() {
         // Si no hay búsqueda, traemos los más recientes
         const [fundRes, volRes] = await Promise.all([
           supabase.from('fundaciones').select('*').eq('estado', 'aprobada').limit(12),
-          supabase.from('voluntarios').select('*').eq('is_verified', true).limit(12)
+          supabase.from('voluntarios').select('*').eq('is_verified', true).eq('disponibilidad_activa', true).limit(12)
         ]);
         setFundaciones(fundRes.data || []);
         setVoluntarios(volRes.data || []);
@@ -44,7 +44,7 @@ export function Explore() {
         // Búsqueda por coincidencias (ilike)
         const [fundRes, volRes] = await Promise.all([
           supabase.from('fundaciones').select('*').eq('estado', 'aprobada').ilike('nombre_legal', `%${q}%`),
-          supabase.from('voluntarios').select('*').eq('is_verified', true).ilike('nombre_completo', `%${q}%`)
+          supabase.from('voluntarios').select('*').eq('is_verified', true).eq('disponibilidad_activa', true).ilike('nombre_completo', `%${q}%`)
         ]);
         setFundaciones(fundRes.data || []);
         setVoluntarios(volRes.data || []);

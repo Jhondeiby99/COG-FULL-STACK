@@ -9,6 +9,10 @@ import { Icon } from '../components/Icon';
 import { iconoDesdeEmoji } from '../lib/iconos';
 import { Estrellas } from '../components/Estrellas';
 import type { VoluntarioRow, HistorialVoluntariadoRow, ResenaRow, CertificacionVoluntario, FranjasHorarias } from '../lib/database.types';
+/** Un perfil es público solo si está completo y su disponibilidad está activa */
+const esPublico = (v: Pick<VoluntarioRow, 'is_verified' | 'disponibilidad_activa'>) =>
+  !!v.is_verified && v.disponibilidad_activa === true;
+
 export function VolunteerProfile() {
   const { id } = useParams<{ id: string }>();
   const [voluntario, setVoluntario] = useState<VoluntarioRow | null>(null);
@@ -50,7 +54,8 @@ export function VolunteerProfile() {
       if (volData) {
         setVoluntario(volData);
 
-        if (!volData.is_verified) {
+        // Solo es público si está completo y el voluntario activó su disponibilidad
+        if (!esPublico(volData)) {
           const { data: { session } } = await supabase.auth.getSession();
           const uid = session?.user?.id;
           let permitido = uid === volData.id;
@@ -86,6 +91,7 @@ export function VolunteerProfile() {
           .select('*')
           .neq('id', volData.id)
           .eq('is_verified', true)
+          .eq('disponibilidad_activa', true)
           .limit(3);
         if (otrosData) setMasVoluntarios(otrosData);
       }
@@ -240,14 +246,17 @@ const handleContactSubmit = async (e: React.FormEvent) => {
     );
   }
 
-  // Los perfiles incompletos no son públicos: solo su dueño y los administradores los ven
-  if (voluntario && !voluntario.is_verified && !puedeVistaPrevia) {
+  // Los perfiles incompletos u ocultos no son públicos: solo su dueño y los administradores los ven
+  if (voluntario && !esPublico(voluntario) && !puedeVistaPrevia) {
+    const incompleto = !voluntario.is_verified;
     return (
       <div className="min-h-svh flex flex-col items-center justify-center bg-[#f4f7fb] gap-4 px-4 text-center">
-        <Icon name="reloj" className="h-10 w-10 text-[#94a3b8]" />
-        <h2 className="text-xl font-bold text-[#0f2a3f]">Perfil en construcción</h2>
+        <Icon name={incompleto ? 'reloj' : 'usuario'} className="h-10 w-10 text-[#94a3b8]" />
+        <h2 className="text-xl font-bold text-[#0f2a3f]">{incompleto ? 'Perfil en construcción' : 'Perfil no disponible'}</h2>
         <p className="text-sm text-gray-500 max-w-md">
-          Este voluntario aún no ha completado su perfil. Estará disponible cuando registre sus datos, habilidades, horarios y ciudad.
+          {incompleto
+            ? 'Este voluntario aún no ha completado su perfil. Estará disponible cuando registre sus datos, habilidades, horarios y ciudad.'
+            : 'Este voluntario desactivó su disponibilidad y por ahora su perfil no es público.'}
         </p>
         <Link to="/explorar" className="text-sm font-bold text-[#005684] hover:underline">
           ← Volver a explorar
@@ -300,10 +309,13 @@ const handleContactSubmit = async (e: React.FormEvent) => {
     <div className="flex min-h-svh w-full flex-col bg-[#f4f7fb] text-left text-[15px] leading-normal text-[#2d3748] font-sans">
       <Header />
 
-      {!voluntario.is_verified && (
+      {!esPublico(voluntario) && (
         <div className="bg-[#fffbeb] border-b border-[#fde68a] px-4 py-3 text-center text-xs text-[#92400e]">
           <Icon name="advertencia" size={14} className="mr-1.5" />
-          <span className="font-bold">Vista previa:</span> este perfil está incompleto y no es visible para el público.
+          <span className="font-bold">Vista previa:</span>{' '}
+          {voluntario.is_verified
+            ? 'la disponibilidad está desactivada y este perfil no es visible para el público.'
+            : 'este perfil está incompleto y no es visible para el público.'}
         </div>
       )}
 

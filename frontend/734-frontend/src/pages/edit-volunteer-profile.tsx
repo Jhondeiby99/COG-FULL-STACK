@@ -78,7 +78,7 @@ export function EditVolunteerProfile() {
 
   const [volunteerId, setVolunteerId] = useState<string | null>(id || null);
 
-  const [disponibilidadActiva, setDisponibilidadActiva] = useState(true);
+  const [disponibilidadActiva, setDisponibilidadActiva] = useState(false);
   const [nombreCompleto, setNombreCompleto] = useState('');
   const [titulo, setTitulo] = useState('');
   const [presentacion, setPresentacion] = useState('');
@@ -176,7 +176,8 @@ export function EditVolunteerProfile() {
         setTitulo(vol.profesion || '');
         setPresentacion(vol.presentacion_civica || vol.sobre_mi || '');
         setAvatarUrl(vol.avatar_url || '');
-        setDisponibilidadActiva(vol.disponibilidad_activa ?? true);
+        // Un perfil incompleto arranca oculto: el voluntario la activa al completarlo
+        setDisponibilidadActiva((vol.disponibilidad_activa ?? true) && !!vol.is_verified);
         setCiudadBase(vol.ciudad_base || vol.ubicacion || '');
         setRadio(vol.radio_desplazamiento ?? 35);
         setViajar(vol.disponibilidad_viajar ?? true);
@@ -246,7 +247,8 @@ export function EditVolunteerProfile() {
         presentacion_civica: presentacion,
         sobre_mi: presentacion,
         avatar_url: avatarUrl,
-        disponibilidad_activa: disponibilidadActiva,
+        // Solo un perfil completo puede quedar visible al público
+        disponibilidad_activa: disponibilidadActiva && estadoSecciones.todasCompletas,
         ciudad_base: ciudadBase,
         ubicacion: ciudadBase,
         radio_desplazamiento: radio,
@@ -409,6 +411,14 @@ export function EditVolunteerProfile() {
   };
 
   const estadoSecciones = evaluarSeccionesCompletas();
+  // El switch solo cuenta como encendido si el perfil está completo
+  const visiblePublico = disponibilidadActiva && estadoSecciones.todasCompletas;
+  const seccionesFaltantes = [
+    !estadoSecciones.sec01 && '01 Identidad',
+    !estadoSecciones.sec02 && '02 Habilidades',
+    !estadoSecciones.sec03 && '03 Disponibilidad',
+    !estadoSecciones.sec05 && '05 Cobertura',
+  ].filter(Boolean) as string[];
 
   if (loading) {
     return (
@@ -494,6 +504,11 @@ export function EditVolunteerProfile() {
               <p className="text-xs text-[#475569] leading-relaxed mb-4">
                 Has completado exitosamente las secciones obligatorias: <b>01 Identidad</b>, <b>02 Habilidades</b>, <b>03 Disponibilidad</b> y <b>05 Cobertura</b>.
               </p>
+              {!disponibilidadActiva && (
+                <p className="text-xs text-[#475569] leading-relaxed mb-4">
+                  Ya puedes encender <b>Disponibilidad Activa</b> para que tu perfil sea público y las fundaciones te encuentren.
+                </p>
+              )}
               <button
                 onClick={() => setShowFirstVerificationModal(false)}
                 className="w-full bg-[#005684] hover:bg-[#00456a] text-white py-3 rounded-xl font-bold text-xs transition cursor-pointer shadow-md"
@@ -555,18 +570,33 @@ export function EditVolunteerProfile() {
             </div>
             
             <div className="flex flex-col items-start gap-3 shrink-0 m-auto md:m-0">
-              <label className="flex items-center gap-2 cursor-pointer bg-[#EFF4FF] p-2 rounded-xl">
-                <div 
-                  className={`w-10 h-6 flex items-center rounded-full p-1 transition-colors ${disponibilidadActiva ? 'bg-[#047857]' : 'bg-gray-300'}`} 
+              <div className="flex flex-col gap-1 max-w-[260px]">
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={visiblePublico}
+                  disabled={!estadoSecciones.todasCompletas}
                   onClick={() => { setDisponibilidadActiva(!disponibilidadActiva); markUnsaved(); }}
+                  title={estadoSecciones.todasCompletas ? undefined : 'Completa las secciones obligatorias para activarla'}
+                  className="flex items-center gap-2 bg-[#EFF4FF] p-2 rounded-xl text-left cursor-pointer disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  <div className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform ${disponibilidadActiva ? 'translate-x-4' : ''}`}></div>
-                </div>
-                <div className="flex flex-col text-left">
-                  <span className="text-xs font-bold text-[#071d37]">Disponibilidad Activa</span>
-                  <span className="text-[10px] text-[#64748b]">Visible en búsquedas</span>
-                </div>
-              </label>
+                  <span className={`w-10 h-6 flex items-center rounded-full p-1 transition-colors shrink-0 ${visiblePublico ? 'bg-[#047857]' : 'bg-gray-300'}`}>
+                    <span className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform ${visiblePublico ? 'translate-x-4' : ''}`}></span>
+                  </span>
+                  <span className="flex flex-col">
+                    <span className="text-xs font-bold text-[#071d37]">Disponibilidad Activa</span>
+                    <span className="text-[10px] text-[#64748b]">
+                      {visiblePublico ? 'Tu perfil es público y aparece en búsquedas' : 'Tu perfil está oculto al público'}
+                    </span>
+                  </span>
+                </button>
+                {!estadoSecciones.todasCompletas && (
+                  <p className="text-[10px] text-[#b45309] flex items-start gap-1">
+                    <Icon name="advertencia" size={12} className="mt-0.5 shrink-0" />
+                    Para activarla completa: {seccionesFaltantes.join(', ')}.
+                  </p>
+                )}
+              </div>
               
               <div className="flex items-center gap-2 mt-2">
                 <button 
