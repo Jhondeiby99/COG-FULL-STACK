@@ -251,7 +251,7 @@ export function EditVolunteerProfile() {
         ubicacion: ciudadBase,
         radio_desplazamiento: radio,
         disponibilidad_viajar: viajar,
-        disponibilidad_viaje: viajar ? 'Dispuesta a viajar (Nivel Nacional)' : 'Disponibilidad Local',
+        disponibilidad_viaje: viajar ? 'Dispuesto a viajar (Nivel Nacional)' : 'Disponibilidad Local',
         tiempo_disponible: tiempoDisponible, // Se guarda el string calculado automáticamente
         modalidad_apoyo: modalidadApoyo,
         horas_objetivo_mensual: horasObjetivoMensual,

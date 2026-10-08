@@ -270,7 +270,7 @@ const handleContactSubmit = async (e: React.FormEvent) => {
 
   // Normalización de datos con fallbacks
   const ubicacionTexto = voluntario.ubicacion || voluntario.ciudad_base || 'Ubicación no especificada';
-  const dispViajeTexto = voluntario.disponibilidad_viaje || (voluntario.disponibilidad_viajar ? 'Dispuesta a viajar (Nivel Nacional)' : 'Disponibilidad Local');
+  const dispViajeTexto = voluntario.disponibilidad_viaje || (voluntario.disponibilidad_viajar ? 'Dispuesto a viajar (Nivel Nacional)' : 'Disponibilidad Local');
   const habilidadesLista = voluntario.habilidades || [];
   // Formateador dinámico de franjas horarias a lista visual
   const formatFranjas = (franjas: FranjasHorarias | null) => {
