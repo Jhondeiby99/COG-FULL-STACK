@@ -4,6 +4,8 @@ import { supabase } from '../lib/supabase';
 import { DialogModal } from '../components/DialogModal';
 import { DocumentosFundacion } from '../components/DocumentosFundacion';
 import { VERIFICACION_REPRESENTANTE } from '../lib/documentos';
+import { HistorialAprobaciones } from '../components/HistorialAprobaciones';
+import { cargarHistorial, construirActa, imprimirActa, type EventoHistorial } from '../lib/historialAprobaciones';
 
 import { Icon } from '../components/Icon';
 interface Fundacion {
@@ -32,6 +34,9 @@ export function AdminApproval() {
   const [aprobadas, setAprobadas] = useState<Fundacion[]>([]);
   const [loading, setLoading] = useState(true);
   const [processingId, setProcessingId] = useState<string | null>(null);
+  const [historial, setHistorial] = useState<EventoHistorial[] | null>(null);
+  const [cargandoHistorial, setCargandoHistorial] = useState(false);
+  const [generandoActa, setGenerandoActa] = useState(false);
 
   useEffect(() => {
     cargarDatos();
@@ -139,6 +144,38 @@ export function AdminApproval() {
     }
   };
 
+  const abrirHistorial = async () => {
+    setCargandoHistorial(true);
+    try {
+      const { eventos } = await cargarHistorial();
+      setHistorial(eventos);
+    } catch (err) {
+      console.error('Error al cargar el historial:', err);
+      setAviso({ title: 'No se pudo cargar el historial', message: 'Revisa tu conexión e intenta de nuevo.' });
+    } finally {
+      setCargandoHistorial(false);
+    }
+  };
+
+  // El acta se arma con los datos vigentes al momento de descargarla
+  const descargarActa = async () => {
+    setGenerandoActa(true);
+    try {
+      const [datos, { data: { session } }] = await Promise.all([cargarHistorial(), supabase.auth.getSession()]);
+      let generadoPor = session?.user?.email || 'Administrador';
+      if (session?.user?.id) {
+        const { data: admin } = await supabase.from('administradores').select('nombre_completo').eq('id', session.user.id).maybeSingle();
+        if (admin?.nombre_completo) generadoPor = admin.nombre_completo;
+      }
+      imprimirActa(construirActa(datos, generadoPor));
+    } catch (err) {
+      console.error('Error al generar el acta:', err);
+      setAviso({ title: 'No se pudo generar el acta', message: 'Revisa tu conexión e intenta de nuevo.' });
+    } finally {
+      setGenerandoActa(false);
+    }
+  };
+
   const getInitials = (name: string) => {
     if (!name) return 'FN';
     const words = name.trim().split(' ');
@@ -187,6 +224,14 @@ export function AdminApproval() {
         />
       )}
       {aviso && <DialogModal title={aviso.title} message={aviso.message} onClose={() => setAviso(null)} />}
+      {historial && (
+        <HistorialAprobaciones
+          eventos={historial}
+          onClose={() => setHistorial(null)}
+          onDescargarActa={descargarActa}
+          descargando={generandoActa}
+        />
+      )}
 
       {/* Inspección de la solicitud: documentos legales reales y vista previa del perfil */}
       {inspeccion && (
@@ -276,11 +321,22 @@ export function AdminApproval() {
         </div>
         
         <div className="flex items-center gap-3 shrink-0">
-          <button className="bg-white border border-[#e2e8f0] text-[#475569] px-4 py-2.5 rounded-xl text-xs font-bold hover:bg-gray-50 transition flex items-center gap-2 shadow-sm cursor-pointer">
-            <span><Icon name="reloj" size="1.1em" /></span> Historial General
+          <button
+            type="button"
+            onClick={abrirHistorial}
+            disabled={cargandoHistorial}
+            className="bg-white border border-[#e2e8f0] text-[#475569] px-4 py-2.5 rounded-xl text-xs font-bold hover:bg-gray-50 transition flex items-center gap-2 shadow-sm cursor-pointer disabled:opacity-50"
+          >
+            <span><Icon name="reloj" size="1.1em" /></span> {cargandoHistorial ? 'Cargando...' : 'Historial General'}
           </button>
-          <button className="bg-[#eef6ff] text-[#005684] px-4 py-2.5 rounded-xl text-xs font-bold hover:bg-[#d4e7fe] transition flex items-center gap-2 border border-[#dbeafe] cursor-pointer">
-            <span><Icon name="descargar" size="1.1em" /></span> Descargar Acta
+          <button
+            type="button"
+            onClick={descargarActa}
+            disabled={generandoActa}
+            title="Genera el acta con los registros actuales; en el diálogo de impresión elige «Guardar como PDF»"
+            className="bg-[#eef6ff] text-[#005684] px-4 py-2.5 rounded-xl text-xs font-bold hover:bg-[#d4e7fe] transition flex items-center gap-2 border border-[#dbeafe] cursor-pointer disabled:opacity-50"
+          >
+            <span><Icon name="descargar" size="1.1em" /></span> {generandoActa ? 'Preparando...' : 'Descargar Acta'}
           </button>
         </div>
       </div>
