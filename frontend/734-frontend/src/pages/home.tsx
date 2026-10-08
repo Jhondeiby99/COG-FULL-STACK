@@ -23,6 +23,16 @@ export function Home() {
   // Estados de Búsqueda y Filtros
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState<'all' | 'needs' | 'volunteers'>('all');
+
+  // Cambia la pestaña y baja a las tarjetas para que el visitante vea el resultado del filtro
+  const irAResultados = (tab: 'all' | 'needs' | 'volunteers') => {
+    setActiveTab(tab);
+    // Espera a que React pinte la sección (al cambiar de pestaña puede no existir aún)
+    setTimeout(() => {
+      const id = tab === 'volunteers' ? 'voluntarios' : 'necesidades';
+      document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 50);
+  };
   const [selectedCategory, setSelectedCategory] = useState<string>('Todas');
 
   // Estados para el Autocompletado Búsqueda Hero
@@ -240,9 +250,9 @@ export function Home() {
           <form className="w-full max-w-4xl bg-white rounded-3xl shadow-xl shadow-[#005684]/5 border border-gray-100 p-4 md:p-6 text-left relative z-40" onSubmit={handleSearchSubmit}>
             
             <div className="flex items-center gap-2 border-b border-gray-100 pb-4 mb-4 overflow-x-auto whitespace-nowrap scrollbar-hide">
-              <button type="button" onClick={() => setActiveTab('all')} className={`px-4 py-2 text-sm font-semibold rounded-xl transition-all ${activeTab === 'all' ? 'bg-[#005684] text-white shadow-md' : 'text-gray-500 hover:bg-gray-100'}`}>Todo el directorio</button>
-              <button type="button" onClick={() => setActiveTab('needs')} className={`px-4 py-2 text-sm font-semibold rounded-xl transition-all ${activeTab === 'needs' ? 'bg-[#005684] text-white shadow-md' : 'text-gray-500 hover:bg-gray-100'}`}>Causas y Requerimientos</button>
-              <button type="button" onClick={() => setActiveTab('volunteers')} className={`px-4 py-2 text-sm font-semibold rounded-xl transition-all ${activeTab === 'volunteers' ? 'bg-[#005684] text-white shadow-md' : 'text-gray-500 hover:bg-gray-100'}`}>Perfiles Voluntarios</button>
+              <button type="button" onClick={() => irAResultados('all')} className={`px-4 py-2 text-sm font-semibold rounded-xl transition-all ${activeTab === 'all' ? 'bg-[#005684] text-white shadow-md' : 'text-gray-500 hover:bg-gray-100'}`}>Todo el directorio</button>
+              <button type="button" onClick={() => irAResultados('needs')} className={`px-4 py-2 text-sm font-semibold rounded-xl transition-all ${activeTab === 'needs' ? 'bg-[#005684] text-white shadow-md' : 'text-gray-500 hover:bg-gray-100'}`}>Causas y Requerimientos</button>
+              <button type="button" onClick={() => irAResultados('volunteers')} className={`px-4 py-2 text-sm font-semibold rounded-xl transition-all ${activeTab === 'volunteers' ? 'bg-[#005684] text-white shadow-md' : 'text-gray-500 hover:bg-gray-100'}`}>Perfiles Voluntarios</button>
             </div>
 
             <div className="flex flex-col md:flex-row gap-3">
@@ -274,10 +284,10 @@ export function Home() {
 
             <div className="flex flex-wrap items-center gap-2 mt-4 relative z-0">
               <span className="text-[10px] font-bold text-gray-400 tracking-wider uppercase">Accesos Rápidos:</span>
-              <button type="button" onClick={() => { setSearchQuery('Alimentos'); setActiveTab('needs'); }} className="px-3 py-1.5 bg-gray-50 hover:bg-gray-100 text-gray-600 text-[11px] font-semibold rounded-lg border border-gray-200 transition"><Icon name="alimentos" size="1.1em" /> Alimentos</button>
-              <button type="button" onClick={() => { setSearchQuery('Médicos'); setActiveTab('volunteers'); }} className="px-3 py-1.5 bg-gray-50 hover:bg-gray-100 text-gray-600 text-[11px] font-semibold rounded-lg border border-gray-200 transition"><Icon name="salud" size="1.1em" /> Médicos</button>
-              <button type="button" onClick={() => { setSearchQuery('Bogotá'); }} className="px-3 py-1.5 bg-gray-50 hover:bg-gray-100 text-gray-600 text-[11px] font-semibold rounded-lg border border-gray-200 transition"><Icon name="ubicacion" className="text-[#006194]" size="1.1em" /> Bogotá D.C.</button>
-              <button type="button" onClick={() => { setSelectedCategory('Alta Prioridad'); setActiveTab('needs'); }} className={`px-3 py-1.5 text-[11px] font-bold rounded-lg border transition ${selectedCategory === 'Alta Prioridad' ? 'bg-red-100 text-red-700 border-red-200 shadow-sm' : 'bg-red-50 hover:bg-red-100 text-red-600 border-red-100'}`}><Icon name="punto" size="1.1em" filled /> Alta Prioridad</button>
+              <button type="button" onClick={() => { setSearchQuery('Alimentos'); irAResultados('needs'); }} className="px-3 py-1.5 bg-gray-50 hover:bg-gray-100 text-gray-600 text-[11px] font-semibold rounded-lg border border-gray-200 transition"><Icon name="alimentos" size="1.1em" /> Alimentos</button>
+              <button type="button" onClick={() => { setSearchQuery('Médicos'); irAResultados('volunteers'); }} className="px-3 py-1.5 bg-gray-50 hover:bg-gray-100 text-gray-600 text-[11px] font-semibold rounded-lg border border-gray-200 transition"><Icon name="salud" size="1.1em" /> Médicos</button>
+              <button type="button" onClick={() => { setSearchQuery('Bogotá'); irAResultados('all'); }} className="px-3 py-1.5 bg-gray-50 hover:bg-gray-100 text-gray-600 text-[11px] font-semibold rounded-lg border border-gray-200 transition"><Icon name="ubicacion" className="text-[#006194]" size="1.1em" /> Bogotá D.C.</button>
+              <button type="button" onClick={() => { setSelectedCategory('Alta Prioridad'); irAResultados('needs'); }} className={`px-3 py-1.5 text-[11px] font-bold rounded-lg border transition ${selectedCategory === 'Alta Prioridad' ? 'bg-red-100 text-red-700 border-red-200 shadow-sm' : 'bg-red-50 hover:bg-red-100 text-red-600 border-red-100'}`}><Icon name="punto" size="1.1em" filled /> Alta Prioridad</button>
             </div>
           </form>
 
