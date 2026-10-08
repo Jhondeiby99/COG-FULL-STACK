@@ -196,7 +196,7 @@ export function FoundationProfile() {
   };
 
   // Envío del Formulario
-  const handleContactSubmit = async (e: React.FormEvent) => {
+  const handleContactSubmit = async (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!fundacion) return;
     setMsgStatus('loading');
