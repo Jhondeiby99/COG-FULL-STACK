@@ -1,0 +1,1 @@
+var e=`2026-10-08`,t=`sharon.cortez.0ds@utap.edu.co`;export{e as n,t};
