@@ -24,6 +24,7 @@ const AccountNotifications = lazy(() => import('./pages/account-notifications').
 const ForgotPassword = lazy(() => import('./pages/ForgotPassword').then(m => ({ default: m.ForgotPassword })));
 const ResetPassword = lazy(() => import('./pages/ResetPassword').then(m => ({ default: m.ResetPassword })));
 const ManageNeeds = lazy(() => import('./pages/manage-needs').then(m => ({ default: m.ManageNeeds })));
+const PrivacyPolicy = lazy(() => import('./pages/privacy-policy').then(m => ({ default: m.PrivacyPolicy })));
 
 function ProtectedRoute({ children, requiredRole }: { children: React.ReactNode; requiredRole?: string }) {
   const [authStatus, setAuthStatus] = useState<{ loading: boolean; session: boolean; role?: string }>({
@@ -127,6 +128,7 @@ function App() {
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/signup" element={<SignUp />} />
+        <Route path="/privacidad" element={<PrivacyPolicy />} />
         <Route path="/voluntario/:id" element={<VolunteerProfile />} />
         <Route path="/fundacion/:id" element={<FoundationProfile />} />
 

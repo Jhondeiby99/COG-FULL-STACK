@@ -54,6 +54,7 @@ export function Footer() {
 
             <nav className="flex flex-col gap-2 col-span-2 sm:col-span-1" aria-label="Contacto">
               <h4 className="font-bold text-base md:text-lg text-white mb-1">Contacto</h4>
+              <Link to="/privacidad" className={enlaceClase}>Política de tratamiento de datos</Link>
               <a href="mailto:contacto@734am.org" className="text-sm font-semibold text-blue-400 hover:text-blue-300 transition-colors py-1 break-all w-fit">
                 contacto@734am.org
               </a>

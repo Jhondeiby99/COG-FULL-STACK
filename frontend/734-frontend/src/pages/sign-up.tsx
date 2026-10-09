@@ -6,6 +6,7 @@ import { DocumentosFundacion } from '../components/DocumentosFundacion';
 import { subirDocumento } from '../lib/documentos';
 import { DialogModal } from '../components/DialogModal';
 import { CIUDADES_COLOMBIA } from '../lib/ciudades';
+import { VERSION_POLITICA_DATOS } from '../lib/politicaDatos';
 import type { TipoDocumento } from '../lib/documentos';
 
 export function SignUp() {
@@ -21,6 +22,8 @@ export function SignUp() {
 	const [documentos, setDocumentos] = useState<Partial<Record<TipoDocumento, File>>>({});
 	// Correo al que se envió el enlace de confirmación (cuando Supabase lo exige)
 	const [correoPorConfirmar, setCorreoPorConfirmar] = useState<string | null>(null);
+	// Ley 1581 de 2012: autorización previa, expresa e informada (la BD rechaza el registro sin ella)
+	const [autorizaDatos, setAutorizaDatos] = useState(false);
 	
 	const [formData, setFormData] = useState({
 		nombreLegal: '',
@@ -62,6 +65,8 @@ export function SignUp() {
 		const datosPerfil = activeRole === 'fundacion'
 			? {
 				rol: 'fundacion',
+				autoriza_tratamiento_datos: autorizaDatos,
+				version_politica_datos: VERSION_POLITICA_DATOS,
 				nombre_legal: formData.nombreLegal.trim(),
 				nit: formData.nit.trim(),
 				representante_legal: formData.representante.trim(),
@@ -71,6 +76,8 @@ export function SignUp() {
 			}
 			: {
 				rol: 'voluntario',
+				autoriza_tratamiento_datos: autorizaDatos,
+				version_politica_datos: VERSION_POLITICA_DATOS,
 				nombre_completo: formData.nombreLegal.trim(),
 				ciudad: formData.ciudad.trim(),
 				ubicacion: formData.ubicacion.trim(),
@@ -315,10 +322,20 @@ export function SignUp() {
 
 									{error && <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm font-bold">{error}</div>}
 
-									<div className="mt-4 flex items-center justify-between">
-										<label className="flex items-center gap-2 text-sm text-[#475569]">
-											<input type="checkbox" required className="h-4 w-4" /> Acepto el Código Ético de Transparencia de 7:34 AM
-										</label>
+									<div className="mt-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
+										<div className="flex flex-col gap-2">
+											<label className="flex items-center gap-2 text-sm text-[#475569]">
+												<input type="checkbox" required className="h-4 w-4 shrink-0" /> Acepto el Código Ético de Transparencia de 7:34 AM
+											</label>
+											<label className="flex items-start gap-2 text-sm text-[#475569]">
+												<input type="checkbox" required checked={autorizaDatos} onChange={(e) => setAutorizaDatos(e.target.checked)} className="h-4 w-4 mt-0.5 shrink-0" />
+												<span>
+													Autorizo el tratamiento de mis datos personales conforme a la{' '}
+													<Link to="/privacidad" target="_blank" className="font-bold text-[#006194] hover:underline">Política de Tratamiento de Datos</Link>{' '}
+													(Ley 1581 de 2012).
+												</span>
+											</label>
+										</div>
 										<button type="submit" disabled={loading} className="rounded-lg bg-[#0f74a8] px-6 py-3 text-sm font-bold text-white cursor-pointer disabled:opacity-50">
 											{loading ? 'Procesando...' : 'Completar registro →'}
 										</button>
