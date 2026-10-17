@@ -17,7 +17,7 @@ export interface Necesidad {
 }
 
 // Opciones y estilos compartidos por los formularios y tarjetas de necesidades
-export const CATEGORIAS_NECESIDAD = ['Alimentos', 'Salud', 'Educación', 'Vivienda', 'Ropa y abrigo', 'Logística', 'Voluntariado', 'Dinero', 'Otro'];
+export const CATEGORIAS_NECESIDAD = ['Alimentos', 'Salud', 'Educación','Medicamentos', 'Vivienda', 'Ropa y abrigo', 'Logística', 'Voluntariado', 'Dinero', 'Otro'];
 
 export const PRIORIDAD_ESTILOS: Record<PrioridadNecesidad, { label: string; chip: string; barra: string }> = {
   alta: { label: 'Prioridad alta', chip: 'bg-[#fef2f2] text-[#b91c1c] border-[#fecaca]', barra: 'bg-[#ef4444]' },
