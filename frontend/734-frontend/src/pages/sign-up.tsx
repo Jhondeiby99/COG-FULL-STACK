@@ -54,6 +54,12 @@ export function SignUp() {
 		setLoading(true);
 		setError(null);
 
+		if (formData.password.length < 6) {
+			setError('La contraseña debe tener al menos 6 caracteres.');
+			setLoading(false);
+			return;
+		}
+
 		if (formData.password !== formData.confirmPassword) {
 			setError("Las contraseñas no coinciden");
 			setLoading(false);
@@ -94,6 +100,14 @@ export function SignUp() {
 
 		if (authError || !authData.user) {
 			setError(authError?.message || 'Hubo un error al registrar tu cuenta.');
+			setLoading(false);
+			return;
+		}
+
+		// Con la confirmación de correo activa, Supabase no devuelve error si el correo ya existe:
+		// responde un usuario sin identidades para no revelar qué correos están registrados.
+		if (authData.user.identities?.length === 0) {
+			setError('Este correo ya está registrado. Inicia sesión o recupera tu contraseña.');
 			setLoading(false);
 			return;
 		}
