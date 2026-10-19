@@ -32,7 +32,7 @@ export function Footer() {
             </p>
             <div className="inline-flex items-center gap-2 bg-[#005684]/30 border border-[#005684] rounded-full px-4 py-1.5 w-max mt-1">
               <Icon name="verificado" className="text-blue-200 w-4 h-4 md:w-5 md:h-5" />
-              <span className="text-xs md:text-sm font-semibold text-blue-200">Impacto Verificado</span>
+              <span className="text-xs md:text-sm font-semibold text-blue-200">Impacto Transparente</span>
             </div>
           </div>
 

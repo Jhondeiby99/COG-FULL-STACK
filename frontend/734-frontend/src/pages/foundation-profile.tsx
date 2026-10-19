@@ -410,7 +410,7 @@ export function FoundationProfile() {
                   <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-end md:justify-between border-b border-[#e2e8f0] pb-4">
                     <div>
                       <h2 className="m-0 text-xl font-extrabold !text-[#0B1C30]">Necesidades publicadas</h2>
-                      <p className="mt-1 mb-0 text-sm font-medium text-[#718096]">Requerimientos verificados para esta fundación en territorio.</p>
+                      <p className="mt-1 mb-0 text-sm font-medium text-[#718096]">Requerimientos publicados por esta fundación.</p>
                     </div>
                     <div className="!flex !flex-wrap !gap-2 !rounded-lg !bg-[#f0f4f8] !p-1.5">
                       {(['todas', 'alta', 'media', 'baja'] as const).map((filterId) => (
@@ -690,7 +690,7 @@ export function FoundationProfile() {
         <div className="mx-auto flex max-w-[1240px] flex-col justify-between gap-6 md:flex-row md:items-center">
           <div className="max-w-2xl">
             <h2 className="m-0 text-2xl font-extrabold text-white">¿Deseas convocar voluntarios o publicar una causa?</h2>
-            <p className="mt-2 mb-0 text-[15px] text-[#cbd5e1]">Suma tu organización a la red nacional y visibiliza necesidades verificadas de forma transparente.</p>
+            <p className="mt-2 mb-0 text-[15px] text-[#cbd5e1]">Suma tu organización a la red nacional y visibiliza sus necesidades de forma transparente.</p>
           </div>
           <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
           {!isAuthenticated && (
@@ -779,7 +779,7 @@ function NeedCard({ need, onSupport }: { need: NecesidadRow; onSupport: (msg: st
       
       <div className="mt-4 flex items-center justify-between pt-2">
         <span className="flex items-center gap-1.5 text-xs font-extrabold text-[#047857]">
-          <Icon name="verificado" size={14} className="text-[#006194]" /> Verificada
+          <Icon name="verificado" size={14} className="text-[#006194]" /> Fundación aprobada
         </span>
         {!isResolved && (
           <button

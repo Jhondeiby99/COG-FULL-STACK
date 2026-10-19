@@ -6,6 +6,7 @@ import { Header } from '../components/Header.tsx';
 import { Footer } from '../components/Footer.tsx';
 
 import { Icon } from '../components/Icon';
+import { CATEGORIAS_NECESIDAD } from '../lib/necesidades';
 import type { FundacionRow, VoluntarioRow } from '../lib/database.types';
 // Tipos
 type Fundacion = { id: string; nombre_legal: string; ubicacion: string | null; };
@@ -344,14 +345,14 @@ export function Home() {
                 <div>
                   <span className="inline-block bg-red-100 text-red-700 text-[10px] font-bold px-2.5 py-1 rounded-md mb-2 tracking-widest uppercase"><Icon name="punto" size="1.1em" filled /> Llamados urgentes</span>
                   <h2 className="text-2xl md:text-3xl font-extrabold text-[#071d37]">Necesidades de Fundaciones</h2>
-                  <p className="text-sm text-gray-500 mt-1 max-w-xl">Requerimientos puntuales, verificados por nuestro comité de transparencia.</p>
+                  <p className="text-sm text-gray-500 mt-1 max-w-xl">Requerimientos publicados por fundaciones aprobadas por el administrador de la plataforma.</p>
                 </div>
                 <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
                   <button className="hidden lg:flex items-center gap-2 text-[#005684] bg-blue-50 hover:bg-blue-100 px-4 py-2 rounded-xl text-xs font-bold transition border border-blue-100 shadow-sm" onClick={() => setIsFilterModalOpen(true)}>
                     <Icon name="filtros" className="size-3 text-[#006194]" /> Panel Filtros Avanzados
                   </button>
                   <div className="flex flex-wrap gap-2">
-                    {['Todas', 'Alimentos', 'Medicamentos', 'Útiles', 'Alta Prioridad'].map((cat) => (
+                    {['Todas', ...CATEGORIAS_NECESIDAD, 'Alta Prioridad'].map((cat) => (
                       <span key={cat} onClick={() => setSelectedCategory(cat)} className={`px-3 py-1.5 rounded-lg text-[11px] font-bold cursor-pointer transition border ${selectedCategory === cat ? 'bg-[#071d37] text-white border-[#071d37] shadow-sm' : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'}`}>
                         {cat} <span className="opacity-60 font-normal">({getCategoryCount(cat)})</span>
                       </span>
@@ -409,7 +410,7 @@ export function Home() {
                         </div>
 
                         <div className="flex items-center justify-between gap-3 mt-auto">
-                          <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-md border border-emerald-100 flex items-center gap-1"><Icon name="verificado" className="text-[#006194] w-3 h-3" /> Validada</span>
+                          <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-md border border-emerald-100 flex items-center gap-1"><Icon name="verificado" className="text-[#006194] w-3 h-3" /> Fundación aprobada</span>
                           <Link to={`/fundacion/${fundacionObj?.id}`} className="flex-1">
                             <button className="w-full bg-[#071d37] hover:bg-[#005684] text-white text-xs font-bold py-2.5 rounded-xl transition shadow-sm active:scale-95">Ver necesidad →</button>
                           </Link>

@@ -34,6 +34,7 @@ export function ManageNeeds({ global = false }: { global?: boolean }) {
   const [filtroFundacion, setFiltroFundacion] = useState('todas');
   const [fundacionId, setFundacionId] = useState<string | null>(null);
   const [nombreFundacion, setNombreFundacion] = useState('');
+  const [estadoFundacion, setEstadoFundacion] = useState<string | null>(null);
   const [necesidades, setNecesidades] = useState<Necesidad[]>([]);
   const [loading, setLoading] = useState(true);
   const [errorCarga, setErrorCarga] = useState<string | null>(null);
@@ -87,7 +88,7 @@ export function ManageNeeds({ global = false }: { global?: boolean }) {
       if (!objetivo) throw new Error('No se encontró la fundación a gestionar.');
 
       const [fund, nec] = await Promise.all([
-        supabase.from('fundaciones').select('id, nombre_legal, sigla').eq('id', objetivo).maybeSingle(),
+        supabase.from('fundaciones').select('id, nombre_legal, sigla, estado').eq('id', objetivo).maybeSingle(),
         supabase.from('necesidades').select('*').eq('fundacion_id', objetivo).order('created_at', { ascending: false }),
       ]);
       if (fund.error) throw fund.error;
@@ -96,6 +97,7 @@ export function ManageNeeds({ global = false }: { global?: boolean }) {
 
       setFundacionId(fund.data.id);
       setNombreFundacion(fund.data.sigla || fund.data.nombre_legal);
+      setEstadoFundacion(fund.data.estado);
       setNecesidades((nec.data || []) as Necesidad[]);
       setErrorCarga(null);
     } catch (e) {
@@ -151,7 +153,20 @@ export function ManageNeeds({ global = false }: { global?: boolean }) {
   }, [base, filtroEstado, filtroPrioridad, busqueda, nombrePorId]);
 
   // ===== Formulario (componente compartido) =====
-  const abrirFormulario = (nec?: Necesidad) => setFormNec({ necesidad: nec ?? null });
+  // Solo las fundaciones aprobadas publican necesidades (la base de datos también lo exige); el administrador sí puede
+  const puedePublicar = esAdmin || estadoFundacion === 'aprobada';
+
+  const abrirFormulario = (nec?: Necesidad) => {
+    if (!nec && !puedePublicar) {
+      setModal({
+        title: 'Fundación pendiente de aprobación',
+        message: 'Podrás publicar necesidades cuando el administrador apruebe tu fundación. Revisa que tus tres documentos legales estén cargados en tu perfil.',
+        isError: true,
+      });
+      return;
+    }
+    setFormNec({ necesidad: nec ?? null });
+  };
 
   const alGuardar = (nec: Necesidad, esNueva: boolean) => {
     setFormNec(null);
@@ -267,11 +282,17 @@ export function ManageNeeds({ global = false }: { global?: boolean }) {
               <Icon name="ver" size="1.1em" /> Ver perfil público
             </Link>
           )}
-          <button type="button" onClick={() => abrirFormulario()} className="bg-[#005684] text-white px-5 py-2.5 rounded-xl text-xs font-bold hover:bg-[#00456a] transition shadow-sm cursor-pointer">
+          <button type="button" onClick={() => abrirFormulario()} className={`bg-[#005684] text-white px-5 py-2.5 rounded-xl text-xs font-bold hover:bg-[#00456a] transition shadow-sm cursor-pointer ${puedePublicar ? '' : 'opacity-50'}`}>
             + Nueva necesidad
           </button>
         </div>
       </div>
+
+      {!global && !puedePublicar && !loading && (
+        <div className="bg-[#fffbeb] border border-[#fde68a] text-[#92400e] rounded-2xl px-4 py-3 text-xs font-semibold">
+          Tu fundación está en estado «{estadoFundacion || 'pendiente'}». Podrás publicar necesidades cuando el administrador la apruebe.
+        </div>
+      )}
 
       {/* Administrador dentro de una fundación: cambiar rápidamente de fundación */}
       {esAdmin && !global && (

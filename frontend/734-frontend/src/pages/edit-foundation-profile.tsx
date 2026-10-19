@@ -125,6 +125,7 @@ export function EditFoundationProfile() {
 
   // ID de la fundación
   const [foundationId, setFoundationId] = useState<string | null>(id || null);
+  const [estadoFundacion, setEstadoFundacion] = useState<string | null>(null);
 
   // Formulario de datos
   const [razonSocial, setRazonSocial] = useState('');
@@ -372,6 +373,7 @@ export function EditFoundationProfile() {
         const fund: FundacionData = data[0];
         const currentId = fund.id;
         setFoundationId(currentId);
+        setEstadoFundacion(fund.estado ?? null);
 
         const valores: FormValues = {
           razonSocial: fund.nombre_legal || '',
@@ -1310,7 +1312,12 @@ export function EditFoundationProfile() {
                     <h3 className="text-[11px] font-bold text-[#005684] uppercase tracking-wider flex items-center gap-2">
                         <span className="text-base"><Icon name="necesidad" size="1.1em" /></span> Necesidades
                     </h3>
-                    <button onClick={() => setNecesidadModalAbierto(true)} className="text-[10px] font-bold text-[#005684] hover:bg-[#eef6ff] px-2 py-1 rounded-lg transition flex items-center gap-1 cursor-pointer">
+                    <button
+                      onClick={() => estadoFundacion === 'aprobada'
+                        ? setNecesidadModalAbierto(true)
+                        : mostrarError('Fundación pendiente de aprobación', 'Podrás publicar necesidades cuando el administrador apruebe tu fundación. Revisa que tus tres documentos legales estén cargados en la pestaña Documentos.')}
+                      className="text-[10px] font-bold text-[#005684] hover:bg-[#eef6ff] px-2 py-1 rounded-lg transition flex items-center gap-1 cursor-pointer"
+                    >
                       <span>+</span> Añadir
                     </button>
                   </div>
