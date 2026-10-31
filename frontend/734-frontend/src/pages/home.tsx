@@ -233,12 +233,7 @@ export function Home() {
         {/* HERO SECTION */}
         <section className="bg-white px-4 md:px-8 py-12 md:py-20 flex flex-col items-center text-center border-b border-gray-200 relative">
           
-          <div className="inline-flex items-center gap-2 bg-red-50 text-red-600 px-4 py-1.5 rounded-full text-xs font-bold mb-6 border border-red-100 shadow-sm animate-pulse">
-            <span className="w-2 h-2 rounded-full bg-red-500"></span>
-            <span>RED NACIONAL ACTIVA</span>
-            <span className="w-px h-3 bg-red-200"></span>
-            <span className="text-red-500 font-medium">Conectando en tiempo real</span>
-          </div>
+         
 
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-[#071d37] max-w-4xl tracking-tight mb-6 leading-tight">
             El momento exacto en que <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#005684] to-[#00a8e8]">la ayuda</span> despierta
